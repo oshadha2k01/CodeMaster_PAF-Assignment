@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 
-const OrderSchema = new schema({
+const OrderSchema = new Schema({
     
     // user id, email should added after the customer model created
     /*userId : {

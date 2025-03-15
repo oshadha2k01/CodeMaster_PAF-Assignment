@@ -31,3 +31,36 @@ exports.addOrders = async (req,res)=>{
         res.status(400).json({message:"error in adding order"});
     }
 }
+
+exports.updateOrder = async (req,res)=>{
+    try{
+        const orderId = req.params.id;
+        const updatedOrder = req.body;
+        const order = await Order.findByIdAndUpdate(orderId,updatedOrder,{new:true});
+        if(!order){
+            return res.status(404).json({message:"Order not found"});
+        }
+        return res.status(200).json({message:"Order updated successfully",data:order});
+    }
+    catch{
+        res.status(400).json({message:"error in updating order"});
+    }
+}
+exports.deleteOrder = async (req,res)=>{
+    try{
+        const orderId = req.params.id;
+        const order = await Order.findByIdAndDelete(orderId);
+
+        if(!order){
+            return res.status(404).json({message:"Order not found"});  
+        }
+
+        return res.status(200).json({message:"Order deleted successfully"});
+    }
+    catch{
+        return res.status(404).json({message:"error in deleting order"});
+    }
+
+
+
+}
