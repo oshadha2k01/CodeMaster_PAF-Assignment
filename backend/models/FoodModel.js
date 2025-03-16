@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 
-
 const FoodSchema = new schema({
 
     name :{type : String , required : true},

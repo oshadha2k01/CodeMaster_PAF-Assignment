@@ -4,7 +4,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 
+const dotenv = require("dotenv");
 const app = express();
+const indexRouter = require('./routes/index');
+
+
+
 
 // Middleware
 app.use(cors());
@@ -24,10 +29,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
+dotenv.config();
+const uri = process.env.MONGO_URI;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
+app.use('/api', indexRouter); // making endpoint
+
+
+mongoose.connect(uri)
+.then(() => console.log("MongoDB connected successfully"))
+.catch(err => console.error("MongoDB connection error:", err));
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
 
 
 
