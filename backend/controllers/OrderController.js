@@ -1,6 +1,4 @@
 const Order = require("../models/OrderModel");
-const Food = require("../models/FoodModel");
-const { use } = require("../routes/FoodRoutes");
 
 
 exports.getOrders = async (req, res) => {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const OrderController = require('../controllers/OrderController');
+const OrderController = require('../controllers/OrderController.js');
 
 router.get('/orders',OrderController.getOrders);
 router.get('/orders/:id',OrderController.viewOneOrder);
@@ -10,4 +10,3 @@ router.put('/orders/:id',OrderController.updateOrder);
 router.delete('/orders/:id',OrderController.deleteOrder);
 
 module.exports = router;
-

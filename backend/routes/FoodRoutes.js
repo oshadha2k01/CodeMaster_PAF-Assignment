@@ -4,10 +4,10 @@ const router = express.Router();
 const FoodController = require('../controllers/FoodController');
 
 
-router.get('/foods', FoodController.getFood);
-router.get('/foods/:id', FoodController.viewOneFood);
-router.post('/foods', FoodController.AddFood);
-router.put('/foods/:id', FoodController.UpdateFood);
-router.delete('/foods/:id', FoodController.deleteFood);
+router.get('/', FoodController.getFood);
+router.get('/:id', FoodController.viewOneFood);
+router.post('/', FoodController.AddFood);
+router.put('/:id', FoodController.UpdateFood);
+router.delete('/:id', FoodController.deleteFood);
 
 module.exports = router;
