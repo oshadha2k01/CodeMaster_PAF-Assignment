@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const BookingRoutes = require('./routes/BookingRoutes');
 
 const app = express();
+const indexRouter = require('./routes/index');
 
 // Middleware
 app.use(cors());
@@ -25,6 +26,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
 });
+app.use('/api', indexRouter); // making endpoint
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
