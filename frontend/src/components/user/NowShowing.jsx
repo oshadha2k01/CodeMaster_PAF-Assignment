@@ -167,7 +167,7 @@ const NowShowing = () => {
                     <span className="text-amber font-bold">${movie.price}</span>
                     <Link
                       to={`/book-tickets/${movie._id}`}
-                      className="flex items-center space-x-2 bg-amber text-deep-space px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm"
+                      className="flex items-center space-x-2 bg-scarlet hover:bg-amber px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm"
                     >
                       <FontAwesomeIcon icon={faTicketAlt} />
                       <span>Book Tickets</span>
