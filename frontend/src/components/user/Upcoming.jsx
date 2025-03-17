@@ -152,8 +152,8 @@ const Upcoming = () => {
                     className="w-full h-[280px] object-cover"
                   />
       
-                  <div className="absolute top-2 left-2 bg-scarlet hover:bg-amber px-2 py-0.5 rounded-full text-xs">
-                    <FontAwesomeIcon icon={faCalendarAlt} className="mr-1" />
+                  <div className="absolute top-2 left-2 bg-scarlet hover:bg-amber px-2 py-0.5 rounded-full text-xs text-black">
+                    <FontAwesomeIcon icon={faCalendarAlt} className="mr-1 text-black" />
                     {new Date(movie.release_date).toLocaleDateString()}
                   </div>
                 </div>
@@ -165,9 +165,9 @@ const Upcoming = () => {
                     
                     <Link
                       to={`/book-tickets/${movie._id}`}
-                      className="flex items-center space-x-2 bg-scarlet hover:bg-amber px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm"
+                      className="flex items-center space-x-2 bg-scarlet hover:bg-amber px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm text-black"
                     >
-                      <FontAwesomeIcon icon={faTicketAlt} />
+                      <FontAwesomeIcon icon={faTicketAlt} className='text-black' />
                       <span>Pre-book Tickets</span>
                     </Link>
                   </div>

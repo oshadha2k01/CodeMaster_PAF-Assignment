@@ -195,9 +195,9 @@ const MovieList = () => {
           <h1 className="text-2xl font-bold text-amber mb-4 md:mb-0">Movie Management</h1>
           <Link
             to="/admin/movies/add"
-            className="bg-scarlet hover:bg-amber text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center"
+            className="bg-scarlet hover:bg-amber text-black px-4 py-2 rounded-lg transition-colors duration-300 flex items-center"
           >
-            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            <FontAwesomeIcon icon={faPlus} className="mr-2 text-black" />
             Add New Movie
           </Link>
         </div>
