@@ -467,13 +467,8 @@ const MovieForm = () => {
                 whileTap={{ scale: 0.98 }}
                 className={`w-full bg-scarlet hover:bg-amber text-white font-semibold py-2 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 text-sm ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-<<<<<<< HEAD
-                <FontAwesomeIcon icon={faFilm} />
-                <span>{loading ? (isEditMode ? 'Updating Movie...' : 'Adding Movie...') : (isEditMode ? 'Update Movie' : 'Add Movie')}</span>
-=======
                 <FontAwesomeIcon icon={faFilm} className='text-black' />
                 <span className='text-black'>{loading ? (isEditMode ? 'Updating Movie...' : 'Adding Movie...') : (isEditMode ? 'Update Movie' : 'Add Movie')}</span>
->>>>>>> Vidumini
               </motion.button>
             </div>
           </form>

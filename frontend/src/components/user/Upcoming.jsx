@@ -151,39 +151,14 @@ const Upcoming = () => {
                     alt={movie.movie_name}
                     className="w-full h-[280px] object-cover"
                   />
-<<<<<<< HEAD
-                  <div className="absolute top-2 right-2 bg-scarlet text-white px-2 py-0.5 rounded-full text-xs">
-                    {movie.rating} <FontAwesomeIcon icon={faStar} className="ml-1" />
-                  </div>
-                  <div className="absolute top-2 left-2 bg-amber text-deep-space px-2 py-0.5 rounded-full text-xs">
-                    <FontAwesomeIcon icon={faCalendarAlt} className="mr-1" />
-=======
       
                   <div className="absolute top-2 left-2 bg-scarlet hover:bg-amber px-2 py-0.5 rounded-full text-xs text-black">
                     <FontAwesomeIcon icon={faCalendarAlt} className="mr-1 text-black" />
->>>>>>> Vidumini
                     {new Date(movie.release_date).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="p-4">
                   <h3 className="text-lg font-bold text-amber mb-1">{movie.movie_name}</h3>
-<<<<<<< HEAD
-                  <div className="flex items-center text-silver text-sm mb-2">
-                    <span className="mr-3">
-                      <FontAwesomeIcon icon={faClock} className="mr-1" />
-                      {movie.duration} min
-                    </span>
-                    <span>{movie.genre}</span>
-                  </div>
-                  <p className="text-silver text-sm mb-3 line-clamp-2">{movie.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-amber font-bold">${movie.price}</span>
-                    <Link
-                      to={`/book-tickets/${movie._id}`}
-                      className="flex items-center space-x-2 bg-amber text-deep-space px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm"
-                    >
-                      <FontAwesomeIcon icon={faTicketAlt} />
-=======
                   
                   <p className="text-silver text-sm mb-3 line-clamp-2">{movie.description}</p>
                   <div className="flex justify-between items-center">
@@ -193,7 +168,6 @@ const Upcoming = () => {
                       className="flex items-center space-x-2 bg-scarlet hover:bg-amber px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm text-black"
                     >
                       <FontAwesomeIcon icon={faTicketAlt} className='text-black' />
->>>>>>> Vidumini
                       <span>Pre-book Tickets</span>
                     </Link>
                   </div>
