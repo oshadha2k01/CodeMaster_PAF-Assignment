@@ -1,48 +1,42 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
-
 const dotenv = require("dotenv");
+const cors = require("cors");
 const app = express();
-const indexRouter = require('./routes/index');
+const path = require('path'); // Add path module for file handling
 
-
-
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+// Load environment variables
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-dotenv.config();
 const uri = process.env.MONGO_URI;
+
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Enable CORS for frontend requests
 
+// Serve uploaded images statically - Moving this BEFORE the API routes
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/api', indexRouter); // making endpoint
+// Import the main router from index.js
+const mainRouter = require('./index');
 
+// Use the main router for all API routes
+app.use('/api', mainRouter);
 
+// Connect to MongoDB
+mongoose.connect(uri)
+    .then(() => console.log("MongoDB connected successfully"))
+    .catch(err => console.error("MongoDB connection error:", err));
 
-
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log('Server is running on port 3000');
 });
 
-
-
-
+// Create the 'uploads' directory if it doesn't exist
+const fs = require('fs');
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}

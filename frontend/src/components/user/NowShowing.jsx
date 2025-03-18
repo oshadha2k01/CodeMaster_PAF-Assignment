@@ -149,6 +149,7 @@ const NowShowing = () => {
                     alt={movie.movie_name}
                     className="w-full h-[280px] object-cover"
                   />
+<<<<<<< HEAD
                   <div className="absolute top-2 right-2 bg-scarlet text-white px-2 py-0.5 rounded-full text-xs">
                     {movie.rating} <FontAwesomeIcon icon={faStar} className="ml-1" />
                   </div>
@@ -170,11 +171,28 @@ const NowShowing = () => {
                       className="flex items-center space-x-2 bg-amber text-deep-space px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm"
                     >
                       <FontAwesomeIcon icon={faTicketAlt} />
+=======
+                  
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-bold text-amber mb-1">{movie.movie_name}</h3>
+                  
+                  <p className="text-silver text-sm mb-3 line-clamp-2">{movie.description}</p>
+                  
+                    <Link
+                      to={`/book-tickets/${movie._id}`}
+                      className="flex items-center space-x-2 bg-scarlet hover:bg-amber px-3 py-1.5 rounded-lg hover:bg-amber/90 transition-colors duration-300 text-sm text-black"
+                    >
+                      <FontAwesomeIcon icon={faTicketAlt} className='text-black'/>
+>>>>>>> Vidumini
                       <span>Book Tickets</span>
                     </Link>
                   </div>
                 </div>
+<<<<<<< HEAD
               </div>
+=======
+>>>>>>> Vidumini
             ))}
           </div>
         )}
