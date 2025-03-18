@@ -15,6 +15,8 @@ import {
   faCalendar,
   faUsers,
   faLink,
+  faClock,
+  faTheaterMasks,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
@@ -76,7 +78,7 @@ const MovieList = () => {
 
       if (data.success) {
         toast.success("Movie deleted successfully");
-        fetchMovies(); // Refresh the list
+        fetchMovies();
       } else {
         toast.error(data.message || "Failed to delete movie");
       }
@@ -95,15 +97,16 @@ const MovieList = () => {
   const filteredMovies = movies.filter((movie) => {
     const matchesSearch =
       movie.movie_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      movie.director.toLowerCase().includes(searchTerm.toLowerCase());
+      movie.director.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      movie.genre.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "All" || movie.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const sortedMovies = [...filteredMovies].sort((a, b) => {
-    const aValue = a[sortField]?.toLowerCase() || "";
-    const bValue = b[sortField]?.toLowerCase() || "";
+    const aValue = a[sortField]?.toString().toLowerCase() || "";
+    const bValue = b[sortField]?.toString().toLowerCase() || "";
     return sortOrder === "asc"
       ? aValue.localeCompare(bValue)
       : bValue.localeCompare(aValue);
@@ -121,21 +124,18 @@ const MovieList = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Upcoming":
-        return "bg-electric-purple/20 text-electric-purple";
+        return "bg-indigo-200 text-indigo-800";
       case "Now Showing":
-        return "bg-amber/20 text-amber";
+        return "bg-yellow-200 text-yellow-800";
       case "End":
-        return "bg-scarlet/20 text-scarlet";
+        return "bg-red-200 text-red-800";
       default:
-        return "bg-silver/20 text-silver";
+        return "bg-gray-200 text-gray-800";
     }
   };
 
   const getImageUrl = (imagePath) => {
-    // Remove any leading slashes to prevent double slashes in URL
-    const cleanPath = imagePath.startsWith("/")
-      ? imagePath.slice(1)
-      : imagePath;
+    const cleanPath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
     return `http://localhost:3000/uploads/${cleanPath}`;
   };
 
@@ -248,7 +248,7 @@ const MovieList = () => {
             />
             <input
               type="text"
-              placeholder="Search by movie name or director..."
+              placeholder="Search by name, director, or genre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-deep-space/50 border border-silver/30 rounded-lg pl-10 pr-4 py-2 text-silver
@@ -277,6 +277,7 @@ const MovieList = () => {
             <option value="movie_name">Sort by Name</option>
             <option value="release_date">Sort by Release Date</option>
             <option value="director">Sort by Director</option>
+            <option value="genre">Sort by Genre</option>
           </select>
         </div>
 
@@ -292,7 +293,7 @@ const MovieList = () => {
               {/* Movie Image */}
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={`http://localhost:3000/uploads/${movie.image_name}`}
+                  src={getImageUrl(movie.image_name)}
                   alt={movie.movie_name}
                   className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
                 />
@@ -328,13 +329,27 @@ const MovieList = () => {
                 </div>
 
                 {/* Cast */}
-                <div className="flex items-start text-silver/80 text-sm mb-2">
+                <div className="flex items-start text-silver/80 text-sm mb-1">
                   <FontAwesomeIcon icon={faUsers} className="mr-2 mt-1" />
                   <span className="line-clamp-2">{movie.cast.join(", ")}</span>
                 </div>
 
+                {/* Genre */}
+                <div className="flex items-center text-silver/80 text-sm mb-1">
+                  <FontAwesomeIcon icon={faTheaterMasks} className="mr-2" />
+                  <span>{movie.genre}</span>
+                </div>
+
+                {/* Show Times */}
+                <div className="flex items-start text-silver/80 text-sm mb-2">
+                  <FontAwesomeIcon icon={faClock} className="mr-2 mt-1" />
+                  <span className="line-clamp-2">
+                    {movie.show_times.join(", ")}
+                  </span>
+                </div>
+
                 {/* Description */}
-                <div className="text-silver/60 text-xs mb-3 line-clamp-2">
+                <div className="text-silver/60 text-xs mb-2 line-clamp-2">
                   {movie.description}
                 </div>
 

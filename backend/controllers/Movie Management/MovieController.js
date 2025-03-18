@@ -1,13 +1,12 @@
 const Movie = require("../../models/Movie Management/MovieModel");
 const multer = require('multer');
 
-// Configure Multer storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Directory to save uploaded files
+        cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname); // Unique filename
+        cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
@@ -25,24 +24,33 @@ exports.getMovies = async (req, res) => {
 
 // Add a new movie with image upload
 exports.addMovie = [
-    upload.single('image_name'), // 'image_name' is the field name in the form
+    upload.single('image_name'),
     async (req, res) => {
         try {
-            const { movie_name, release_date, description, director, cast, trailer_link, status } = req.body;
+            const { movie_name, release_date, description, director, cast, trailer_link, status, show_times, genre } = req.body;
 
-            // Validate required fields
-            if (!movie_name || !release_date || !director || !cast || !status) {
+            if (!movie_name || !release_date || !director || !cast || !status || !genre) {
                 return res.status(400).json({ success: false, error: "Please fill all the required fields" });
             }
 
-            // Get the uploaded file name
             const image_name = req.file ? req.file.filename : null;
-
             if (!image_name) {
                 return res.status(400).json({ success: false, error: "Please upload an image" });
             }
 
-            // Create a new movie
+            let parsedShowTimes = show_times ? JSON.parse(show_times) : [];
+            if (!Array.isArray(parsedShowTimes) || parsedShowTimes.length > 2) {
+                return res.status(400).json({ success: false, error: "Show times must be an array of maximum 2 times" });
+            }
+
+            const validTimes = ['9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '7:00 PM', '9:30 PM'];
+            if (parsedShowTimes.length > 0) {
+                parsedShowTimes = parsedShowTimes.filter(time => validTimes.includes(time));
+                if (parsedShowTimes.length === 0) {
+                    return res.status(400).json({ success: false, error: "Invalid show times provided" });
+                }
+            }
+
             const newMovie = new Movie({
                 image_name,
                 movie_name,
@@ -52,10 +60,11 @@ exports.addMovie = [
                 cast,
                 trailer_link,
                 status,
+                show_times: parsedShowTimes,
+                genre
             });
 
             const savedMovie = await newMovie.save();
-
             return res.status(200).json({ success: true, data: savedMovie });
         } catch (err) {
             console.log('Error in adding movie', err);
@@ -66,7 +75,7 @@ exports.addMovie = [
 
 // Update a movie with optional image upload
 exports.updateMovie = [
-    upload.single('image_name'), // Optional upload
+    upload.single('image_name'),
     async (req, res) => {
         try {
             const movieId = req.params.id;
@@ -79,11 +88,21 @@ exports.updateMovie = [
                 cast: req.body.cast,
                 trailer_link: req.body.trailer_link,
                 status: req.body.status,
+                genre: req.body.genre
             };
 
-            // Update image_name if a new file is uploaded
             if (req.file) {
                 updatedMovie.image_name = req.file.filename;
+            }
+
+            if (req.body.show_times) {
+                let parsedShowTimes = JSON.parse(req.body.show_times);
+                const validTimes = ['9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '7:00 PM', '9:30 PM'];
+                parsedShowTimes = parsedShowTimes.filter(time => validTimes.includes(time));
+                if (parsedShowTimes.length > 2) {
+                    parsedShowTimes = parsedShowTimes.slice(0, 2);
+                }
+                updatedMovie.show_times = parsedShowTimes;
             }
 
             const movie = await Movie.findByIdAndUpdate(movieId, updatedMovie, { new: true });
@@ -110,7 +129,6 @@ exports.deleteMovie = async (req, res) => {
             return res.status(404).json({ message: "Movie not found" });
         }
 
-        // Optional: Delete the associated image file
         const fs = require('fs');
         const path = require('path');
         const imagePath = path.join(__dirname, '../uploads', movie.image_name);
