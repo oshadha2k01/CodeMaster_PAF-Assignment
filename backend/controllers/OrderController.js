@@ -14,6 +14,24 @@ exports.getOrders = async (req, res) => {
     }
 }
 
+exports.getOrderByid=async(req,res)=>{
+    try{
+        const id = req.params.id;
+        const order = await Order.findById(id);
+        if(!order){
+            return res.status(404).json({message:"Order not found"});
+        }
+        return res.status(200).json({message:"Order found successfully",data:order});
+        }
+
+        catch(err){
+            res.status(400).json({error:"error in getting order"});
+        }
+    }
+    
+   
+
+
 exports.addOrders = async (req,res)=>{
     try{
         const {userID,meals,quantity,status} = req.body;
