@@ -5,8 +5,8 @@ const MovieController = require('../../controllers/Movie Management/MovieControl
 
 router.get('/', MovieController.getMovies);
 router.get('/:id', MovieController.viewOneMovie);
-router.post('/', MovieController.addMovie); // Multer middleware is in controller
-router.put('/:id', MovieController.updateMovie); // Multer middleware is in controller
+router.post('/', MovieController.addMovie);
+router.put('/:id', MovieController.updateMovie);
 router.delete('/:id', MovieController.deleteMovie);
 
 module.exports = router;

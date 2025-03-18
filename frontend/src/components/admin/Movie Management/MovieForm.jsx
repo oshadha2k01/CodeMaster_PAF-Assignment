@@ -11,7 +11,8 @@ import {
   faToggleOn,
   faTimes,
   faExclamationCircle,
-  faInfoCircle
+  faClock,
+  faTheaterMasks
 } from '@fortawesome/free-solid-svg-icons';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -26,7 +27,9 @@ const MovieForm = () => {
     cast: '',
     trailer_link: '',
     status: '',
-    image_name: null // This will hold the file or existing filename
+    image_name: null,
+    show_times: [],
+    genre: 'Action'
   });
 
   const [imagePreview, setImagePreview] = useState(null);
@@ -36,27 +39,21 @@ const MovieForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Determine if we're in edit mode
   const isEditMode = !!id;
+  const availableShowTimes = ['9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '7:00 PM', '9:30 PM'];
+  const availableGenres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Adventure'];
 
-  // Calculate status based on release date
   const calculateStatus = (releaseDate) => {
     const currentDate = new Date();
     const releaseDateObj = new Date(releaseDate);
-    
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(currentDate.getMonth() + 1);
-    
     const fourMonthsFromRelease = new Date(releaseDateObj);
     fourMonthsFromRelease.setMonth(releaseDateObj.getMonth() + 4);
 
-    if (releaseDateObj > currentDate && releaseDateObj <= oneMonthFromNow) {
-      return 'Upcoming';
-    } else if (releaseDateObj <= currentDate && currentDate <= fourMonthsFromRelease) {
-      return 'Now Showing';
-    } else if (currentDate > fourMonthsFromRelease) {
-      return 'End';
-    }
+    if (releaseDateObj > currentDate && releaseDateObj <= oneMonthFromNow) return 'Upcoming';
+    if (releaseDateObj <= currentDate && currentDate <= fourMonthsFromRelease) return 'Now Showing';
+    if (currentDate > fourMonthsFromRelease) return 'End';
     return 'Upcoming';
   };
 
@@ -72,11 +69,21 @@ const MovieForm = () => {
   const handleDateChange = (e) => {
     const { value } = e.target;
     const status = calculateStatus(value);
-    setFormData(prev => ({
-      ...prev,
-      release_date: value,
-      status
-    }));
+    setFormData(prev => ({ ...prev, release_date: value, status }));
+  };
+
+  const areShowTimesValid = (times) => {
+    if (times.length !== 2) return false;
+    const timeToMinutes = (time) => {
+      const [hourStr, period] = time.split(' ');
+      let [hours, minutes] = hourStr.split(':').map(Number);
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+    const time1 = timeToMinutes(times[0]);
+    const time2 = timeToMinutes(times[1]);
+    return Math.abs(time1 - time2) >= 180;
   };
 
   const validateForm = () => {
@@ -86,10 +93,16 @@ const MovieForm = () => {
     if (!formData.release_date) newErrors.release_date = 'Release date is required';
     if (!formData.director.trim()) newErrors.director = 'Director name is required';
     if (!formData.cast.trim()) newErrors.cast = 'At least one cast member is required';
-    if (!isEditMode && !formData.image_name) newErrors.image_name = 'Movie poster is required'; // Only required for add
+    if (!isEditMode && !formData.image_name) newErrors.image_name = 'Movie poster is required';
     if (formData.trailer_link && !formData.trailer_link.match(/^https?:\/\/.+/)) {
       newErrors.trailer_link = 'Please enter a valid URL';
     }
+    if (formData.show_times.length !== 2) {
+      newErrors.show_times = 'Select exactly two show times';
+    } else if (!areShowTimesValid(formData.show_times)) {
+      newErrors.show_times = 'Show times must be 3+ hours apart';
+    }
+    if (!formData.genre) newErrors.genre = 'Select a genre';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -98,6 +111,20 @@ const MovieForm = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleShowTimeChange = (index, value) => {
+    const newShowTimes = [...formData.show_times];
+    newShowTimes[index] = value;
+    setFormData(prev => ({ ...prev, show_times: newShowTimes.filter(Boolean) }));
+    if (errors.show_times) setErrors(prev => ({ ...prev, show_times: '' }));
+  };
+
+  const getAvailableOptions = (currentIndex) => {
+    const otherTime = formData.show_times[currentIndex === 0 ? 1 : 0];
+    if (!otherTime) return availableShowTimes;
+    const otherTimeMinutes = availableShowTimes.indexOf(otherTime);
+    return availableShowTimes.filter((_, i) => Math.abs(i - otherTimeMinutes) >= 2);
   };
 
   const handleDrag = useCallback((e) => {
@@ -115,19 +142,17 @@ const MovieForm = () => {
   }, []);
 
   const handleImageFile = (file) => {
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
-        return;
-      }
-      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-        toast.error('Please upload a valid image (JPG, JPEG, or PNG)');
-        return;
-      }
-      setFormData(prev => ({ ...prev, image_name: file }));
-      setImagePreview(URL.createObjectURL(file));
-      if (errors.image_name) setErrors(prev => ({ ...prev, image_name: '' }));
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
     }
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      toast.error('Please upload a valid image (JPG, JPEG, or PNG)');
+      return;
+    }
+    setFormData(prev => ({ ...prev, image_name: file }));
+    setImagePreview(URL.createObjectURL(file));
+    if (errors.image_name) setErrors(prev => ({ ...prev, image_name: '' }));
   };
 
   const handleImageChange = (e) => {
@@ -143,7 +168,7 @@ const MovieForm = () => {
     try {
       const response = await fetch(`http://localhost:3000/api/movies/${id}`);
       const data = await response.json();
-      if (data.data) { // Check `data.data` based on your backend response structure
+      if (data.data) {
         const movie = data.data;
         setFormData({
           movie_name: movie.movie_name || '',
@@ -152,8 +177,10 @@ const MovieForm = () => {
           cast: movie.cast ? movie.cast.join(', ') : '',
           trailer_link: movie.trailer_link || '',
           description: movie.description || '',
-          image_name: movie.image_name || null, // Keep as string for existing image
-          status: movie.status || ''
+          image_name: movie.image_name || null,
+          status: movie.status || '',
+          show_times: movie.show_times || [],
+          genre: movie.genre || 'Action'
         });
         setImagePreview(movie.image_name ? `http://localhost:3000/uploads/${movie.image_name}` : null);
       } else {
@@ -186,8 +213,9 @@ const MovieForm = () => {
       formDataToSend.append('cast', JSON.stringify(castArray));
       formDataToSend.append('trailer_link', formData.trailer_link);
       formDataToSend.append('status', formData.status);
+      formDataToSend.append('show_times', JSON.stringify(formData.show_times));
+      formDataToSend.append('genre', formData.genre);
       
-      // Only append image_name if a new file is uploaded
       if (formData.image_name instanceof File) {
         formDataToSend.append('image_name', formData.image_name);
       }
@@ -235,7 +263,7 @@ const MovieForm = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-6xl mx-auto bg-electric-purple/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-silver/10"
+          className="max-w-5xl mx-auto bg-electric-purple/10 backdrop-blur-lg rounded-xl p-4 border border-silver/10"
         >
           <div className="flex items-center mb-4">
             <FontAwesomeIcon icon={faFilm} className="text-amber text-2xl mr-3" />
@@ -244,8 +272,8 @@ const MovieForm = () => {
             </h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Column */}
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Column 1 */}
             <div className="space-y-4">
               <div
                 className="relative group"
@@ -254,7 +282,7 @@ const MovieForm = () => {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <div className={`h-40 w-full rounded-lg border-2 border-dashed 
+                <div className={`h-36 w-full rounded-lg border-2 border-dashed 
                   ${imagePreview ? 'border-electric-purple' : dragActive ? 'border-amber' : 'border-silver/30'} 
                   flex items-center justify-center overflow-hidden relative
                   ${errors.image_name ? 'border-red-500' : ''}`}
@@ -273,8 +301,8 @@ const MovieForm = () => {
                   ) : (
                     <div className="text-center p-2">
                       <FontAwesomeIcon icon={faUpload} className="text-amber text-2xl mb-1" />
-                      <p className="text-silver text-sm">Click or drag to upload poster</p>
-                      <p className="text-silver/60 text-xs">Max: 5MB (JPG, PNG)</p>
+                      <p className="text-silver text-sm">Upload poster</p>
+                      <p className="text-silver/60 text-xs">Max: 5MB</p>
                     </div>
                   )}
                   <input
@@ -296,38 +324,6 @@ const MovieForm = () => {
               </div>
 
               <div>
-                <label className="block text-silver text-sm mb-1">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className="w-full bg-deep-space/50 border border-silver/30 rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-silver text-sm mb-1">
-                  <FontAwesomeIcon icon={faToggleOn} className="mr-2" />
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full bg-deep-space/50 border border-silver/30 rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
-                  required
-                >
-                  <option value="Upcoming">Upcoming</option>
-                  <option value="Now Showing">Now Showing</option>
-                  <option value="End">End</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-4">
-              <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faFilm} className="mr-2" />
                   Movie Name
@@ -348,6 +344,43 @@ const MovieForm = () => {
                     {errors.movie_name}
                   </motion.p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-silver text-sm mb-1">
+                  <FontAwesomeIcon icon={faUser} className="mr-2" />
+                  Director
+                </label>
+                <input
+                  type="text"
+                  name="director"
+                  value={formData.director}
+                  onChange={handleInputChange}
+                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.director ? 'border-red-500' : 'border-silver/30'}`}
+                  required
+                />
+                {errors.director && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="text-red-500 text-xs mt-1 flex items-center"
+                  >
+                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" size="sm" />
+                    {errors.director}
+                  </motion.p>
+                )}
+              </div>
+            </div>
+
+            {/* Column 2 */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-silver text-sm mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows="2"
+                  className="w-full bg-deep-space/50 border border-silver/30 rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none resize-none"
+                />
               </div>
 
               <div>
@@ -380,37 +413,6 @@ const MovieForm = () => {
                     {errors.release_date}
                   </motion.p>
                 )}
-                {formData.release_date && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-silver/60 text-xs mt-1 flex items-center"
-                  >
-                    <FontAwesomeIcon icon={faInfoCircle} className="mr-1" />
-                    Status is automatically set based on release date
-                  </motion.p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-silver text-sm mb-1">
-                  <FontAwesomeIcon icon={faUser} className="mr-2" />
-                  Director
-                </label>
-                <input
-                  type="text"
-                  name="director"
-                  value={formData.director}
-                  onChange={handleInputChange}
-                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.director ? 'border-red-500' : 'border-silver/30'}`}
-                  required
-                />
-                {errors.director && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-red-500 text-xs mt-1 flex items-center"
-                  >
-                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" size="sm" />
-                    {errors.director}
-                  </motion.p>
-                )}
               </div>
 
               <div>
@@ -423,7 +425,7 @@ const MovieForm = () => {
                   name="cast"
                   value={formData.cast}
                   onChange={handleInputChange}
-                  placeholder="Actor 1, Actor 2, Actor 3"
+                  placeholder="Actor 1, Actor 2"
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.cast ? 'border-red-500' : 'border-silver/30'}`}
                   required
                 />
@@ -437,6 +439,27 @@ const MovieForm = () => {
                 )}
               </div>
 
+              <div>
+                <label className="block text-silver text-sm mb-1">
+                  <FontAwesomeIcon icon={faToggleOn} className="mr-2" />
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className="w-full bg-deep-space/50 border border-silver/30 rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
+                  required
+                >
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Now Showing">Now Showing</option>
+                  <option value="End">End</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div className="space-y-4">
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faLink} className="mr-2" />
@@ -460,6 +483,66 @@ const MovieForm = () => {
                 )}
               </div>
 
+              <div>
+                <label className="block text-silver text-sm mb-1">
+                  <FontAwesomeIcon icon={faTheaterMasks} className="mr-2" />
+                  Genre
+                </label>
+                <select
+                  name="genre"
+                  value={formData.genre}
+                  onChange={handleInputChange}
+                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.genre ? 'border-red-500' : 'border-silver/30'}`}
+                  required
+                >
+                  {availableGenres.map(genre => (
+                    <option key={genre} value={genre}>{genre}</option>
+                  ))}
+                </select>
+                {errors.genre && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="text-red-500 text-xs mt-1 flex items-center"
+                  >
+                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" size="sm" />
+                    {errors.genre}
+                  </motion.p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-silver text-sm mb-1">
+                  <FontAwesomeIcon icon={faClock} className="mr-2" />
+                  Show Times (Select 2)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[0, 1].map(index => (
+                    <select
+                      key={index}
+                      value={formData.show_times[index] || ''}
+                      onChange={(e) => handleShowTimeChange(index, e.target.value)}
+                      className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.show_times ? 'border-red-500' : 'border-silver/30'}`}
+                      required
+                    >
+                      <option value="">Select</option>
+                      {getAvailableOptions(index).map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                  ))}
+                </div>
+                {errors.show_times && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="text-red-500 text-xs mt-1 flex items-center"
+                  >
+                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" size="sm" />
+                    {errors.show_times}
+                  </motion.p>
+                )}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="md:col-span-3 mt-4">
               <motion.button
                 type="submit"
                 disabled={loading}
@@ -467,8 +550,10 @@ const MovieForm = () => {
                 whileTap={{ scale: 0.98 }}
                 className={`w-full bg-scarlet hover:bg-amber text-white font-semibold py-2 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 text-sm ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <FontAwesomeIcon icon={faFilm} className='text-black' />
-                <span className='text-black'>{loading ? (isEditMode ? 'Updating Movie...' : 'Adding Movie...') : (isEditMode ? 'Update Movie' : 'Add Movie')}</span>
+                <FontAwesomeIcon icon={faFilm} className="text-black" />
+                <span className="text-black">
+                  {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Movie' : 'Add Movie')}
+                </span>
               </motion.button>
             </div>
           </form>

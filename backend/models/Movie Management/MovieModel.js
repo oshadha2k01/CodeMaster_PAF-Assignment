@@ -36,32 +36,41 @@ const MovieSchema = new schema({
         enum: ['Upcoming', 'Now Showing', 'End'],
         default: 'Upcoming',
     },
+    show_times: [{
+        type: String,
+        enum: ['9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '7:00 PM', '9:30 PM'],
+        required: true
+    }],
+    genre: {
+        type: String,
+        required: true,
+        enum: ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Adventure'],
+        default: 'Action'
+    }
 }, {
     timestamps: true
 });
 
-// Middleware to update status based on release_date
 MovieSchema.pre('save', function (next) {
-    const currentDate = new Date(); // Use actual current date
+    const currentDate = new Date();
     const releaseDate = this.release_date;
     
-    // Calculate dates for comparison
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(currentDate.getMonth() + 1);
     
     const fourMonthsFromReleaseDate = new Date(releaseDate);
     fourMonthsFromReleaseDate.setMonth(releaseDate.getMonth() + 4);
 
-    // Set status based on date comparisons
     if (releaseDate > currentDate && releaseDate <= oneMonthFromNow) {
-        // If release date is within the next month
         this.status = 'Upcoming';
     } else if (releaseDate <= currentDate && currentDate <= fourMonthsFromReleaseDate) {
-        // If movie is released and within 4 months of release date
         this.status = 'Now Showing';
     } else if (currentDate > fourMonthsFromReleaseDate) {
-        // If more than 4 months have passed since release date
         this.status = 'End';
+    }
+
+    if (this.show_times && this.show_times.length > 2) {
+        this.show_times = this.show_times.slice(0, 2);
     }
 
     next();
