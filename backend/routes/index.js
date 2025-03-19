@@ -17,3 +17,19 @@ router.get("/", (req, res) => {
 router.use('/movies', movieRoute);
 
 module.exports = router;
+//const FoodRoutes = require('./FoodRoutes');
+const BookingRoutes = require('./BookingRoutes');
+
+
+
+
+//router.use('/foods',FoodRoutes);
+router.use('/Booking',BookingRoutes);
+
+module.exports = router;
+
+
+
+
+
+
