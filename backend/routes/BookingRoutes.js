@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/BookingController');
 
@@ -9,4 +9,4 @@ router.get('/:id', bookingController.getBookingById);     // Get Single Booking
 router.put('/:id', bookingController.updateBooking);      // Update Booking
 router.delete('/:id', bookingController.deleteBooking);   // Delete Booking
 
-module.exports = router;
+module.exports = router;*/

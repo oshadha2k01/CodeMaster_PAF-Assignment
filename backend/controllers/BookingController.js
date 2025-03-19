@@ -1,4 +1,4 @@
-const Booking = require('../models/BookingModel');
+/*const Booking = require('../models/BookingModel');
 
 // Add Booking
 exports.addBooking = async (req, res, next) => {
@@ -58,7 +58,7 @@ exports.updateBooking = async (req, res, next) => {
 };
 
 // Delete Booking
-exports.deleteBooking = async (req, res, next) => {
+/*exports.deleteBooking = async (req, res, next) => {
     try {
         const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
         if (!deletedBooking) return res.status(404).json({ message: 'Booking not found' });
@@ -66,4 +66,4 @@ exports.deleteBooking = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
+};*/
