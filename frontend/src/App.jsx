@@ -1,10 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './components/user/Home';
-import AdminDashboard from './components/admin/AdminDashboard';
-import MovieForm from './components/admin/Movie Management/MovieForm';
-import MovieList from './components/admin/Movie Management/MovieList';
-import NowShowing from './components/user/NowShowing';
-import Upcoming from './components/user/Upcoming';
+import Home from './components/Client/Home';
+import AdminDashboard from './components/Admin/Dashboard/AdminDashboard';
+import MovieForm from './components/Admin/MovieManagement/MovieForm';
+import MovieList from './components/Admin/MovieManagement/MovieList';
+import NowShowing from './components/Client/MovieManagement/NowShowing';
+import Upcoming from './components/Client/MovieManagement/Upcoming';
+import BookingList from './components/Admin/BookingManagement/BookingList';
+import BookingForm from './components/Client/BookingManagement/BookingForm';
+import BookingDetails from './components//Client/BookingManagement/BookingDetails';
+
 
 function App() {
   return (
@@ -21,6 +25,11 @@ function App() {
           <Route path="/admin/bookings" element={<AdminDashboard />} />
           <Route path="/admin/food" element={<AdminDashboard />} />
           <Route path="/admin/movie-buddy" element={<AdminDashboard />} />
+          <Route path="/book-tickets/:id" element={<BookingForm />} />
+          <Route path="/admin/bookings" element={<BookingList />} />
+          <Route path="/admin/food" element={<AdminDashboard />} />
+          <Route path="/admin/movie-buddy" element={<AdminDashboard />} />
+          <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
         </Routes>
       </div>
     </Router>
