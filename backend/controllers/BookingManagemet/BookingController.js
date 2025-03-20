@@ -1,4 +1,4 @@
-const Booking = require('../../models/Booking Management/BookingModel');
+const Booking = require('../../models/BookingManagement/BookingModel');
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
@@ -97,6 +97,61 @@ exports.deleteBooking = async (req, res) => {
         }
         await Booking.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Booking deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get movie buddies for a specific movie, date, and time
+exports.getMovieBuddies = async (req, res) => {
+    try {
+        const { movieName, movieDate, movieTime, excludeBookingId } = req.query;
+        
+        if (!movieName || !movieDate || !movieTime) {
+            return res.status(400).json({ message: 'Movie name, date, and time are required' });
+        }
+
+        // Find all bookings for the same movie, date, and time
+        const query = {
+            movieName,
+            movieDate,
+            movieTime
+        };
+
+        // Exclude the current booking if excludeBookingId is provided
+        if (excludeBookingId) {
+            query._id = { $ne: excludeBookingId };
+        }
+
+        const movieBuddies = await Booking.find(query)
+            .select('name email phone seatNumbers createdAt')
+            .sort({ createdAt: -1 });
+
+        // Group bookings by email to identify groups
+        const groupedBuddies = movieBuddies.reduce((acc, booking) => {
+            if (!acc[booking.email]) {
+                acc[booking.email] = {
+                    name: booking.name,
+                    email: booking.email,
+                    phone: booking.phone,
+                    seats: booking.seatNumbers,
+                    bookingDate: booking.createdAt,
+                    isGroup: booking.seatNumbers.length > 1
+                };
+            }
+            return acc;
+        }, {});
+
+        // Convert grouped buddies to array
+        const buddiesList = Object.values(groupedBuddies);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalBuddies: buddiesList.length,
+                buddies: buddiesList
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

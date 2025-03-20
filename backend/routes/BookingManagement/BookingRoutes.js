@@ -6,8 +6,9 @@ const {
     getBookingById,
     updateBooking,
     deleteBooking,
-    getBookedSeats
-} = require('../../controllers/Booking Management/BookingController');
+    getBookedSeats,
+    getMovieBuddies
+} = require('../../controllers/BookingManagemet/BookingController');
 
 // Create a new booking
 router.post('/', createBooking);
@@ -26,5 +27,8 @@ router.put('/:id', updateBooking);
 
 // Delete a booking
 router.delete('/:id', deleteBooking);
+
+// Get movie buddies for a specific movie, date, and time
+router.get('/movie-buddies', getMovieBuddies);
 
 module.exports = router;
