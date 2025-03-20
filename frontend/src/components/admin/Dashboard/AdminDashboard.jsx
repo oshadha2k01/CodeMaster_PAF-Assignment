@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import AdminNavbar from '../../navbar/AdminNavbar';
-import MovieList from '../MovieManagement/MovieList';
+import MovieList from '../../admin/MovieManagement/MovieList';
 
 const AdminDashboard = () => {
   const location = useLocation();

@@ -154,7 +154,7 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
                 ? 'bg-deep-space/50 text-silver/50 cursor-not-allowed'
                 : isEditMode
                 ? 'bg-amber text-black hover:bg-amber/90'
-                : 'bg-amber text-white hover:bg-amber/90'
+                : 'bg-electric-purple text-white hover:bg-electric-purple/90'
             }`}
           >
             {isEditMode ? 'Update Selection' : 'Confirm Selection'}

@@ -19,7 +19,7 @@ app.use(cors()); // Enable CORS for frontend requests
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import the main router from index.js
-const mainRouter = require('./routes/index.js');
+const mainRouter = require('././routes/index.js');
 
 // Use the main router for all API routes
 app.use('/api', mainRouter);

@@ -8,7 +8,7 @@ const {
     deleteBooking,
     getBookedSeats,
     getMovieBuddies
-} = require('../../controllers/BookingManagemet/BookingController');
+} = require('../../controllers/BookingManagement/BookingController');
 
 // Create a new booking
 router.post('/', createBooking);
