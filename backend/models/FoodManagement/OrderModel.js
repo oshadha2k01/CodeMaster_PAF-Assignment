@@ -4,18 +4,10 @@ const Schema = mongoose.Schema;
 
 const OrderSchema = new Schema({
     
-    // user id, email should added after the customer model created
-    /*userId : {
-        type: schema.Types.ObjectId,
-        ref: "Customer",
-        required: true},
-    Email:{
-      type:schema.Types.ObjectId,
-      ref:"Customer"
-    },*/
+
 
     meals : {
-        type: Schema.Types.ObjectId,
+        type:String,
         ref: "Food",
         required: true
     },

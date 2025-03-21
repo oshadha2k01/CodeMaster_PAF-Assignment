@@ -2,17 +2,18 @@ const Order = require("../../models/FoodManagement/OrderModel");
 
 
 exports.getOrders = async (req, res) => {
-    try{
-        const orders = await Order.find().populate({Path:"meals",model:"Food"});
-        if (orders.length===0){
-            return res.status(404).json({message:"No orders found"});
+    try {
+        const orders = await Order.find()
+
+        if (orders.length === 0) {
+            return res.status(404).json({ message: "No orders found" });
         }
-        res.status(200).json({message:"Orders found successfully",data:orders});
+
+        res.status(200).json({ message: "Orders found successfully", data: orders });
+    } catch (err) {
+        res.status(500).json({ error: err.message || "Error in getting orders" });
     }
-    catch(err){
-        res.status(400).json({error:"error in getting orders"});
-    }
-}
+};
 
 exports.getOrderByid=async(req,res)=>{
     try{
@@ -28,18 +29,15 @@ exports.getOrderByid=async(req,res)=>{
             res.status(400).json({error:"error in getting order"});
         }
     }
-    
-   
-
 
 exports.addOrders = async (req,res)=>{
     try{
-        const {userID,meals,quantity,status} = req.body;
+        const {meals,quantity,status,totalprice} = req.body;
 
-        if(!userID ||!meals || !quantity || !status){
+        if(!meals || !quantity || !status){
             return res.status(400).json({message:"Please fill all the fields"});
         }
-        const newOrder = new Order({userID,meals,quantity,status});
+        const newOrder = new Order({meals,quantity,status,totalprice});
         const savedOrder = await newOrder.save();
         return res.status(200).json({message:"Order added successfully",data:savedOrder});
     }
@@ -72,11 +70,8 @@ exports.deleteOrder = async (req,res)=>{
         }
 
         return res.status(200).json({message:"Order deleted successfully"});
-    }
+    }   
     catch{
         return res.status(404).json({message:"error in deleting order"});
     }
-
-
-
 }

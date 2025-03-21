@@ -34,7 +34,7 @@ router.use('/bookings', bookingRoute);
 router.use('/movie-buddies', movieBuddyRoute);
 
 // New route usage for Food
-router.use('/food', foodRoute);
+router.use('/foods', foodRoute);
 
 // New route usage for Order        
 router.use('/orders', orderRoute);

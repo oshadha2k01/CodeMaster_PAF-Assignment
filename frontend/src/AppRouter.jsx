@@ -9,6 +9,7 @@ import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AddFood from './components/admin/AddFood';
+import FoodList from './components/admin/Foodmanagement/FoodList';
 
 function AppRouter() {
   return (
@@ -18,6 +19,7 @@ function AppRouter() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/addfood' element={<AddFood />}></Route>
+        <Route path="/foodlist" element={<FoodList />}></Route>
 
         {/* Protected Routes */}
         <Route
