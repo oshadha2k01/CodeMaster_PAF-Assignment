@@ -57,7 +57,6 @@ const BookingForm = () => {
     fetchMovieData();
   }, [id, navigate, location.state]);
 
-  // Fetch booked seats when date and time are selected
   useEffect(() => {
     const fetchBookedSeats = async () => {
       if (formData.movieDate && formData.movieTime) {
@@ -70,7 +69,6 @@ const BookingForm = () => {
             }
           });
           setBookedSeats(response.data.bookedSeats || []);
-          // Clear selected seats when date or time changes
           setSelectedSeats([]);
         } catch (error) {
           console.error('Error fetching booked seats:', error);
@@ -84,8 +82,22 @@ const BookingForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Name validation: only allow letters and spaces
+    if (name === 'name') {
+      if (/[^a-zA-Z\s]/.test(value)) {
+        return; // Don't update if contains numbers or special characters
+      }
+    }
+    
+    // Phone validation: only allow numbers
+    if (name === 'phone') {
+      if (/[^0-9]/.test(value) || value.length > 10) {
+        return; // Don't update if contains letters or exceeds 10 digits
+      }
+    }
+
     setFormData({ ...formData, [name]: value });
-    // Clear selected seats when date or time changes
     if (name === 'movieDate' || name === 'movieTime') {
       setSelectedSeats([]);
     }
@@ -112,26 +124,32 @@ const BookingForm = () => {
       newErrors.seatNumber = 'Please select at least one seat';
     }
 
-    // Check for double booking
     const hasDoubleBooking = selectedSeats.some(seat => bookedSeats.includes(seat));
     if (hasDoubleBooking) {
       newErrors.seatNumber = 'Some selected seats are already booked';
     }
 
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Please enter your name';
+    } else if (/[^a-zA-Z\s]/.test(formData.name)) {
+      newErrors.name = 'Name should only contain letters';
+    } else if (formData.name.length < 2) {
+      newErrors.name = 'Name should be at least 2 characters';
     }
 
+    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Please enter your email';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    // Phone validation
     if (!formData.phone.trim()) {
       newErrors.phone = 'Please enter your phone number';
     } else if (!/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
+      newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
     setErrors(newErrors);
@@ -147,9 +165,8 @@ const BookingForm = () => {
 
     setLoading(true);
     try {
-      // Send all seats in a single request with correct movie data
       const response = await axios.post('http://localhost:3000/api/bookings', {
-        movieName: movieData.movie_name, // Add movie name explicitly
+        movieName: movieData.movie_name,
         movieDate: formData.movieDate,
         movieTime: formData.movieTime,
         seatNumbers: formData.seatNumbers,
@@ -161,7 +178,6 @@ const BookingForm = () => {
 
       if (response.data) {
         toast.success('Booking confirmed successfully!');
-        // Navigate to booking details page with the new booking ID
         navigate(`/booking-details/${response.data._id}`);
       }
     } catch (error) {
@@ -194,11 +210,9 @@ const BookingForm = () => {
 
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column - Movie Details */}
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold text-amber mb-6 pb-2 border-b border-silver/20">Movie Details</h2>
                   
-                  {/* Movie Date */}
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
                       <FontAwesomeIcon icon={faCalendar} className="mr-2 text-amber" />
@@ -220,7 +234,6 @@ const BookingForm = () => {
                     )}
                   </div>
 
-                  {/* Show Time */}
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
                       <FontAwesomeIcon icon={faClock} className="mr-2 text-amber" />
@@ -247,7 +260,6 @@ const BookingForm = () => {
                     )}
                   </div>
 
-                  {/* Seat Number */}
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
                       <FontAwesomeIcon icon={faChair} className="mr-2 text-amber" />
@@ -276,11 +288,9 @@ const BookingForm = () => {
                   </div>
                 </div>
 
-                {/* Right Column - Personal Details */}
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold text-amber mb-6 pb-2 border-b border-silver/20">Personal Details</h2>
                   
-                  {/* Customer Name */}
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
                       <FontAwesomeIcon icon={faUser} className="mr-2 text-amber" />
@@ -292,6 +302,7 @@ const BookingForm = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
+                      placeholder="Enter your name"
                     />
                     {errors.name && (
                       <p className="mt-1 text-sm text-scarlet flex items-center">
@@ -301,7 +312,6 @@ const BookingForm = () => {
                     )}
                   </div>
 
-                  {/* Email */}
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
                       <FontAwesomeIcon icon={faEnvelope} className="mr-2 text-amber" />
@@ -313,6 +323,7 @@ const BookingForm = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
+                      placeholder="example@domain.com"
                     />
                     {errors.email && (
                       <p className="mt-1 text-sm text-scarlet flex items-center">
@@ -322,7 +333,6 @@ const BookingForm = () => {
                     )}
                   </div>
 
-                  {/* Phone */}
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
                       <FontAwesomeIcon icon={faPhone} className="mr-2 text-amber" />
@@ -333,8 +343,9 @@ const BookingForm = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      placeholder="10-digit number"
+                      maxLength={10}
                       className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
+                      placeholder="Ente Phone number"
                     />
                     {errors.phone && (
                       <p className="mt-1 text-sm text-scarlet flex items-center">
@@ -346,7 +357,6 @@ const BookingForm = () => {
                 </div>
               </div>
 
-              {/* Submit Buttons */}
               <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-silver/20">
                 <button
                   type="button"
@@ -375,7 +385,6 @@ const BookingForm = () => {
         </motion.div>
       </div>
 
-      {/* Seat Selection Modal */}
       <SeatSelection
         isOpen={seatSelectionOpen}
         onClose={() => setSeatSelectionOpen(false)}
@@ -388,4 +397,4 @@ const BookingForm = () => {
   );
 };
 
-export default BookingForm; 
+export default BookingForm;
