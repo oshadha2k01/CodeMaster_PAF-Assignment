@@ -10,7 +10,8 @@ import BookingForm from './components/customer/BookingManagement/BookingForm';
 import BookingDetails from './components/customer/BookingManagement/BookingDetails';
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
-
+import AddFood from './components/admin/Foodmanagement/AddFood';
+import FoodList from './components/admin/Foodmanagement/FoodList';
 function App() {
   return (
     <Router>
@@ -29,6 +30,10 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
+
+
+           <Route path='/addfood' element={<AddFood />}></Route>
+          <Route path='/foodlist' element={<FoodList/>}></Route>
         </Routes>
       </div>
     </Router>

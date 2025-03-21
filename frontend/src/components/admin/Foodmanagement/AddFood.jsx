@@ -5,10 +5,12 @@ function AddFood() {
   const [formdata, setFormdata] = useState({
     name: "",
     ingrediants: "",
-    category: "Food", // Default value set to "Food"
+    category: "Food",
     price: "",
     imageUrl: "",
   });
+
+  const [message, setMessage] = useState(null); // For success/error messages
 
   const handleChange = (e) => {
     setFormdata({
@@ -17,12 +19,35 @@ function AddFood() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios
-      .post("http://localhost:5000/api/foods", formdata)
-      .then((res) => console.log(res))
-      .catch((err) => console.log(err));
+
+    // Validation
+    if (!formdata.name || !formdata.ingrediants || !formdata.price || !formdata.imageUrl) {
+      setMessage({ type: "error", text: "Please fill in all fields." });
+      return;
+    }
+
+    if (formdata.price <= 0) {
+      setMessage({ type: "error", text: "Price must be greater than 0." });
+      return;
+    }
+
+    try {
+      const res = await axios.post("http://localhost:3000/api/foods", formdata);
+      setMessage({ type: "success", text: "Food item added successfully!" });
+
+      // Reset form
+      setFormdata({
+        name: "",
+        ingrediants: "",
+        category: "Food",
+        price: "",
+        imageUrl: "",
+      });
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to add food item. Try again." });
+    }
   };
 
   return (
@@ -31,6 +56,17 @@ function AddFood() {
         <h2 className="text-2xl font-semibold text-white mb-4 text-center">
           Add New Food Item
         </h2>
+
+        {message && (
+          <div
+            className={`text-center mb-4 p-2 rounded-lg ${
+              message.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
@@ -48,8 +84,6 @@ function AddFood() {
             onChange={handleChange}
             className="w-full p-2 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-yellow-500 outline-none"
           />
-
-          {/* Dropdown for Category */}
           <select
             name="category"
             value={formdata.category}
@@ -59,7 +93,6 @@ function AddFood() {
             <option value="Food">Foods</option>
             <option value="Drinks">Drinks</option>
           </select>
-
           <input
             type="number"
             name="price"

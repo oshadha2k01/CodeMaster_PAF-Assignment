@@ -1,7 +1,7 @@
 import React from 'react'
 import axios from 'axios'
-import { useEffect } from 'axios'
 import { useNavigate } from "react-router-dom";
+import { useState,useEffect } from 'react';
 
 function FoodList() {
 
@@ -12,7 +12,7 @@ function FoodList() {
     const fetchFood = async () => {
         try {
           const response = await axios.get("http://localhost:3000/api/foods");
-          setFoods(response.data);
+          setFoods(response.data.data);
         } catch (error) {
           console.log(error);
         }
