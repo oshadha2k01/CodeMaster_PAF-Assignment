@@ -29,20 +29,75 @@ const AddFood = () => {
 
   const availableCategories = ['Food', 'Drinks', 'Snacks', 'Desserts', 'Beverages'];
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Food name is required';
-    if (!formData.ingrediants.trim()) newErrors.ingrediants = 'Ingredients are required';
-    if (!formData.price || formData.price <= 0) newErrors.price = 'Valid price is required';
-    if (!formData.imageUrl) newErrors.imageUrl = 'Image is required';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validateName = (name) => {
+    if (!name) return 'Food name is required';
+    if (name.length < 2) return 'Food name must be at least 2 characters long';
+    if (/[^A-Za-z\s]/.test(name)) return 'Food name can only contain letters and spaces';
+    return '';
+  };
+
+  const validatePrice = (price) => {
+    if (!price) return 'Price is required';
+    if (!/^\d*\.?\d*$/.test(price)) return 'Price can only contain numbers and decimal point';
+    if (parseFloat(price) <= 0) return 'Price must be greater than 0';
+    return '';
+  };
+
+  const validateIngredients = (ingredients) => {
+    if (!ingredients) return 'Ingredients are required';
+    if (/[^A-Za-z\s,]/.test(ingredients)) return 'Ingredients can only contain letters, spaces, and commas';
+    return '';
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    let sanitizedValue = value;
+
+    switch (name) {
+      case 'name':
+        sanitizedValue = value.replace(/[^A-Za-z\s]/g, '');
+        break;
+      
+      case 'price':
+        sanitizedValue = value.replace(/[^\d.]/g, '');
+        const decimalCount = (sanitizedValue.match(/\./g) || []).length;
+        if (decimalCount > 1) {
+          sanitizedValue = sanitizedValue.slice(0, -1);
+        }
+        break;
+      
+      case 'ingredients':
+        sanitizedValue = value.replace(/[^A-Za-z\s,]/g, '');
+        break;
+      
+      default:
+        break;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: sanitizedValue
+    }));
+
+    let error = '';
+    switch (name) {
+      case 'name':
+        error = validateName(sanitizedValue);
+        break;
+      case 'price':
+        error = validatePrice(sanitizedValue);
+        break;
+      case 'ingredients':
+        error = validateIngredients(sanitizedValue);
+        break;
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
   };
 
   const handleDrag = useCallback((e) => {
@@ -59,7 +114,7 @@ const AddFood = () => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
   }, []);
 
-  const handleImageFile = (file) => {
+  const handleImageFile = async (file) => {
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image size should be less than 5MB');
       return;
@@ -68,8 +123,17 @@ const AddFood = () => {
       toast.error('Please upload a valid image (JPG, JPEG, or PNG)');
       return;
     }
-    setFormData(prev => ({ ...prev, imageUrl: URL.createObjectURL(file) }));
+
+    // Create preview for UI
     setImagePreview(URL.createObjectURL(file));
+    
+    // Convert file to base64
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, imageUrl: reader.result }));
+    };
+
     if (errors.imageUrl) setErrors(prev => ({ ...prev, imageUrl: '' }));
   };
 
@@ -83,9 +147,10 @@ const AddFood = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+    e.preventDefault(); // Add this to prevent form default submission
+    
+    if (!formData.imageUrl) {
+      toast.error('Please upload an image');
       return;
     }
 
@@ -93,12 +158,20 @@ const AddFood = () => {
     const loadingToast = toast.loading('Adding food item...');
 
     try {
+      // Create FormData object
+      const formDataToSend = new FormData();
+      
+      // Append all form fields
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+
       const response = await fetch("http://localhost:3000/api/foods", {
         method: 'POST',
+        body: JSON.stringify(formData),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -128,6 +201,7 @@ const AddFood = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-deep-space text-silver">
@@ -226,7 +300,7 @@ const AddFood = () => {
                   Price
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
@@ -251,12 +325,12 @@ const AddFood = () => {
                   <FontAwesomeIcon icon={faList} className="mr-2" />
                   Ingredients
                 </label>
-                <textarea
+                <input
+                  type="text"
                   name="ingrediants"
                   value={formData.ingrediants}
                   onChange={handleInputChange}
-                  rows="2"
-                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none resize-none ${errors.ingrediants ? 'border-red-500' : 'border-silver/30'}`}
+                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.ingrediants ? 'border-red-500' : 'border-silver/30'}`}
                   required
                 />
                 {errors.ingrediants && (

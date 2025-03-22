@@ -13,10 +13,13 @@ import {
   faSave,
   faDollarSign,
   faTag,
-  faFilter
+  faFilter,
+  faPlus,
+  faList,
+  faBurger
 } from '@fortawesome/free-solid-svg-icons';
 import AdminNavbar from '../../navbar/AdminNavbar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const FoodList = () => {
   const [foods, setFoods] = useState([]);
@@ -144,19 +147,51 @@ const FoodList = () => {
           className="max-w-7xl mx-auto"
         >
           <div className="bg-electric-purple/10 rounded-xl p-8 border border-silver/10 shadow-lg">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-amber">Food Management</h1>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search food items..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber w-64"
-                  />
-                  <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-3 text-silver/50" />
+            <div className="bg-electric-purple/10 rounded-lg p-6 mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <FontAwesomeIcon icon={faBurger} className="text-amber text-2xl" />
+                  <h1 className="text-2xl font-bold text-amber">Food Management</h1>
                 </div>
+                
+                <div className="flex gap-4">
+                  <Link
+                    to="/admin/food-list"
+                    className="bg-deep-space hover:bg-electric-purple/20 text-silver px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2"
+                  >
+                    <FontAwesomeIcon icon={faList} />
+                    <span>Food List</span>
+                  </Link>
+                  
+                  <Link
+                    to="/admin/add-food"
+                    className="bg-scarlet hover:bg-amber text-black px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2"
+                  >
+                    <FontAwesomeIcon icon={faPlus} />
+                    <span>Add New Food</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mt-4 text-silver/60 text-sm">
+                <span>Dashboard</span>
+                <span className="mx-2">/</span>
+                <span>Food Management</span>
+                <span className="mx-2">/</span>
+                <span className="text-amber">Food List</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-8">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search food items..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber w-64"
+                />
+                <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-3 text-silver/50" />
               </div>
             </div>
 

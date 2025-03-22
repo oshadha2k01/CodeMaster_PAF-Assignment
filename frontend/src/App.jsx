@@ -14,6 +14,8 @@ import AddFood from './components/admin/Foodmanagement/AddFood';
 import FoodList from './components/admin/Foodmanagement/FoodList';
 import ShowFoods from './components/customer/FoodManagement/ShowFoods';
 import Cart from './components/customer/FoodManagement/Cart';
+import Payment from './components/customer/Payment/Payment';
+
 function App() {
   return (
     <Router>
@@ -28,17 +30,18 @@ function App() {
           <Route path="/admin/movies/add" element={<MovieForm />} />
           <Route path="/admin/movies/edit/:id" element={<MovieForm />} />
           <Route path="/admin/bookings" element={<BookingList />} />
-          <Route path="/admin/food" element={<AdminDashboard />} />
+          <Route path="/admin/food" element={<FoodList />} />
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
           
 
 
-           <Route path='/addfood' element={<AddFood />}></Route>
+           <Route path='/admin/add-food' element={<AddFood />}></Route>
           <Route path='/foodlist' element={<FoodList/>}></Route>
           <Route path='/showfoods' element={<ShowFoods/>}></Route>
           <Route path='/cart' element={<Cart/>}></Route>
+          <Route path="/payment" element={<Payment />} /> 
         </Routes>
       </div>
     </Router>

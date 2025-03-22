@@ -169,7 +169,12 @@ const Cart = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => navigate('/payment', { 
+                    state: { 
+                      cartItems: cartItems,
+                      totalAmount: calculateTotal()
+                    }
+                  })}
                   className="w-full mt-6 bg-scarlet hover:bg-amber px-6 py-3 rounded-lg transition-colors duration-300 text-black font-bold"
                 >
                   Proceed to Checkout
