@@ -11,21 +11,27 @@ import {
   faArrowRight,
   faUserGroup,
   faVenusMars,
-  faStar
+  faStar,
+  faEnvelope,
+  faPhone,
+  faLock,
+  faUserSecret,
+  faCheck,
+  faTimes,
+  faCalendarAlt,
+  faFilm,
+  faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { toast, Toaster } from 'react-hot-toast';
 import axios from 'axios';
 
-const MovieBuddyPortal = () => {
-  const location = useLocation();
+const MovieBuddyPortal = ({ bookingData }) => {
   const navigate = useNavigate();
-  const bookingData = location.state;
   
   const [preferences, setPreferences] = useState({
     gender: '',
-    groupPreference: 'single', // 'single' or 'group'
-    interests: [],
-    ageRange: '18-25'
+    groupPreference: 'single',
+    ageRange: ''
   });
 
   const [showPersonalInfo, setShowPersonalInfo] = useState(false);
@@ -33,9 +39,10 @@ const MovieBuddyPortal = () => {
   const [showPetNameInput, setShowPetNameInput] = useState(false);
 
   const [privacySettings, setPrivacySettings] = useState({
-    showName: false,
+    showName: true,
     showEmail: false,
-    showPhone: false
+    showPhone: false,
+    petName: ''
   });
 
   const [agreed, setAgreed] = useState(false);
@@ -46,24 +53,23 @@ const MovieBuddyPortal = () => {
     'Sci-Fi', 'Animation', 'Thriller', 'Romance'
   ];
 
+  // Gender options
+  const genderOptions = ['Male', 'Female', 'Other'];
+  
   // Age range options
-  const ageRangeOptions = [
-    '18-25', '26-35', '36-45', '46+'
-  ];
+  const ageRangeOptions = ['18-25', '26-35', '36-45', '46+'];
 
-  const handleInterestToggle = (interest) => {
+  const handlePreferenceChange = (field, value) => {
     setPreferences(prev => ({
       ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
+      [field]: value
     }));
   };
 
-  const handlePrivacyToggle = (field) => {
+  const handlePrivacyToggle = (setting) => {
     setPrivacySettings(prev => ({
       ...prev,
-      [field]: !prev[field]
+      [setting]: !prev[setting]
     }));
   };
 
@@ -75,56 +81,25 @@ const MovieBuddyPortal = () => {
     }
   };
 
-  const handleContinue = async () => {
-    if (!agreed) {
-      toast.error('Please agree to the privacy terms to continue');
-      return;
-    }
+  const handlePetNameChange = (e) => {
+    setPrivacySettings(prev => ({
+      ...prev,
+      petName: e.target.value
+    }));
+  };
 
-    if (!preferences.gender) {
-      toast.error('Please select your gender');
-      return;
-    }
-
-    if (preferences.interests.length === 0) {
-      toast.error('Please select at least one interest');
-      return;
-    }
-
-    if (!showPersonalInfo && !petName) {
-      toast.error('Please enter a pet name');
-      return;
-    }
-
+  const handleSubmit = async () => {
     try {
-      // Prepare the movie buddy data
-      const movieBuddyData = {
-        movieName: bookingData.movieName,
-        movieDate: bookingData.movieDate,
-        movieTime: bookingData.movieTime,
-        preferences: {
-          ...preferences,
-          showPersonalInfo
-        },
-        personalInfo: showPersonalInfo ? {
-          name: bookingData.name,
-          email: bookingData.email,
-          phone: bookingData.phone,
-          ...privacySettings
-        } : {
-          petName
+      // Navigate to MovieBuddyList with user data
+      navigate('/movie-buddies', {
+        state: {
+          ...bookingData,
+          preferences
         }
-      };
-
-      // Save to database
-      await axios.post('http://localhost:3000/api/movie-buddies', movieBuddyData);
-
-      // Navigate to movie buddies list
-      navigate('/movie-buddies', { state: movieBuddyData });
-      
+      });
     } catch (error) {
-      console.error('Error saving movie buddy data:', error);
-      toast.error('Failed to save preferences');
+      console.error('Error:', error);
+      toast.error('An error occurred. Please try again.');
     }
   };
 
@@ -141,259 +116,127 @@ const MovieBuddyPortal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-deep-space text-silver py-12">
-      <Toaster position="top-right" />
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto"
-        >
-          <div className="bg-electric-purple/10 rounded-xl p-8 border border-silver/10 shadow-lg">
-            {/* Booking Details Section */}
-            <div className="mb-8 p-4 bg-deep-space/50 rounded-lg">
-              <h2 className="text-xl font-bold text-amber mb-4">Your Movie Details</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-silver/80">Movie</p>
-                  <p className="text-amber font-semibold">{bookingData.movieName}</p>
+    <div className="min-h-screen bg-deep-space text-silver py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-electric-purple/10 shadow rounded-lg p-6 border border-silver/10">
+          <h2 className="text-2xl font-bold text-amber mb-6">Movie Buddy Portal</h2>
+          
+          <div className="space-y-6">
+            {/* Movie Details Section */}
+            <div className="bg-electric-purple/20 p-6 rounded-lg border border-silver/10">
+              <h3 className="text-xl font-semibold text-amber mb-4">Movie Details</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <FontAwesomeIcon icon={faFilm} className="text-amber" />
+                  <div>
+                    <p className="text-silver/75">Movie Name</p>
+                    <p className="text-silver font-medium">{bookingData.movieName}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-silver/80">Date</p>
-                  <p className="text-amber font-semibold">{bookingData.movieDate}</p>
+                <div className="flex items-center space-x-3">
+                  <FontAwesomeIcon icon={faCalendarAlt} className="text-amber" />
+                  <div>
+                    <p className="text-silver/75">Show Date</p>
+                    <p className="text-silver font-medium">{bookingData.movieDate}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-silver/80">Time</p>
-                  <p className="text-amber font-semibold">{bookingData.movieTime}</p>
+                <div className="flex items-center space-x-3">
+                  <FontAwesomeIcon icon={faClock} className="text-amber" />
+                  <div>
+                    <p className="text-silver/75">Show Time</p>
+                    <p className="text-silver font-medium">{bookingData.movieTime}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Preferences Section */}
-            <div className="space-y-6 mb-8">
-              <h2 className="text-2xl font-bold text-amber flex items-center">
-                <FontAwesomeIcon icon={faStar} className="mr-3" />
-                Your Preferences
-              </h2>
-
-              {/* Gender Selection */}
-              <div className="space-y-2">
-                <label className="block text-lg font-semibold text-amber">Gender</label>
-                <div className="flex space-x-4">
-                  {['Male', 'Female', 'Other'].map((gender) => (
+            <div className="space-y-6">
+              {/* Gender Preference */}
+              <div>
+                <label className="flex items-center space-x-2 text-amber mb-3">
+                  <FontAwesomeIcon icon={faVenusMars} />
+                  <span>Gender Preference</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {genderOptions.map((gender) => (
                     <button
                       key={gender}
-                      onClick={() => setPreferences(prev => ({ ...prev, gender }))}
-                      className={`px-4 py-2 rounded-lg flex items-center ${
-                        preferences.gender === gender
-                          ? 'bg-amber text-deep-space'
-                          : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                      }`}
+                      onClick={() => handlePreferenceChange('gender', gender)}
+                      className={`px-4 py-2 rounded-lg border transition-colors duration-200 flex items-center space-x-2
+                        ${preferences.gender === gender 
+                          ? 'bg-amber text-deep-space border-amber' 
+                          : 'bg-deep-space text-silver border-silver/20 hover:border-amber/50'}`}
                     >
-                      <FontAwesomeIcon icon={faVenusMars} className="mr-2" />
-                      {gender}
+                      <span>{gender}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Group Preference */}
-              <div className="space-y-2">
-                <label className="block text-lg font-semibold text-amber">Preferred Company</label>
-                <div className="flex space-x-4">
+              <div>
+                <label className="flex items-center space-x-2 text-amber mb-3">
+                  <FontAwesomeIcon icon={faUserGroup} />
+                  <span>Group Preference</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => setPreferences(prev => ({ ...prev, groupPreference: 'single' }))}
-                    className={`px-4 py-2 rounded-lg flex items-center ${
-                      preferences.groupPreference === 'single'
-                        ? 'bg-amber text-deep-space'
-                        : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                    }`}
+                    onClick={() => handlePreferenceChange('groupPreference', 'single')}
+                    className={`px-4 py-2 rounded-lg border transition-colors duration-200 flex items-center space-x-2
+                      ${preferences.groupPreference === 'single' 
+                        ? 'bg-amber text-deep-space border-amber' 
+                        : 'bg-deep-space text-silver border-silver/20 hover:border-amber/50'}`}
                   >
-                    <FontAwesomeIcon icon={faUser} className="mr-2" />
-                    Single Buddy
+                    <FontAwesomeIcon icon={faUser} />
+                    <span>Single</span>
                   </button>
                   <button
-                    onClick={() => setPreferences(prev => ({ ...prev, groupPreference: 'group' }))}
-                    className={`px-4 py-2 rounded-lg flex items-center ${
-                      preferences.groupPreference === 'group'
-                        ? 'bg-amber text-deep-space'
-                        : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                    }`}
+                    onClick={() => handlePreferenceChange('groupPreference', 'group')}
+                    className={`px-4 py-2 rounded-lg border transition-colors duration-200 flex items-center space-x-2
+                      ${preferences.groupPreference === 'group' 
+                        ? 'bg-amber text-deep-space border-amber' 
+                        : 'bg-deep-space text-silver border-silver/20 hover:border-amber/50'}`}
                   >
-                    <FontAwesomeIcon icon={faUserGroup} className="mr-2" />
-                    Group Watch
+                    <FontAwesomeIcon icon={faUserGroup} />
+                    <span>Group</span>
                   </button>
                 </div>
               </div>
 
               {/* Age Range */}
-              <div className="space-y-2">
-                <label className="block text-lg font-semibold text-amber">Age Range</label>
-                <div className="flex flex-wrap gap-2">
-                  {ageRangeOptions.map((range) => (
+              <div>
+                <label className="flex items-center space-x-2 text-amber mb-3">
+                  <FontAwesomeIcon icon={faCalendarAlt} />
+                  <span>Age Range</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {ageRangeOptions.map((age) => (
                     <button
-                      key={range}
-                      onClick={() => setPreferences(prev => ({ ...prev, ageRange: range }))}
-                      className={`px-4 py-2 rounded-lg ${
-                        preferences.ageRange === range
-                          ? 'bg-amber text-deep-space'
-                          : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                      }`}
+                      key={age}
+                      onClick={() => handlePreferenceChange('ageRange', age)}
+                      className={`px-4 py-2 rounded-lg border transition-colors duration-200 flex items-center space-x-2
+                        ${preferences.ageRange === age 
+                          ? 'bg-amber text-deep-space border-amber' 
+                          : 'bg-deep-space text-silver border-silver/20 hover:border-amber/50'}`}
                     >
-                      {range}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Movie Interests */}
-              <div className="space-y-2">
-                <label className="block text-lg font-semibold text-amber">Movie Interests</label>
-                <div className="flex flex-wrap gap-2">
-                  {interestOptions.map((interest) => (
-                    <button
-                      key={interest}
-                      onClick={() => handleInterestToggle(interest)}
-                      className={`px-4 py-2 rounded-lg ${
-                        preferences.interests.includes(interest)
-                          ? 'bg-amber text-deep-space'
-                          : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                      }`}
-                    >
-                      {interest}
+                      <span>{age}</span>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Privacy Settings */}
-            <div className="space-y-6 mb-8">
-              <h2 className="text-2xl font-bold text-amber flex items-center">
-                <FontAwesomeIcon icon={faShield} className="mr-3" />
-                Privacy Settings
-              </h2>
-
-              <div className="space-y-4">
-                <p className="text-lg text-silver">Would you like to share your personal details with movie buddies?</p>
-                
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => handleShowPersonalInfoChange(true)}
-                    className={`px-6 py-3 rounded-lg flex items-center ${
-                      showPersonalInfo
-                        ? 'bg-amber text-deep-space'
-                        : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                    }`}
-                  >
-                    <FontAwesomeIcon icon={faEye} className="mr-2" />
-                    Yes, share my details
-                  </button>
-                  <button
-                    onClick={() => handleShowPersonalInfoChange(false)}
-                    className={`px-6 py-3 rounded-lg flex items-center ${
-                      !showPersonalInfo
-                        ? 'bg-amber text-deep-space'
-                        : 'bg-deep-space/50 text-silver hover:bg-deep-space/70'
-                    }`}
-                  >
-                    <FontAwesomeIcon icon={faEyeSlash} className="mr-2" />
-                    No, use a pet name
-                  </button>
-                </div>
-
-                {showPersonalInfo && (
-                  <div className="space-y-4 mt-4">
-                    <div className="flex items-center justify-between p-4 bg-deep-space/50 rounded-lg">
-                      <div>
-                        <h3 className="font-semibold text-amber">Display Name</h3>
-                        <p className="text-sm text-silver/80">Your name: {bookingData.name}</p>
-                      </div>
-                      <button
-                        onClick={() => handlePrivacyToggle('showName')}
-                        className={`p-2 rounded-lg ${privacySettings.showName ? 'bg-emerald-500/20 text-emerald-400' : 'bg-scarlet/20 text-scarlet'}`}
-                      >
-                        <FontAwesomeIcon icon={privacySettings.showName ? faEye : faEyeSlash} />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-deep-space/50 rounded-lg">
-                      <div>
-                        <h3 className="font-semibold text-amber">Email Address</h3>
-                        <p className="text-sm text-silver/80">Your email: {bookingData.email}</p>
-                      </div>
-                      <button
-                        onClick={() => handlePrivacyToggle('showEmail')}
-                        className={`p-2 rounded-lg ${privacySettings.showEmail ? 'bg-emerald-500/20 text-emerald-400' : 'bg-scarlet/20 text-scarlet'}`}
-                      >
-                        <FontAwesomeIcon icon={privacySettings.showEmail ? faEye : faEyeSlash} />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-deep-space/50 rounded-lg">
-                      <div>
-                        <h3 className="font-semibold text-amber">Phone Number</h3>
-                        <p className="text-sm text-silver/80">Your phone: {bookingData.phone}</p>
-                      </div>
-                      <button
-                        onClick={() => handlePrivacyToggle('showPhone')}
-                        className={`p-2 rounded-lg ${privacySettings.showPhone ? 'bg-emerald-500/20 text-emerald-400' : 'bg-scarlet/20 text-scarlet'}`}
-                      >
-                        <FontAwesomeIcon icon={privacySettings.showPhone ? faEye : faEyeSlash} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {showPetNameInput && (
-                  <div className="mt-4">
-                    <label className="block text-lg font-semibold text-amber mb-2">Choose a Pet Name</label>
-                    <input
-                      type="text"
-                      value={petName}
-                      onChange={(e) => setPetName(e.target.value)}
-                      placeholder="Enter your pet name"
-                      className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Privacy Agreement */}
-            <div className="mt-8">
-              <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1"
-                />
-                <span className="text-sm text-silver/80">
-                  I understand and agree that my selected preferences and information will be used to find compatible movie buddies.
-                  I can modify these settings at any time.
-                </span>
-              </label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 mt-8">
+            <div className="flex justify-end">
               <button
-                onClick={handleCancel}
-                className="px-6 py-2 text-silver hover:text-amber"
+                onClick={handleSubmit}
+                className="bg-amber text-deep-space px-6 py-2 rounded-lg hover:bg-amber/90 focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleContinue}
-                className="px-6 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80 flex items-center"
-              >
-                Continue
-                <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                Find Movie Buddies
               </button>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

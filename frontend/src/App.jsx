@@ -11,6 +11,8 @@ import BookingDetails from './components/customer/BookingManagement/BookingDetai
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
 import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
+import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
+import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
           <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
+          <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
         </Routes>
       </div>
     </Router>

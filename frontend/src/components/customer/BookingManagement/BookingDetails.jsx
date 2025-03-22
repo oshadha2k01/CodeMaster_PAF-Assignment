@@ -215,15 +215,16 @@ const BookingDetails = () => {
 
   const handleMovieBuddyConfirm = () => {
     setShowMovieBuddyDialog(false);
-    navigate('/movie-buddy-portal', {
+    navigate('/movie-buddy-form', {
       state: {
         movieName: booking.movieName,
         movieDate: booking.movieDate,
         movieTime: booking.movieTime,
-        excludeBookingId: bookingId,
         name: booking.name,
         email: booking.email,
-        phone: booking.phone
+        phone: booking.phone,
+        bookingId: booking._id,
+        seatNumbers: booking.seatNumbers
       }
     });
   };
