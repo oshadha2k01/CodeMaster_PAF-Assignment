@@ -126,7 +126,19 @@ const MovieBuddyList = () => {
       movieName: group.movieName,
       movieDate: group.movieDate,
       movieTime: group.movieTime,
-      bookingDate: new Date().toISOString().split('T')[0] // Current date
+      bookingDate: new Date().toISOString().split('T')[0], // Current date
+      seatNumbers: group.buddies[0]?.seatNumbers || [], // Add seat numbers from the first buddy
+      preferences: {
+        gender: group.buddies[0]?.gender || '',
+        age: group.buddies[0]?.age || '',
+        moviePreferences: group.buddies[0]?.moviePreferences || []
+      },
+      privacySettings: group.buddies[0]?.privacySettings || {
+        showName: true,
+        showEmail: false,
+        showPhone: false,
+        petName: ''
+      }
     });
     setShowFilterPortal(true);
   };
