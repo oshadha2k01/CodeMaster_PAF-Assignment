@@ -10,6 +10,7 @@ import BookingForm from './components/customer/BookingManagement/BookingForm';
 import BookingDetails from './components/customer/BookingManagement/BookingDetails';
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
+import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
+          <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
         </Routes>
       </div>
     </Router>
