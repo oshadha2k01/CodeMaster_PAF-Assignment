@@ -253,12 +253,15 @@ const FoodList = () => {
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-amber">Edit Food Item</h2>
                     <button
-                      onClick={() => setEditModalOpen(false)}
-                      className="text-silver hover:text-amber"
-                      na
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
+                        onClick={() => {
+                          setEditModalOpen(false);
+                          navigate(`/admin/food/edit/${editFormData._id}`);
+                        }}
+                        className="text-silver hover:text-amber"
+                      >
+                        <FontAwesomeIcon icon={faTimes} />
+                      </button>
+
                   </div>
                   <div className="space-y-4">
                     <div>
