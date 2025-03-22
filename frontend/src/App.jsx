@@ -14,6 +14,8 @@ import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal'
 import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
 
+import Login from './components/login';
+import Register from './components/register';
 function App() {
   return (
     <Router>
@@ -35,6 +37,8 @@ function App() {
           <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>

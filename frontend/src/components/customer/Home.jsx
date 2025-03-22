@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilm, faTicket, faUtensils, faUserFriends } from '@fortawesome/free-solid-svg-icons';
 import MainNavBar from '../navbar/MainNavBar';
 
 const Home = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   return (
     <div className="min-h-screen bg-deep-space text-silver">
       <MainNavBar />
@@ -38,6 +40,7 @@ const Home = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
           className="bg-scarlet hover:bg-amber text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300 z-10"
+          onClick={() => navigate("/now-showing")} // Corrected navigation
         >
           Book Now
         </motion.button>
@@ -105,4 +108,4 @@ const features = [
   }
 ];
 
-export default Home; 
+export default Home;
