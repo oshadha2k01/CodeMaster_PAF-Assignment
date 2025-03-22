@@ -10,19 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.0.14",
-    "axios": "^1.8.3",
-=======
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
-<<<<<<< HEAD
->>>>>>> 065563d61959bf0ad6a9d273324b099ff1e7f7e5
-=======
+
     "axios": "^1.8.3",
->>>>>>> d00e609f2e92953d6e054ef51d7a7dca871f8bc6
     "framer-motion": "^12.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
