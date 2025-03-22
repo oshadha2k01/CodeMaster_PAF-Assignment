@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ShowFoods from '../customer/FoodManagement/ShowFoods';
 import {
   faFilm,
   faCalendar,
@@ -20,7 +21,7 @@ const MainNavBar = () => {
   const navItems = [
     { path: '/now-showing', label: 'Now Showing', icon: faFilm },
     { path: '/upcoming', label: 'Upcoming', icon: faCalendar },
-    { path: '/beverages', label: 'Beverages', icon: faGlassMartiniAlt },
+    { path: '/ShowFoods', label: 'Beverages', icon: faGlassMartiniAlt },
     { path: '/show-times', label: 'Show Times', icon: faClock }
   ];
 

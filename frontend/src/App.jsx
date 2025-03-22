@@ -12,6 +12,8 @@ import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
 import AddFood from './components/admin/Foodmanagement/AddFood';
 import FoodList from './components/admin/Foodmanagement/FoodList';
+import ShowFoods from './components/customer/FoodManagement/ShowFoods';
+import Cart from './components/customer/FoodManagement/Cart';
 function App() {
   return (
     <Router>
@@ -30,10 +32,13 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
+          
 
 
            <Route path='/addfood' element={<AddFood />}></Route>
           <Route path='/foodlist' element={<FoodList/>}></Route>
+          <Route path='/showfoods' element={<ShowFoods/>}></Route>
+          <Route path='/cart' element={<Cart/>}></Route>
         </Routes>
       </div>
     </Router>
