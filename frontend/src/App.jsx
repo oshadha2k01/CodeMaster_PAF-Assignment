@@ -11,7 +11,8 @@ import BookingDetails from './components/customer/BookingManagement/BookingDetai
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
 import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
-
+import Login from './components/login';
+import Register from './components/register';
 function App() {
   return (
     <Router>
@@ -31,6 +32,8 @@ function App() {
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
           <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>

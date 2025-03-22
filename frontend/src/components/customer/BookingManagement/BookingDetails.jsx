@@ -11,11 +11,10 @@ import {
   faTimes,
   faSave,
   faCreditCard,
-  faUsers,
-  faCheck,
-  faTimes as faTimesCircle
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import SeatSelection from './SeatSelection';
+import MainNavBar from '../../navbar/MainNavBar';
 
 const BookingDetails = () => {
   const { bookingId } = useParams();
@@ -23,7 +22,6 @@ const BookingDetails = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [showMovieBuddyDialog, setShowMovieBuddyDialog] = useState(false);
   const [editFormData, setEditFormData] = useState({
     movieName: '',
     movieDate: '',
@@ -55,19 +53,6 @@ const BookingDetails = () => {
       fetchBookedSeats();
     }
   }, [editFormData.movieDate, editFormData.movieTime]);
-
-  // Modified useEffect to add 2-second delay
-  useEffect(() => {
-    if (booking && !loading) {
-      // Set a 2-second delay before showing the dialog
-      const timer = setTimeout(() => {
-        setShowMovieBuddyDialog(true);
-      }, 2000); // 2000 milliseconds = 2 seconds
-
-      // Cleanup the timer if component unmounts
-      return () => clearTimeout(timer);
-    }
-  }, [booking, loading]);
 
   const fetchMovieData = async () => {
     try {
@@ -210,26 +195,14 @@ const BookingDetails = () => {
   };
 
   const handleMovieBuddyClick = () => {
-    setShowMovieBuddyDialog(true);
-  };
-
-  const handleMovieBuddyConfirm = () => {
-    setShowMovieBuddyDialog(false);
-    navigate('/movie-buddy-portal', {
+    navigate('/movie-buddies', {
       state: {
         movieName: booking.movieName,
         movieDate: booking.movieDate,
         movieTime: booking.movieTime,
-        excludeBookingId: bookingId,
-        name: booking.name,
-        email: booking.email,
-        phone: booking.phone
+        excludeBookingId: bookingId
       }
     });
-  };
-
-  const handleMovieBuddyCancel = () => {
-    setShowMovieBuddyDialog(false);
   };
 
   if (loading) {
@@ -251,6 +224,7 @@ const BookingDetails = () => {
   return (
     <div className="min-h-screen bg-deep-space text-silver py-12">
       <Toaster position="top-right" />
+      <MainNavBar />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -262,6 +236,13 @@ const BookingDetails = () => {
               <h1 className="text-3xl font-bold text-amber">Booking Details</h1>
               {!editMode && (
                 <div className="space-x-4">
+                  <button
+                    onClick={handleMovieBuddyClick}
+                    className="text-electric-purple hover:text-electric-purple/80 text-xl"
+                    title="Find Movie Buddies"
+                  >
+                    <FontAwesomeIcon icon={faUsers} />
+                  </button>
                   <button
                     onClick={handleEdit}
                     className="text-amber hover:text-amber/80 text-xl"
@@ -279,36 +260,6 @@ const BookingDetails = () => {
                 </div>
               )}
             </div>
-
-            {/* Movie Buddy Confirmation Dialog */}
-            {showMovieBuddyDialog && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="bg-deep-space border-2 border-amber rounded-xl p-8 max-w-md w-full mx-4"
-                >
-                  <h2 className="text-2xl font-bold text-amber mb-4">Find Movie Buddies</h2>
-                  <p className="text-silver mb-6">Would you like to find movie buddies who are watching the same movie at the same time?</p>
-                  <div className="flex justify-end space-x-4">
-                    <button
-                      onClick={handleMovieBuddyCancel}
-                      className="px-6 py-2 rounded-lg bg-scarlet hover:bg-scarlet/80 text-white flex items-center"
-                    >
-                      <FontAwesomeIcon icon={faTimesCircle} className="mr-2" />
-                      No
-                    </button>
-                    <button
-                      onClick={handleMovieBuddyConfirm}
-                      className="px-6 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center"
-                    >
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                      Yes
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
 
             {editMode ? (
               <div className="space-y-4">
