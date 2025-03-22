@@ -40,12 +40,10 @@ const BookingForm = () => {
           });
         } else {
           const response = await axios.get(`http://localhost:3000/api/movies/${id}`);
-          if (response.data) {
-            setMovieData({
-              movie_name: response.data.movie_name,
-              show_times: response.data.show_times || []
-            });
-          }
+          setMovieData({
+            movie_name: response.data.movie_name,
+            show_times: response.data.show_times || []
+          });
         }
       } catch (error) {
         console.error('Error fetching movie data:', error);
@@ -53,7 +51,6 @@ const BookingForm = () => {
         navigate('/now-showing');
       }
     };
-
     fetchMovieData();
   }, [id, navigate, location.state]);
 
@@ -62,11 +59,7 @@ const BookingForm = () => {
       if (formData.movieDate && formData.movieTime) {
         try {
           const response = await axios.get(`http://localhost:3000/api/bookings/booked-seats`, {
-            params: {
-              movieId: id,
-              date: formData.movieDate,
-              time: formData.movieTime
-            }
+            params: { movieId: id, date: formData.movieDate, time: formData.movieTime }
           });
           setBookedSeats(response.data.bookedSeats || []);
           setSelectedSeats([]);
@@ -76,28 +69,80 @@ const BookingForm = () => {
         }
       }
     };
-
     fetchBookedSeats();
   }, [formData.movieDate, formData.movieTime, id]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Name validation: only allow letters and spaces
-    if (name === 'name') {
-      if (/[^a-zA-Z\s]/.test(value)) {
-        return; // Don't update if contains numbers or special characters
-      }
-    }
-    
-    // Phone validation: only allow numbers
-    if (name === 'phone') {
-      if (/[^0-9]/.test(value) || value.length > 10) {
-        return; // Don't update if contains letters or exceeds 10 digits
-      }
+  const validateInput = (name, value) => {
+    const newErrors = { ...errors };
+
+    switch (name) {
+      case 'name':
+        if (/[^a-zA-Z\s]/.test(value)) {
+          newErrors.name = 'Please use letters only';
+        } else if (value.trim() === '') {
+          newErrors.name = 'Name is required';
+        } else if (value.length < 2) {
+          newErrors.name = 'Name must be at least 2 characters';
+        } else {
+          delete newErrors.name;
+        }
+        break;
+
+      case 'email':
+        if (!/^[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]{0,}$/.test(value)) {
+          newErrors.email = 'Invalid email format';
+        } else if (value.trim() === '') {
+          newErrors.email = 'Email is required';
+        } else {
+          delete newErrors.email;
+        }
+        break;
+
+      case 'phone':
+        if (/[^0-9]/.test(value)) {
+          newErrors.phone = 'Please use numbers only';
+        } else if (value.length > 10) {
+          newErrors.phone = 'Maximum 10 digits allowed';
+        } else if (value.trim() === '') {
+          newErrors.phone = 'Phone number is required';
+        } else if (value.length < 10 && value.length > 0) {
+          newErrors.phone = 'Phone number must be 10 digits';
+        } else {
+          delete newErrors.phone;
+        }
+        break;
+
+      default:
+        break;
     }
 
-    setFormData({ ...formData, [name]: value });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0 || !newErrors[name];
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let newValue = value;
+
+    // Real-time validation and input restriction
+    switch (name) {
+      case 'name':
+        if (/[^a-zA-Z\s]/.test(value)) {
+          return; // Prevent numbers and special characters
+        }
+        break;
+      case 'phone':
+        if (/[^0-9]/.test(value) || value.length > 10) {
+          return; // Prevent non-numbers and limit to 10 digits
+        }
+        break;
+      default:
+        break;
+    }
+
+    setFormData(prev => ({ ...prev, [name]: newValue }));
+    validateInput(name, newValue);
+
     if (name === 'movieDate' || name === 'movieTime') {
       setSelectedSeats([]);
     }
@@ -112,45 +157,15 @@ const BookingForm = () => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.movieDate) {
-      newErrors.movieDate = 'Please select a date';
-    }
-
-    if (!formData.movieTime) {
-      newErrors.movieTime = 'Please select a show time';
-    }
-
-    if (selectedSeats.length === 0) {
-      newErrors.seatNumber = 'Please select at least one seat';
-    }
-
-    const hasDoubleBooking = selectedSeats.some(seat => bookedSeats.includes(seat));
-    if (hasDoubleBooking) {
+    if (!formData.movieDate) newErrors.movieDate = 'Please select a date';
+    if (!formData.movieTime) newErrors.movieTime = 'Please select a show time';
+    if (selectedSeats.length === 0) newErrors.seatNumber = 'Please select at least one seat';
+    if (selectedSeats.some(seat => bookedSeats.includes(seat))) {
       newErrors.seatNumber = 'Some selected seats are already booked';
     }
-
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = 'Please enter your name';
-    } else if (/[^a-zA-Z\s]/.test(formData.name)) {
-      newErrors.name = 'Name should only contain letters';
-    } else if (formData.name.length < 2) {
-      newErrors.name = 'Name should be at least 2 characters';
-    }
-
-    // Email validation
-    if (!formData.email.trim()) {
-      newErrors.email = 'Please enter your email';
-    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    // Phone validation
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Please enter your phone number';
-    } else if (!/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number must be exactly 10 digits';
-    }
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -158,10 +173,7 @@ const BookingForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
@@ -176,10 +188,8 @@ const BookingForm = () => {
         movie_id: id
       });
 
-      if (response.data) {
-        toast.success('Booking confirmed successfully!');
-        navigate(`/booking-details/${response.data._id}`);
-      }
+      toast.success('Booking confirmed successfully!');
+      navigate(`/booking-details/${response.data._id}`);
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error(error.response?.data?.message || 'Failed to create booking');
@@ -213,26 +223,32 @@ const BookingForm = () => {
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold text-amber mb-6 pb-2 border-b border-silver/20">Movie Details</h2>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-silver mb-2">
-                      <FontAwesomeIcon icon={faCalendar} className="mr-2 text-amber" />
-                      Select Date
-                    </label>
-                    <input
-                      type="date"
-                      name="movieDate"
-                      value={formData.movieDate}
-                      onChange={handleInputChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                    />
-                    {errors.movieDate && (
-                      <p className="mt-1 text-sm text-scarlet flex items-center">
-                        <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
-                        {errors.movieDate}
-                      </p>
-                    )}
-                  </div>
+                  <style jsx>{`
+  .calendar-white::-webkit-calendar-picker-indicator {
+    filter: invert(100%);
+  }
+`}</style>
+
+<div>
+  <label className="block text-sm font-medium text-silver mb-2">
+    <FontAwesomeIcon icon={faCalendar} className="mr-2 text-amber" />
+    Select Date
+  </label>
+  <input
+    type="date"
+    name="movieDate"
+    value={formData.movieDate}
+    onChange={handleInputChange}
+    min={new Date().toISOString().split('T')[0]}
+    className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber calendar-white"
+  />
+  {errors.movieDate && (
+    <p className="mt-1 text-sm text-scarlet flex items-center">
+      <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
+      {errors.movieDate}
+    </p>
+  )}
+</div>
 
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
@@ -247,9 +263,7 @@ const BookingForm = () => {
                     >
                       <option value="">Select a time</option>
                       {movieData.show_times.map((time, index) => (
-                        <option key={index} value={time}>
-                          {time}
-                        </option>
+                        <option key={index} value={time}>{time}</option>
                       ))}
                     </select>
                     {errors.movieTime && (
@@ -273,7 +287,7 @@ const BookingForm = () => {
                         }
                         setSeatSelectionOpen(true);
                       }}
-                      className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber cursor-pointer hover:border-amber transition-colors duration-200"
+                      className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver cursor-pointer hover:border-amber transition-colors duration-200"
                     >
                       {selectedSeats.length > 0 
                         ? `${selectedSeats.length} seat${selectedSeats.length > 1 ? 's' : ''} selected: ${selectedSeats.join(', ')}`
@@ -345,7 +359,7 @@ const BookingForm = () => {
                       onChange={handleInputChange}
                       maxLength={10}
                       className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                      placeholder="Ente Phone number"
+                      placeholder="Enter phone number"
                     />
                     {errors.phone && (
                       <p className="mt-1 text-sm text-scarlet flex items-center">

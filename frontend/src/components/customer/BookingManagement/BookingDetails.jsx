@@ -14,6 +14,7 @@ import {
   faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import SeatSelection from './SeatSelection';
+import MainNavBar from '../../navbar/MainNavBar';
 
 const BookingDetails = () => {
   const { bookingId } = useParams();
@@ -223,6 +224,7 @@ const BookingDetails = () => {
   return (
     <div className="min-h-screen bg-deep-space text-silver py-12">
       <Toaster position="top-right" />
+      <MainNavBar />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
