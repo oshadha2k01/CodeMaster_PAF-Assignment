@@ -176,7 +176,7 @@ const Upcoming = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredMovies.map((movie) => (
               <div
                 key={movie._id}
@@ -205,7 +205,7 @@ const Upcoming = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleBookTickets(movie)}
-                      className="flex-1 flex items-center space-x-2 bg-scarlet hover:bg-amber px-3 py-1.5 rounded-lg transition-colors duration-300 text-sm text-black justify-center"
+                      className="flex-1 flex items-center space-x-2 bg-amber hover:bg-scarlet px-3 py-1.5 rounded-lg transition-colors duration-300 text-sm text-black justify-center"
                     >
                       <FontAwesomeIcon icon={faTicketAlt} className='text-black'/>
                       <span>Book Tickets</span>

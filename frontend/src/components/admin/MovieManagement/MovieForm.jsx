@@ -41,7 +41,8 @@ const MovieForm = () => {
 
   const isEditMode = !!id;
   const availableShowTimes = ['9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '7:00 PM', '9:30 PM'];
-  const availableGenres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Adventure'];
+  const availableGenres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Animation', 'Thriller', 'Romance',
+    'Documentary', 'Family', 'Fantasy', 'Mystery'];
 
   // Real-time validation functions
   const validateDirector = (value) => {
@@ -60,6 +61,10 @@ const MovieForm = () => {
 
   const validateGenre = (value) => {
     return value.trim().length > 0;
+  };
+
+  const validateTrailerLink = (value) => {
+    return value.trim().length > 0 && /^https?:\/\/.+/.test(value);
   };
 
   const calculateStatus = (releaseDate) => {
@@ -118,10 +123,9 @@ const MovieForm = () => {
     else if (!validateCast(formData.cast)) newErrors.cast = 'Cast must contain only letters and commas';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.genre) newErrors.genre = 'Genre is required';
+    if (!formData.trailer_link.trim()) newErrors.trailer_link = 'Trailer link is required';
+    else if (!validateTrailerLink(formData.trailer_link)) newErrors.trailer_link = 'Please enter a valid URL';
     if (!isEditMode && !formData.image_name) newErrors.image_name = 'Movie poster is required';
-    if (formData.trailer_link && !formData.trailer_link.match(/^https?:\/\/.+/)) {
-      newErrors.trailer_link = 'Please enter a valid URL';
-    }
     if (formData.show_times.length !== 2) {
       newErrors.show_times = 'Select exactly two show times';
     } else if (!areShowTimesValid(formData.show_times)) {
@@ -166,6 +170,13 @@ const MovieForm = () => {
       setFormData(prev => ({ ...prev, [name]: value }));
       if (validateGenre(value)) setErrors(prev => ({ ...prev, genre: '' }));
       else setErrors(prev => ({ ...prev, genre: 'Genre is required' }));
+    }
+    
+    else if (name === 'trailer_link') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      if (validateTrailerLink(value)) setErrors(prev => ({ ...prev, trailer_link: '' }));
+      else if (!value.trim()) setErrors(prev => ({ ...prev, trailer_link: 'Trailer link is required' }));
+      else setErrors(prev => ({ ...prev, trailer_link: 'Please enter a valid URL' }));
     }
     
     else {
@@ -281,7 +292,6 @@ const MovieForm = () => {
       formDataToSend.append('release_date', formData.release_date);
       formDataToSend.append('director', formData.director);
       
-      // Handle cast field properly
       const castArray = formData.cast
         .split(',')
         .map(item => item.trim())
@@ -411,7 +421,7 @@ const MovieForm = () => {
                   value={formData.movie_name}
                   onChange={handleInputChange}
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.movie_name ? 'border-red-500' : 'border-silver/30'}`}
-               
+                  
                 />
                 {errors.movie_name && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -458,7 +468,7 @@ const MovieForm = () => {
                   onChange={handleInputChange}
                   rows="2"
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none resize-none ${errors.description ? 'border-red-500' : 'border-silver/30'}`}
-                
+                  
                 />
                 {errors.description && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -481,8 +491,8 @@ const MovieForm = () => {
                     name="release_date"
                     value={formData.release_date}
                     onChange={handleDateChange}
-                    className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.release_date ? 'border-red-500' : 'border-silver/30'}`}
-                    
+                    className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.release_date ? 'border-red-500' : 'border-silver/30'} custom-date-input`}
+                  
                   />
                   {formData.release_date && (
                     <div className="absolute right-0 top-0 h-full flex items-center pr-3">
@@ -551,7 +561,7 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faLink} className="mr-2" />
-                  Trailer Link
+                  Trailer Link *
                 </label>
                 <input
                   type="url"
@@ -560,6 +570,7 @@ const MovieForm = () => {
                   onChange={handleInputChange}
                   placeholder="https://..."
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.trailer_link ? 'border-red-500' : 'border-silver/30'}`}
+                 
                 />
                 {errors.trailer_link && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -610,7 +621,7 @@ const MovieForm = () => {
                       value={formData.show_times[index] || ''}
                       onChange={(e) => handleShowTimeChange(index, e.target.value)}
                       className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.show_times ? 'border-red-500' : 'border-silver/30'}`}
-                     
+                      
                     >
                       <option value="">Select</option>
                       {getAvailableOptions(index).map(time => (
