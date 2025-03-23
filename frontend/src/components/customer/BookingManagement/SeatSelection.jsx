@@ -90,9 +90,16 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faChair} className="text-amber" />
-              <span className="text-silver text-sm">Selected</span>
-            </div>
+            <FontAwesomeIcon icon={faChair} className="text-amber" />
+            <span className="text-silver text-sm">
+              Selected
+              {selectedSeats.length > 0 && (
+                <span className="text-amber ml-1">
+                  : {selectedSeats.join(', ')}
+                </span>
+              )}
+            </span>
+          </div>
           )}
           <div className="flex items-center gap-2">
             <FontAwesomeIcon icon={faChair} className="text-scarlet" />

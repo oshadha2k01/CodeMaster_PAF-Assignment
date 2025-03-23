@@ -1,25 +1,49 @@
-# Logs
-logs
-*.log
+# Node.js & NPM
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-/node_modules
-dist
-dist-ssr
+# Build & Distribution Folders
+dist/
+dist-ssr/
+build/
+
+# Vite
+.vite/
 *.local
 
-# Editor directories and files
-.vscode/*
+# Editor files
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
 backend/.env
+frontend/.env
+
+# Dependency directories for different package managers
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Log files
+logs/
+*.log
+
+# Miscellaneous
+*.tgz
+
+# Tailwind CSS Cache
+.tailwind/
+
+# OS specific files
+Thumbs.db

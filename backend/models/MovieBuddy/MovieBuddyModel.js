@@ -3,90 +3,81 @@ const mongoose = require('mongoose');
 const movieBuddySchema = new mongoose.Schema({
   movieName: {
     type: String,
-    required: [true, 'Movie name is required'],
-    trim: true
+    required: true
   },
   movieDate: {
     type: String,
-    required: [true, 'Movie date is required'],
-    trim: true
+    required: true
   },
   movieTime: {
     type: String,
-    required: [true, 'Movie time is required'],
-    trim: true
+    required: true
   },
   buddies: [{
     name: {
       type: String,
+      required: true
+    },
+    age: {
+      type: Number,
+      required: true
+    },
+    gender: {
+      type: String,
       required: true,
-      trim: true
+      enum: ['Male', 'Female', 'Other']
     },
     email: {
       type: String,
-      required: true,
-      trim: true,
-      lowercase: true
+      required: false
     },
     phone: {
       type: String,
-      required: true,
-      trim: true
+      required: false
     },
-    seatNumbers: [{
-      type: String,
-      required: true
-    }],
     bookingId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Booking',
+      type: String,
       required: true
     },
     bookingDate: {
       type: Date,
-      required: true
+      default: Date.now
     },
+    seatNumbers: [{
+      type: String
+    }],
+    moviePreferences: [{
+      type: String
+    }],
     isGroup: {
       type: Boolean,
       default: false
+    },
+    privacySettings: {
+      showName: {
+        type: Boolean,
+        default: true
+      },
+      showEmail: {
+        type: Boolean,
+        default: false
+      },
+      showPhone: {
+        type: Boolean,
+        default: false
+      },
+      petName: {
+        type: String,
+        default: ''
+      }
     }
-  }],
-  totalBuddies: {
-    type: Number,
-    default: 0
-  },
-  totalSeats: {
-    type: Number,
-    default: 0
-  },
-  groupBookings: {
-    type: Number,
-    default: 0
-  },
-  singleBookings: {
-    type: Number,
-    default: 0
-  },
-  lastUpdated: {
-    type: Date,
-    default: Date.now
-  }
+  }]
 }, {
   timestamps: true
 });
 
 // Create a compound index for unique movie showtimes
 movieBuddySchema.index({ movieName: 1, movieDate: 1, movieTime: 1 }, { unique: true });
-
-// Pre-save middleware to update statistics
-movieBuddySchema.pre('save', function(next) {
-  this.totalBuddies = this.buddies.length;
-  this.totalSeats = this.buddies.reduce((acc, buddy) => acc + buddy.seatNumbers.length, 0);
-  this.groupBookings = this.buddies.filter(buddy => buddy.isGroup).length;
-  this.singleBookings = this.buddies.filter(buddy => !buddy.isGroup).length;
-  this.lastUpdated = new Date();
-  next();
-});
 
 const MovieBuddy = mongoose.model('MovieBuddy', movieBuddySchema);
 
