@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0A192F] text-[#C0C0C0] antialiased;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#0A192F];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#8A2BE2]/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#8A2BE2]/50;
+}
+@layer utilities {
+  .custom-date-input::-webkit-calendar-picker-indicator {
+    @apply invert cursor-pointer;
+  }
+}
