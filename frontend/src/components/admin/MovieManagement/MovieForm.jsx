@@ -29,7 +29,7 @@ const MovieForm = () => {
     status: '',
     image_name: null,
     show_times: [],
-    genre: 'Action'
+    genre: ''
   });
 
   const [imagePreview, setImagePreview] = useState(null);
@@ -41,7 +41,31 @@ const MovieForm = () => {
 
   const isEditMode = !!id;
   const availableShowTimes = ['9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '7:00 PM', '9:30 PM'];
-  const availableGenres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Adventure'];
+  const availableGenres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Animation', 'Thriller', 'Romance',
+    'Documentary', 'Family', 'Fantasy', 'Mystery'];
+
+  // Real-time validation functions
+  const validateDirector = (value) => {
+    const regex = /^[A-Za-z\s]*$/;
+    return regex.test(value);
+  };
+
+  const validateCast = (value) => {
+    const regex = /^[A-Za-z\s,]*$/;
+    return regex.test(value);
+  };
+
+  const validateDescription = (value) => {
+    return value.trim().length > 0;
+  };
+
+  const validateGenre = (value) => {
+    return value.trim().length > 0;
+  };
+
+  const validateTrailerLink = (value) => {
+    return value.trim().length > 0 && /^https?:\/\/.+/.test(value);
+  };
 
   const calculateStatus = (releaseDate) => {
     const currentDate = new Date();
@@ -70,6 +94,8 @@ const MovieForm = () => {
     const { value } = e.target;
     const status = calculateStatus(value);
     setFormData(prev => ({ ...prev, release_date: value, status }));
+    if (value) setErrors(prev => ({ ...prev, release_date: '' }));
+    else setErrors(prev => ({ ...prev, release_date: 'Release date is required' }));
   };
 
   const areShowTimesValid = (times) => {
@@ -92,32 +118,87 @@ const MovieForm = () => {
     else if (formData.movie_name.length < 2) newErrors.movie_name = 'Movie name must be at least 2 characters';
     if (!formData.release_date) newErrors.release_date = 'Release date is required';
     if (!formData.director.trim()) newErrors.director = 'Director name is required';
+    else if (!validateDirector(formData.director)) newErrors.director = 'Director name must contain only letters';
     if (!formData.cast.trim()) newErrors.cast = 'At least one cast member is required';
+    else if (!validateCast(formData.cast)) newErrors.cast = 'Cast must contain only letters and commas';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.genre) newErrors.genre = 'Genre is required';
+    if (!formData.trailer_link.trim()) newErrors.trailer_link = 'Trailer link is required';
+    else if (!validateTrailerLink(formData.trailer_link)) newErrors.trailer_link = 'Please enter a valid URL';
     if (!isEditMode && !formData.image_name) newErrors.image_name = 'Movie poster is required';
-    if (formData.trailer_link && !formData.trailer_link.match(/^https?:\/\/.+/)) {
-      newErrors.trailer_link = 'Please enter a valid URL';
-    }
     if (formData.show_times.length !== 2) {
       newErrors.show_times = 'Select exactly two show times';
     } else if (!areShowTimesValid(formData.show_times)) {
       newErrors.show_times = 'Show times must be 3+ hours apart';
     }
-    if (!formData.genre) newErrors.genre = 'Select a genre';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+
+    if (name === 'director') {
+      if (validateDirector(value)) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (value.trim()) setErrors(prev => ({ ...prev, director: '' }));
+        else setErrors(prev => ({ ...prev, director: 'Director name is required' }));
+      } else {
+        setErrors(prev => ({ ...prev, director: 'Only letters and spaces are allowed' }));
+        return;
+      }
+    }
+    
+    else if (name === 'cast') {
+      if (validateCast(value)) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (value.trim()) setErrors(prev => ({ ...prev, cast: '' }));
+        else setErrors(prev => ({ ...prev, cast: 'At least one cast member is required' }));
+      } else {
+        setErrors(prev => ({ ...prev, cast: 'Only letters, spaces, and commas are allowed' }));
+        return;
+      }
+    }
+    
+    else if (name === 'description') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      if (validateDescription(value)) setErrors(prev => ({ ...prev, description: '' }));
+      else setErrors(prev => ({ ...prev, description: 'Description is required' }));
+    }
+    
+    else if (name === 'genre') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      if (validateGenre(value)) setErrors(prev => ({ ...prev, genre: '' }));
+      else setErrors(prev => ({ ...prev, genre: 'Genre is required' }));
+    }
+    
+    else if (name === 'trailer_link') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      if (validateTrailerLink(value)) setErrors(prev => ({ ...prev, trailer_link: '' }));
+      else if (!value.trim()) setErrors(prev => ({ ...prev, trailer_link: 'Trailer link is required' }));
+      else setErrors(prev => ({ ...prev, trailer_link: 'Please enter a valid URL' }));
+    }
+    
+    else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      if (name === 'movie_name') {
+        if (value.trim()) setErrors(prev => ({ ...prev, movie_name: '' }));
+        else setErrors(prev => ({ ...prev, movie_name: 'Movie name is required' }));
+      }
+      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleShowTimeChange = (index, value) => {
     const newShowTimes = [...formData.show_times];
     newShowTimes[index] = value;
     setFormData(prev => ({ ...prev, show_times: newShowTimes.filter(Boolean) }));
-    if (errors.show_times) setErrors(prev => ({ ...prev, show_times: '' }));
+    if (newShowTimes.filter(Boolean).length === 2) {
+      if (areShowTimesValid(newShowTimes)) setErrors(prev => ({ ...prev, show_times: '' }));
+      else setErrors(prev => ({ ...prev, show_times: 'Show times must be 3+ hours apart' }));
+    } else {
+      setErrors(prev => ({ ...prev, show_times: 'Select exactly two show times' }));
+    }
   };
 
   const getAvailableOptions = (currentIndex) => {
@@ -162,6 +243,7 @@ const MovieForm = () => {
   const removeImage = () => {
     setFormData(prev => ({ ...prev, image_name: null }));
     setImagePreview(null);
+    if (!isEditMode) setErrors(prev => ({ ...prev, image_name: 'Movie poster is required' }));
   };
 
   const fetchMovieData = async () => {
@@ -180,7 +262,7 @@ const MovieForm = () => {
           image_name: movie.image_name || null,
           status: movie.status || '',
           show_times: movie.show_times || [],
-          genre: movie.genre || 'Action'
+          genre: movie.genre || ''
         });
         setImagePreview(movie.image_name ? `http://localhost:3000/uploads/${movie.image_name}` : null);
       } else {
@@ -209,8 +291,13 @@ const MovieForm = () => {
       formDataToSend.append('description', formData.description);
       formDataToSend.append('release_date', formData.release_date);
       formDataToSend.append('director', formData.director);
-      const castArray = formData.cast.split(',').map(item => item.trim());
-      formDataToSend.append('cast', JSON.stringify(castArray));
+      
+      const castArray = formData.cast
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+      castArray.forEach(cast => formDataToSend.append('cast[]', cast));
+      
       formDataToSend.append('trailer_link', formData.trailer_link);
       formDataToSend.append('status', formData.status);
       formDataToSend.append('show_times', JSON.stringify(formData.show_times));
@@ -326,7 +413,7 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faFilm} className="mr-2" />
-                  Movie Name
+                  Movie Name *
                 </label>
                 <input
                   type="text"
@@ -334,7 +421,7 @@ const MovieForm = () => {
                   value={formData.movie_name}
                   onChange={handleInputChange}
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.movie_name ? 'border-red-500' : 'border-silver/30'}`}
-                  required
+                  
                 />
                 {errors.movie_name && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -349,7 +436,7 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faUser} className="mr-2" />
-                  Director
+                  Director *
                 </label>
                 <input
                   type="text"
@@ -357,7 +444,8 @@ const MovieForm = () => {
                   value={formData.director}
                   onChange={handleInputChange}
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.director ? 'border-red-500' : 'border-silver/30'}`}
-                  required
+                  placeholder="Enter director name (letters only)"
+                 
                 />
                 {errors.director && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -373,20 +461,29 @@ const MovieForm = () => {
             {/* Column 2 */}
             <div className="space-y-4">
               <div>
-                <label className="block text-silver text-sm mb-1">Description</label>
+                <label className="block text-silver text-sm mb-1">Description *</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full bg-deep-space/50 border border-silver/30 rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none resize-none"
+                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none resize-none ${errors.description ? 'border-red-500' : 'border-silver/30'}`}
+                  
                 />
+                {errors.description && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="text-red-500 text-xs mt-1 flex items-center"
+                  >
+                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" size="sm" />
+                    {errors.description}
+                  </motion.p>
+                )}
               </div>
 
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faCalendar} className="mr-2" />
-                  Release Date
+                  Release Date *
                 </label>
                 <div className="relative">
                   <input
@@ -394,8 +491,8 @@ const MovieForm = () => {
                     name="release_date"
                     value={formData.release_date}
                     onChange={handleDateChange}
-                    className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.release_date ? 'border-red-500' : 'border-silver/30'}`}
-                    required
+                    className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.release_date ? 'border-red-500' : 'border-silver/30'} custom-date-input`}
+                  
                   />
                   {formData.release_date && (
                     <div className="absolute right-0 top-0 h-full flex items-center pr-3">
@@ -418,16 +515,16 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faUsers} className="mr-2" />
-                  Cast (comma-separated)
+                  Cast (comma-separated) *
                 </label>
                 <input
                   type="text"
                   name="cast"
                   value={formData.cast}
                   onChange={handleInputChange}
-                  placeholder="Actor 1, Actor 2"
+                  placeholder="Actor One, Actor Two"
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.cast ? 'border-red-500' : 'border-silver/30'}`}
-                  required
+                 
                 />
                 {errors.cast && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -442,15 +539,16 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faToggleOn} className="mr-2" />
-                  Status
+                  Status *
                 </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full bg-deep-space/50 border border-silver/30 rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
-                  required
+                  className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.status ? 'border-red-500' : 'border-silver/30'}`}
+                 
                 >
+                  <option value="">Select Status</option>
                   <option value="Upcoming">Upcoming</option>
                   <option value="Now Showing">Now Showing</option>
                   <option value="End">End</option>
@@ -463,7 +561,7 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faLink} className="mr-2" />
-                  Trailer Link
+                  Trailer Link *
                 </label>
                 <input
                   type="url"
@@ -472,6 +570,7 @@ const MovieForm = () => {
                   onChange={handleInputChange}
                   placeholder="https://..."
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.trailer_link ? 'border-red-500' : 'border-silver/30'}`}
+                 
                 />
                 {errors.trailer_link && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -486,15 +585,16 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faTheaterMasks} className="mr-2" />
-                  Genre
+                  Genre *
                 </label>
                 <select
                   name="genre"
                   value={formData.genre}
                   onChange={handleInputChange}
                   className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.genre ? 'border-red-500' : 'border-silver/30'}`}
-                  required
+                  
                 >
+                  <option value="">Select Genre</option>
                   {availableGenres.map(genre => (
                     <option key={genre} value={genre}>{genre}</option>
                   ))}
@@ -512,7 +612,7 @@ const MovieForm = () => {
               <div>
                 <label className="block text-silver text-sm mb-1">
                   <FontAwesomeIcon icon={faClock} className="mr-2" />
-                  Show Times (Select 2)
+                  Show Times (Select 2) *
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {[0, 1].map(index => (
@@ -521,7 +621,7 @@ const MovieForm = () => {
                       value={formData.show_times[index] || ''}
                       onChange={(e) => handleShowTimeChange(index, e.target.value)}
                       className={`w-full bg-deep-space/50 border rounded-lg px-3 py-2 text-silver text-sm focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none ${errors.show_times ? 'border-red-500' : 'border-silver/30'}`}
-                      required
+                      
                     >
                       <option value="">Select</option>
                       {getAvailableOptions(index).map(time => (
