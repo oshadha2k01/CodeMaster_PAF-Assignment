@@ -12,6 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import toast, { Toaster } from 'react-hot-toast';
 import AdminNavbar from '../../navbar/AdminNavbar';
+import { Navigate } from "react-router-dom";
 
 const AddFood = () => {
   const [formData, setFormData] = useState({
@@ -186,6 +187,7 @@ const AddFood = () => {
           imageUrl: "",
         });
         setImagePreview(null);
+        
       } else {
         throw new Error(data.error || 'Failed to add food item');
       }
@@ -198,7 +200,9 @@ const AddFood = () => {
         { id: loadingToast }
       );
     } finally {
+      
       setLoading(false);
+
     }
   };
   
