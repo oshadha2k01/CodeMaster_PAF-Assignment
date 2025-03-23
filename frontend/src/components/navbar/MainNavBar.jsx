@@ -20,8 +20,9 @@ const MainNavBar = () => {
 
   const navItems = [
     { path: '/now-showing', label: 'Now Showing', icon: faCalendar },
-    { path: '/beverages', label: 'Beverages', icon: faGlassMartiniAlt },
-    { path: '/Upcomming', label: 'Upcoming', icon: faClock }
+    { path: '/upcoming', label: 'Upcoming', icon: faClock },
+    { path: '/beverages', label: 'Beverages', icon: faGlassMartiniAlt }
+    
   ];
 
   const isActive = (path) => {
