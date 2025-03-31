@@ -11,7 +11,6 @@ import {
   faTimes,
   faSave,
   faCreditCard,
-  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import SeatSelection from './SeatSelection';
 import MainNavBar from '../../navbar/MainNavBar';
@@ -36,6 +35,7 @@ const BookingDetails = () => {
   const [seatSelectionOpen, setSeatSelectionOpen] = useState(false);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [movieData, setMovieData] = useState(null);
+  const [showMovieBuddyDialog, setShowMovieBuddyDialog] = useState(false);
 
   useEffect(() => {
     fetchBookingDetails();
@@ -54,6 +54,16 @@ const BookingDetails = () => {
     }
   }, [editFormData.movieDate, editFormData.movieTime]);
 
+  // Show movie buddy dialog after 2 seconds
+  useEffect(() => {
+    if (!loading && booking) {
+      const timer = setTimeout(() => {
+        setShowMovieBuddyDialog(true);
+      }, 2000);
+      return () => clearTimeout(timer); // Cleanup timeout on unmount
+    }
+  }, [loading, booking]);
+
   const fetchMovieData = async () => {
     try {
       const response = await axios.get(`http://localhost:3000/api/movies/${booking.movie_id}`);
@@ -61,12 +71,10 @@ const BookingDetails = () => {
         const movieData = response.data.data;
         setMovieData(movieData);
         
-        // Get show times from the movie data and ensure they are valid
         const validShowTimes = movieData.show_times || [];
         if (Array.isArray(validShowTimes) && validShowTimes.length > 0) {
           setShowTimes(validShowTimes);
           
-          // If current time is not in valid show times, set it to the first available time
           if (!validShowTimes.includes(editFormData.movieTime)) {
             setEditFormData(prev => ({
               ...prev,
@@ -110,17 +118,14 @@ const BookingDetails = () => {
       setBooking(response.data);
       setEditFormData(response.data);
       
-      // Fetch movie data and show times immediately when booking details are loaded
       if (response.data.movie_id) {
         const movieResponse = await axios.get(`http://localhost:3000/api/movies/${response.data.movie_id}`);
         if (movieResponse.data && movieResponse.data.data) {
           const movieData = movieResponse.data.data;
           setMovieData(movieData);
-          // Ensure show_times is properly set from the movie data
           const validShowTimes = movieData.show_times || [];
           setShowTimes(validShowTimes);
           
-          // If current booking time is not in valid show times, set it to the first available time
           if (!validShowTimes.includes(response.data.movieTime)) {
             setEditFormData(prev => ({
               ...prev,
@@ -141,24 +146,8 @@ const BookingDetails = () => {
     setEditMode(true);
   };
 
-  /*const handleTimeChange = (e) => {
-    const newTime = e.target.value;
-    if (!showTimes.includes(newTime)) {
-      toast.error('Please select a valid show time from the available options');
-      return;
-    }
-    setEditFormData(prev => ({ ...prev, movieTime: newTime }));
-  };*/
-
   const handleUpdate = async () => {
     try {
-      // Validate show time
-      /*if (!showTimes.includes(editFormData.movieTime)) {
-        toast.error('Please select a valid show time from the available options');
-        return;
-      }*/
-
-      // Validate seats
       if (editFormData.seatNumbers.length === 0) {
         toast.error('Please select at least one seat');
         return;
@@ -194,15 +183,24 @@ const BookingDetails = () => {
     navigate('/payment', { state: { booking } });
   };
 
-  const handleMovieBuddyClick = () => {
-    navigate('/movie-buddies', {
+  const handleMovieBuddyConfirm = () => {
+    setShowMovieBuddyDialog(false);
+    navigate('/movie-buddy-form', {
       state: {
         movieName: booking.movieName,
         movieDate: booking.movieDate,
         movieTime: booking.movieTime,
-        excludeBookingId: bookingId
+        name: booking.name,
+        email: booking.email,
+        phone: booking.phone,
+        bookingId: booking._id,
+        seatNumbers: booking.seatNumbers
       }
     });
+  };
+
+  const handleMovieBuddyCancel = () => {
+    setShowMovieBuddyDialog(false);
   };
 
   if (loading) {
@@ -236,13 +234,6 @@ const BookingDetails = () => {
               <h1 className="text-3xl font-bold text-amber">Booking Details</h1>
               {!editMode && (
                 <div className="space-x-4">
-                  <button
-                    onClick={handleMovieBuddyClick}
-                    className="text-electric-purple hover:text-electric-purple/80 text-xl"
-                    title="Find Movie Buddies"
-                  >
-                    <FontAwesomeIcon icon={faUsers} />
-                  </button>
                   <button
                     onClick={handleEdit}
                     className="text-amber hover:text-amber/80 text-xl"
@@ -286,38 +277,6 @@ const BookingDetails = () => {
                     className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
                   />
                 </div>
-                {/*<div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Time
-                  </label>
-                  <select
-                    value={editFormData.movieTime}
-                    onChange={handleTimeChange}
-                    className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                    disabled={!editFormData.movieDate}
-                  >
-                    <option value="">Select a time</option>
-                    {showTimes && showTimes.length > 0 ? (
-                      showTimes.map((time, index) => (
-                        <option key={index} value={time}>
-                          {time}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" disabled>No show times available</option>
-                    )}
-                  </select>
-                  {!editFormData.movieDate && (
-                    <p className="mt-1 text-sm text-amber">
-                      Please select a date first to view available show times
-                    </p>
-                  )}
-                  {editFormData.movieDate && (!showTimes || showTimes.length === 0) && (
-                    <p className="mt-1 text-sm text-amber">
-                      No show times available for the selected date
-                    </p>
-                  )}
-                </div>*/}
                 <div>
                   <label className="block text-sm font-medium text-silver mb-2">
                     Seats
@@ -475,8 +434,34 @@ const BookingDetails = () => {
           </div>
         </div>
       )}
+
+      {/* Movie Buddy Dialog */}
+      {showMovieBuddyDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-deep-space p-8 rounded-xl max-w-md w-full">
+            <h2 className="text-2xl font-bold text-amber mb-6">Find Movie Buddies</h2>
+            <p className="text-silver mb-6">
+              Do you want to find movie buddies for this booking?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleMovieBuddyCancel}
+                className="px-4 py-2 text-silver hover:text-amber"
+              >
+                No
+              </button>
+              <button
+                onClick={handleMovieBuddyConfirm}
+                className="px-4 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default BookingDetails; 
+export default BookingDetails;

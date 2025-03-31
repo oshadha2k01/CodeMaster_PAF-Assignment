@@ -10,9 +10,12 @@ import BookingForm from './components/customer/BookingManagement/BookingForm';
 import BookingDetails from './components/customer/BookingManagement/BookingDetails';
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
+import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
+import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
+import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+
 import Login from './components/login';
 import Register from './components/register';
-
 function App() {
   return (
     <Router>
@@ -31,6 +34,9 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
+          <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
+          <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>
