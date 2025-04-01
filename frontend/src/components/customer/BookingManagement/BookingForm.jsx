@@ -151,7 +151,7 @@ const BookingForm = () => {
   const handleSeatSelect = (seats) => {
     setSelectedSeats(seats);
     setFormData({ ...formData, seatNumbers: seats });
-    setSeatSelectionOpen(false);
+    //setSeatSelectionOpen(false);
   };
 
   const validateForm = () => {
