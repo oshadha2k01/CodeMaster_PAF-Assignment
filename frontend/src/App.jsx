@@ -10,17 +10,14 @@ import BookingForm from './components/customer/BookingManagement/BookingForm';
 import BookingDetails from './components/customer/BookingManagement/BookingDetails';
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
-<<<<<<< HEAD
 import AddFood from './components/admin/Foodmanagement/AddFood';
 import FoodList from './components/admin/Foodmanagement/FoodList';
 import ShowFoods from './components/customer/FoodManagement/ShowFoods';
 import Cart from './components/customer/FoodManagement/Cart';
 import Payment from './components/customer/Payment/Payment';
-=======
 import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
 import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
->>>>>>> origin/dev
 
 import Login from './components/login';
 import Register from './components/register';
@@ -42,22 +39,19 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
-<<<<<<< HEAD
-          
+              
 
 
            <Route path='/admin/add-food' element={<AddFood />}></Route>
           <Route path='/foodlist' element={<FoodList/>}></Route>
           <Route path='/showfoods' element={<ShowFoods/>}></Route>
           <Route path='/cart' element={<Cart/>}></Route>
-          <Route path="/payment" element={<Payment />} /> 
-=======
+          <Route path="/payment" element={<Payment/>} /> 
           <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
->>>>>>> origin/dev
         </Routes>
       </div>
     </Router>

@@ -20,17 +20,12 @@ const MainNavBar = () => {
   const navigate = useNavigate(); 
 
   const navItems = [
-<<<<<<< HEAD
     { path: '/now-showing', label: 'Now Showing', icon: faFilm },
     { path: '/upcoming', label: 'Upcoming', icon: faCalendar },
     { path: '/ShowFoods', label: 'Beverages', icon: faGlassMartiniAlt },
     { path: '/show-times', label: 'Show Times', icon: faClock }
-=======
-    { path: '/now-showing', label: 'Now Showing', icon: faCalendar },
-    { path: '/upcoming', label: 'Upcoming', icon: faClock },
-    { path: '/beverages', label: 'Beverages', icon: faGlassMartiniAlt }
     
->>>>>>> origin/dev
+    
   ];
 
   const isActive = (path) => {
