@@ -3,10 +3,11 @@ const Schema = mongoose.Schema;
 
 
 const OrderSchema = new Schema({
-    
+
 
 
     meals : {
+        ref: "Food",
         type:String,
         ref: "Food",
         required: true
