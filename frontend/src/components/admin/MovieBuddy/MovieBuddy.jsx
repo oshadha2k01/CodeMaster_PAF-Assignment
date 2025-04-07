@@ -17,7 +17,12 @@ import {
   faTicketAlt,
   faChartBar,
   faTimes,
-  faArrowLeft
+  faArrowLeft,
+  faEnvelope,
+  faPhone,
+  faUserSecret,
+  faEye,
+  faEyeSlash
 } from '@fortawesome/free-solid-svg-icons';
 import AdminNavBar from '../../navbar/AdminNavbar';
 
@@ -138,6 +143,14 @@ const MovieBuddy = () => {
         return aValue < bValue ? 1 : -1;
       }
     });
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   if (loading) {
     return (
@@ -277,7 +290,7 @@ const MovieBuddy = () => {
                           {group.movieName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-silver">
-                          {group.movieDate}
+                          {formatDate(group.movieDate)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-silver">
                           {group.movieTime}
@@ -353,7 +366,7 @@ const MovieBuddy = () => {
                         <FontAwesomeIcon icon={faCalendarAlt} className="text-amber text-xl" />
                         <div>
                           <p className="text-silver/75">Date</p>
-                          <p className="text-xl font-semibold text-amber">{selectedGroup.movieDate}</p>
+                          <p className="text-xl font-semibold text-amber">{formatDate(selectedGroup.movieDate)}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
@@ -381,11 +394,40 @@ const MovieBuddy = () => {
                               />
                             </div>
                             <div>
-                              <h3 className="text-lg font-semibold text-silver">{buddy.name}</h3>
-                              <p className="text-silver/75">{buddy.email}</p>
-                              <p className="text-sm text-silver/60 mt-1">
-                                Booked on {new Date(buddy.bookingDate).toLocaleDateString()}
-                              </p>
+                              <div className="flex items-center space-x-2">
+                                <h3 className="text-lg font-semibold text-silver">
+                                  {buddy.privacySettings?.showName ? buddy.name : buddy.privacySettings?.petName || 'Anonymous'}
+                                </h3>
+                                {!buddy.privacySettings?.showName && (
+                                  <FontAwesomeIcon icon={faUserSecret} className="text-amber" title="Using pet name" />
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center space-x-2 mt-1">
+                                <FontAwesomeIcon icon={faEnvelope} className="text-silver/60" />
+                                <span className="text-silver/75">
+                                  {buddy.privacySettings?.showEmail ? buddy.email : 'Email hidden'}
+                                </span>
+                                {!buddy.privacySettings?.showEmail && (
+                                  <FontAwesomeIcon icon={faEyeSlash} className="text-amber" title="Email hidden" />
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center space-x-2 mt-1">
+                                <FontAwesomeIcon icon={faPhone} className="text-silver/60" />
+                                <span className="text-silver/75">
+                                  {buddy.privacySettings?.showPhone ? buddy.phone : 'Phone hidden'}
+                                </span>
+                                {!buddy.privacySettings?.showPhone && (
+                                  <FontAwesomeIcon icon={faEyeSlash} className="text-amber" title="Phone hidden" />
+                                )}
+                              </div>
+
+                              <div className="mt-2 text-sm text-silver/60">
+                                <p>Age: {buddy.age} • Gender: {buddy.gender}</p>
+                                <p>Booking ID: {buddy.bookingId}</p>
+                                <p>Booked on: {new Date(buddy.bookingDate).toLocaleDateString()}</p>
+                              </div>
                             </div>
                           </div>
                           <div className="flex flex-col items-end">

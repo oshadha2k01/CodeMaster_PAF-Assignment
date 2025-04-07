@@ -26,8 +26,11 @@ export default {
         'scarlet': '#FF2400',
         'silver': '#C0C0C0',
         'amber': '#FFBF00',
-      }
+      },
+      
     },
   },
   plugins: [],
+
+  
 } 

@@ -24,3 +24,8 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-[#8A2BE2]/50;
 }
+@layer utilities {
+  .custom-date-input::-webkit-calendar-picker-indicator {
+    @apply invert cursor-pointer;
+  }
+}

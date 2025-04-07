@@ -44,7 +44,8 @@ const MovieSchema = new schema({
     genre: {
         type: String,
         required: true,
-        enum: ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Adventure'],
+        enum: ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi',  'Animation', 'Thriller', 'Romance',
+            'Documentary', 'Family', 'Fantasy', 'Mystery'],
         default: 'Action'
     }
 }, {
