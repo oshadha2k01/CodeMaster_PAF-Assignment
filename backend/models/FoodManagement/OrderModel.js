@@ -4,18 +4,7 @@ const Schema = mongoose.Schema;
 
 const OrderSchema = new Schema({
 
-
-
-    meals : {
-        ref: "Food",
-        type:String,
-        ref: "Food",
-        required: true
-    },
-    quantity : {
-        type: Number,
-        required: true
-    },
+   
     date : {
         type: Date,
         default: Date.now
@@ -28,6 +17,10 @@ const OrderSchema = new Schema({
         type: Number,
         required: true
     },
+    meals : [{
+        food: {type: Schema.Types.ObjectId, ref: "Food", required: true},
+        quantity: {type: Number, required: true},
+    }]
 
 });
 

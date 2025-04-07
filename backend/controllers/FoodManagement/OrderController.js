@@ -3,7 +3,7 @@ const Order = require("../../models/FoodManagement/OrderModel");
 
 exports.getOrders = async (req, res) => {
     try {
-        const orders = await Order.find()
+        const orders = await Order.find().populate('meals.food');
 
         if (orders.length === 0) {
             return res.status(404).json({ message: "No orders found" });
@@ -18,7 +18,7 @@ exports.getOrders = async (req, res) => {
 exports.getOrderByid=async(req,res)=>{
     try{
         const id = req.params.id;
-        const order = await Order.findById(id);
+        const order = await Order.findById(id).populate('meals.food');
         if(!order){
             return res.status(404).json({message:"Order not found"});
         }
@@ -32,17 +32,38 @@ exports.getOrderByid=async(req,res)=>{
 
 exports.addOrders = async (req,res)=>{
     try{
-        const {meals,quantity,status,totalprice} = req.body;
+        const {meals, totalprice} = req.body;
 
-        if(!meals || !quantity || !status){
-            return res.status(400).json({message:"Please fill all the fields"});
+        if(!meals || !totalprice){
+            return res.status(400).json({message:"Please fill all the required fields"});
         }
-        const newOrder = new Order({meals,quantity,status,totalprice});
+
+        // Validate meals array structure
+        if(!Array.isArray(meals) || meals.length === 0){
+            return res.status(400).json({message:"Meals must be a non-empty array"});
+        }
+
+        // Validate each meal has required fields
+        for(const meal of meals){
+            if(!meal.food || typeof meal.quantity !== 'number'){
+                return res.status(400).json({message:"Each meal must have food (ObjectId) and quantity (number)"});
+            }
+        }
+
+        const newOrder = new Order({
+            meals: meals.map(meal => ({
+                food: meal.food,
+                quantity: meal.quantity
+            })),
+            totalprice: Number(totalprice),
+            status: "pending"
+        });
+        
         const savedOrder = await newOrder.save();
-        return res.status(200).json({message:"Order added successfully",data:savedOrder});
+        return res.status(201).json({message:"Order added successfully",data:savedOrder});
     }
-    catch{
-        res.status(400).json({message:"error in adding order"});
+    catch(err){
+        res.status(500).json({message:"Error in adding order", error: err.message});
     }
 }
 
@@ -56,8 +77,8 @@ exports.updateOrder = async (req,res)=>{
         }
         return res.status(200).json({message:"Order updated successfully",data:order});
     }
-    catch{
-        res.status(400).json({message:"error in updating order"});
+    catch(err){
+        res.status(500).json({message:"Error in updating order", error: err.message});
     }
 }
 exports.deleteOrder = async (req,res)=>{
@@ -71,7 +92,7 @@ exports.deleteOrder = async (req,res)=>{
 
         return res.status(200).json({message:"Order deleted successfully"});
     }   
-    catch{
-        return res.status(404).json({message:"error in deleting order"});
+    catch(err){
+        return res.status(500).json({message:"Error in deleting order", error: err.message});
     }
 }
