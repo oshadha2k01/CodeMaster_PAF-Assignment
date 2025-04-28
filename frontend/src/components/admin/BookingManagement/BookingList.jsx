@@ -10,8 +10,11 @@ import {
   faTrash, 
   faChair,
   faTimes,
-  faSave
+  faSave,
+  faFileDownload
 } from '@fortawesome/free-solid-svg-icons';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import AdminNavBar from '../../navbar/AdminNavbar';
 
 const BookingList = () => {
@@ -102,6 +105,59 @@ const BookingList = () => {
     }
   };
 
+  const generateReport = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Booking Report', 14, 20);
+    
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    
+    // Prepare table data
+    const tableData = filteredBookings.map(booking => [
+      booking.movieName,
+      booking.movieDate,
+      booking.movieTime,
+      Array.isArray(booking.seatNumbers) ? booking.seatNumbers.join(', ') : booking.seatNumbers,
+      booking.name,
+      booking.email,
+      booking.phone
+    ]);
+
+    // Add table using autoTable
+    doc.autoTable({
+      startY: 40,
+      head: [['Movie Name', 'Date', 'Time', 'Seats', 'Customer Name', 'Email', 'Phone']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillColor: [66, 66, 66], textColor: [255, 255, 255] },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 40 },
+        6: { cellWidth: 30 }
+      }
+    });
+
+    // Add page numbers
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+    }
+
+    // Save the PDF
+    doc.save('booking_report.pdf');
+  };
+
   const filteredBookings = bookings
     .filter(booking => {
       const searchLower = searchTerm.toLowerCase();
@@ -156,6 +212,13 @@ const BookingList = () => {
                   />
                   <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-3 text-silver/50" />
                 </div>
+                <button
+                  onClick={generateReport}
+                  className="px-4 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80 flex items-center"
+                >
+                  <FontAwesomeIcon icon={faFileDownload} className="mr-2" />
+                  Generate Report
+                </button>
               </div>
             </div>
 
@@ -400,4 +463,4 @@ const BookingList = () => {
   );
 };
 
-export default BookingList; 
+export default BookingList;
