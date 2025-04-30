@@ -38,30 +38,42 @@ const MovieBuddyProfile = () => {
         const response = await axios.get('http://localhost:3000/api/movie-buddies/all');
         
         if (response.data.success) {
-          // Find the current user's movie buddy data using movie details and buddy information
+          console.log('Fetched movie buddy data:', response.data.data);
+          
+          // Find the movie group matching our criteria
           const userData = response.data.data.find(group => 
             group.movieName === location.state?.movieName &&
             group.movieDate === location.state?.movieDate &&
-            group.movieTime === location.state?.movieTime &&
-            group.buddies.some(buddy => 
-              buddy.name === location.state?.name &&
-              buddy.age === location.state?.age &&
-              buddy.gender === location.state?.gender
-            )
+            group.movieTime === location.state?.movieTime
           );
           
-          if (userData) {
-            const buddyData = userData.buddies.find(buddy => 
-              buddy.name === location.state?.name &&
-              buddy.age === location.state?.age &&
-              buddy.gender === location.state?.gender
-            );
-            setMovieBuddyData({
-              ...userData,
-              buddyDetails: buddyData
+          if (userData && userData.buddies) {
+            // Find the specific buddy within the group
+            // Use more flexible matching to handle potential data inconsistencies
+            const buddyData = userData.buddies.find(buddy => {
+              const nameMatch = buddy.name === location.state?.name;
+              const ageMatch = buddy.age === location.state?.age || 
+                               (typeof buddy.age === 'number' && typeof location.state?.age === 'string' && 
+                                buddy.age === parseInt(location.state?.age));
+              const genderMatch = buddy.gender === location.state?.gender;
+              
+              return nameMatch && (ageMatch || genderMatch);
             });
+            
+            if (buddyData) {
+              console.log('Found buddy data:', buddyData);
+              setMovieBuddyData({
+                ...userData,
+                buddyDetails: buddyData
+              });
+            } else {
+              console.error('No matching buddy found within movie group', userData);
+              toast.error('Movie buddy data not found');
+              navigate('/movie-buddies');
+            }
           } else {
-            toast.error('Movie buddy data not found');
+            console.error('No matching movie group found', location.state);
+            toast.error('Failed to load movie buddy data');
             navigate('/movie-buddies');
           }
         } else {
@@ -268,4 +280,4 @@ const MovieBuddyProfile = () => {
   );
 };
 
-export default MovieBuddyProfile; 
+export default MovieBuddyProfile;

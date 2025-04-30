@@ -115,7 +115,39 @@ const updateMovieBuddies = async (req, res) => {
 // Get all movie buddy groups
 const getAllMovieBuddyGroups = async (req, res) => {
   try {
-    const movieBuddyGroups = await MovieBuddy.find();
+    // Get all movie buddies from the database
+    const allBuddies = await MovieBuddy.find().lean();
+    
+    // Group buddies by movie details (movieName, movieDate, movieTime)
+    const groupedBuddies = allBuddies.reduce((acc, buddy) => {
+      // Create a unique key for each movie showing
+      const key = `${buddy.movieName}|${buddy.movieDate}|${buddy.movieTime}`;
+      
+      if (!acc[key]) {
+        // Initialize a new group
+        acc[key] = {
+          movieName: buddy.movieName,
+          movieDate: buddy.movieDate,
+          movieTime: buddy.movieTime,
+          buddies: []
+        };
+      }
+      
+      // Add this buddy to the appropriate group
+      // Determine if this is a group booking based on seat numbers
+      const isGroup = buddy.seatNumbers && buddy.seatNumbers.length > 1;
+      
+      acc[key].buddies.push({
+        ...buddy,
+        isGroup: isGroup // Add isGroup flag for frontend
+      });
+      
+      return acc;
+    }, {});
+    
+    // Convert the grouped object to an array
+    const movieBuddyGroups = Object.values(groupedBuddies);
+    
     res.status(200).json({
       success: true,
       data: movieBuddyGroups

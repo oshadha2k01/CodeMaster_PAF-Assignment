@@ -40,18 +40,18 @@ wss.on('connection', (ws) => {
       const data = JSON.parse(message);
       
       if (data.type === 'updateMovieDetails') {
-        const { email, newMovieDetails } = data;
+        const { email, movieDetails } = data; // Fix parameter name from newMovieDetails to movieDetails
         
         // Update movie details in database
         const MovieBuddy = require('./models/MovieBuddy/MovieBuddyModel');
         const updatedBuddy = await MovieBuddy.findOneAndUpdate(
           { email },
           {
-            movieName: newMovieDetails.movieName,
-            movieDate: newMovieDetails.movieDate,
-            movieTime: newMovieDetails.movieTime,
-            bookingId: newMovieDetails.bookingId,
-            seatNumbers: newMovieDetails.seatNumbers,
+            movieName: movieDetails.movieName,
+            movieDate: movieDetails.movieDate,
+            movieTime: movieDetails.movieTime,
+            bookingId: movieDetails.bookingId,
+            seatNumbers: movieDetails.seatNumbers,
             bookingDate: new Date()
           },
           { new: true }
