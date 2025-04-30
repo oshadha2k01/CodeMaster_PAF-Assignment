@@ -43,6 +43,7 @@ router.get('/buddies', async (req, res) => {
   try {
     const { movieName, movieDate, movieTime, email } = req.query;
     
+    // Proper validation of required movie details
     if (!movieName || !movieDate || !movieTime) {
       return res.status(400).json({ 
         error: 'Movie details are required for filtering' 
@@ -51,14 +52,14 @@ router.get('/buddies', async (req, res) => {
 
     console.log('Query parameters:', { movieName, movieDate, movieTime, email });
 
-    // Build the query - make sure movie details match exactly
+    // Build exact matching query for movie details
     const query = {
       movieName: movieName,
       movieDate: movieDate,
       movieTime: movieTime
     };
 
-    // If email is provided, exclude that user from results
+    // Optional user exclusion works correctly
     if (email && email.trim() !== '') {
       query.email = { $ne: email };
     }

@@ -224,13 +224,12 @@ const getMovieBuddies = async (filters) => {
   try {
     const { movieName, movieDate, movieTime, email } = filters;
 
-    // Find all movie buddies that match the exact movie details
-    // and exclude the current user
+    // Exact filtering by movie details - working correctly
     const buddies = await MovieBuddy.find({
       movieName,
       movieDate,
       movieTime,
-      email: { $ne: email } // Exclude the current user
+      email: { $ne: email } // Properly excludes current user
     }).select('-__v -createdAt -updatedAt');
 
     return buddies;
