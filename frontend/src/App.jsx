@@ -13,6 +13,9 @@ import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
 import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
 import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+import MovieBuddyAuth from './components/customer/MovieBuddy/MovieBuddyAuth';
+import MovieBuddyMainProfile from './components/customer/MovieBuddy/MovieBuddyMainProfile';
+import MovieBuddyFilter from './components/customer/MovieBuddy/MovieBuddyFilter';
 
 import Login from './components/login';
 import Register from './components/register';
@@ -39,6 +42,11 @@ function App() {
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/movie-buddy-auth" element={<MovieBuddyAuth />} />
+          <Route path="/movie-buddy-main-profile" element={<MovieBuddyMainProfile />} />
+          <Route path="/movie-buddy-filter" element={<MovieBuddyFilter />} />
+          {/* Add more routes as needed */}
+          
         </Routes>
       </div>
     </Router>

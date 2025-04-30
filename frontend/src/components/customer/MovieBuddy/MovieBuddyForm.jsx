@@ -21,9 +21,12 @@ const MovieBuddyForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const bookingData = location.state;
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: bookingData?.name || '',
+    email: bookingData?.email || '',
+    phone: bookingData?.phone || '',
     age: '',
     gender: '',
     preferredGroupSize: '1-2',
@@ -69,6 +72,11 @@ const MovieBuddyForm = () => {
           toast.error('Please enter your name');
           return false;
         }
+        if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
+          toast.error('Please enter a valid email');
+          return false;
+        }
+   
         if (!formData.age || formData.age < 18) {
           toast.error('Please enter a valid age (18 or above)');
           return false;
@@ -81,6 +89,12 @@ const MovieBuddyForm = () => {
       case 2:
         if (formData.moviePreferences.length === 0) {
           toast.error('Please select at least one movie genre preference');
+          return false;
+        }
+        break;
+      case 3:
+        if (!privacySettings.showName && !privacySettings.petName.trim()) {
+          toast.error('Please enter a pet name if you choose not to show your real name');
           return false;
         }
         break;
@@ -100,74 +114,117 @@ const MovieBuddyForm = () => {
     setStep(prev => prev - 1);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      if (!formData.gender) {
-        toast.error('Please select your gender');
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData) {
+        toast.error('Please log in to continue');
+        navigate('/login');
         return;
       }
 
       if (!bookingData?.bookingId) {
-        toast.error('Invalid booking information');
+        toast.error('Booking ID is missing. Please complete your booking first.');
+        navigate('/booking');
         return;
       }
 
-      if (!privacySettings.showName && !privacySettings.petName.trim()) {
-        toast.error('Please enter a pet name since you chose not to share your real name');
-        return;
-      }
+      // Save phone and email to localStorage
+      localStorage.setItem('userPhone', formData.phone || userData.phone);
+      localStorage.setItem('userEmail', formData.email || userData.email);
 
-      const movieBuddyData = {
+      const buddyData = {
+        name: formData.name || `${userData.firstName} ${userData.lastName}`,
+        age: parseInt(formData.age),
+        gender: formData.gender,
+        bookingId: bookingData.bookingId,
+        email: formData.email || userData.email,
+        phone: formData.phone || userData.phone,
+        privacySettings: {
+          showName: privacySettings.showName,
+          showEmail: privacySettings.showEmail,
+          showPhone: privacySettings.showPhone,
+          petName: privacySettings.showName ? '' : privacySettings.petName
+        },
+        moviePreferences: formData.moviePreferences,
+        seatNumbers: bookingData.seatNumbers || [],
+        bookingDate: new Date().toISOString()
+      };
+
+      const payload = {
         movieName: bookingData.movieName,
         movieDate: bookingData.movieDate,
         movieTime: bookingData.movieTime,
-        buddies: [{
-          name: bookingData.name,
-          age: Number(formData.age),
-          gender: formData.gender,
-          email: privacySettings.showEmail ? bookingData.email : '',
-          phone: privacySettings.showPhone ? bookingData.phone : '',
-          bookingId: bookingData.bookingId,
-          bookingDate: new Date().toISOString(),
-          seatNumbers: bookingData.seatNumbers || [],
-          moviePreferences: formData.moviePreferences,
-          privacySettings: {
-            showName: privacySettings.showName,
-            showEmail: privacySettings.showEmail,
-            showPhone: privacySettings.showPhone,
-            petName: privacySettings.showName ? '' : privacySettings.petName
-          }
-        }]
+        buddies: [buddyData]
       };
 
-      const response = await axios.post('http://localhost:3000/api/movie-buddies/update', movieBuddyData);
+      // Check if the user already exists
+      const checkResponse = await axios.post('http://localhost:3000/api/movie-buddies/check-existing', {
+        email: buddyData.email
+      });
 
-      if (response.data.success) {
-        toast.success('Your preferences have been saved successfully!');
-        navigate('/movie-buddies', {
-          state: {
-            ...bookingData,
-            privacySettings,
-            preferences: {
-              gender: formData.gender,
-              age: formData.age,
-              moviePreferences: formData.moviePreferences
+      if (checkResponse.data.exists) {
+        // If user exists, update movie details via WebSocket
+        const ws = new WebSocket('ws://localhost:3000');
+        ws.onopen = () => {
+          ws.send(JSON.stringify({
+            type: 'updateMovieDetails',
+            email: buddyData.email,
+            movieDetails: {
+              movieName: bookingData.movieName,
+              movieDate: bookingData.movieDate,
+              movieTime: bookingData.movieTime,
+              bookingId: bookingData.bookingId,
+              seatNumbers: bookingData.seatNumbers || []
             }
-          }
+          }));
+          ws.close();
+        };
+      } else {
+        // If user doesn't exist, create new entry
+        const response = await axios.post('http://localhost:3000/api/movie-buddies/update', payload);
+        console.log('Movie buddy created:', response.data);
+      }
+
+      toast.success("Movie buddy preferences saved successfully!", {
+        duration: 4000,
+        position: 'top-center',
+        style: {
+          background: '#4ade80',
+          color: '#fff',
+          padding: '10px 20px',
+          borderRadius: '8px'
+        },
+        icon: '🎉'
+      });
+      navigate("/movie-buddies", { state: { bookingData } });
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+      const errorMessage = error.response?.data?.message || "Error saving preferences";
+      if (error.response?.status === 400) {
+        toast.error(errorMessage, {
+          duration: 5000,
+          style: { background: '#f87171', color: '#fff' }
+        });
+      } else if (error.response?.status === 409) {
+        toast.error("This movie group already exists. Please join it or update your booking.", {
+          duration: 5000,
+          style: { background: '#f87171', color: '#fff' }
         });
       } else {
-        toast.error(response.data.message || 'Failed to save preferences');
+        toast.error("An unexpected error occurred. Please try again.");
       }
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-      toast.error(error.response?.data.message || 'An error occurred while saving your preferences');
+    } finally {
+      setLoading(false);
     }
   };
 
   const renderPrivacySettings = () => (
-    <div className="space-y-6 w-full"> {/* Added w-full to ensure full width */}
-      <div className="grid grid-cols-2 gap-6"> {/* Use grid layout for better width distribution */}
-        {/* Name Privacy */}
+    <div className="space-y-6 w-full">
+      <div className="grid grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-deep-space/50 rounded-lg">
             <div className="flex items-center space-x-3">
@@ -180,15 +237,9 @@ const MovieBuddyForm = () => {
             <Switch
               checked={privacySettings.showName}
               onChange={(checked) => setPrivacySettings(prev => ({ ...prev, showName: checked }))}
-              className={`${
-                privacySettings.showName ? 'bg-amber' : 'bg-silver/20'
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
+              className={`${privacySettings.showName ? 'bg-amber' : 'bg-silver/20'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
             >
-              <span
-                className={`${
-                  privacySettings.showName ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}
-              />
+              <span className={`${privacySettings.showName ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}/>
             </Switch>
           </div>
 
@@ -205,15 +256,13 @@ const MovieBuddyForm = () => {
                 onChange={(e) => setPrivacySettings(prev => ({ ...prev, petName: e.target.value }))}
                 className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
                 placeholder="Enter your pet name"
-                required
+                required={!privacySettings.showName}
               />
             </div>
           )}
         </div>
 
-        {/* Email and Phone Privacy */}
         <div className="space-y-4">
-          {/* Email Privacy */}
           <div className="flex items-center justify-between p-4 bg-deep-space/50 rounded-lg">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faEnvelope} className="text-amber" />
@@ -225,19 +274,12 @@ const MovieBuddyForm = () => {
             <Switch
               checked={privacySettings.showEmail}
               onChange={(checked) => setPrivacySettings(prev => ({ ...prev, showEmail: checked }))}
-              className={`${
-                privacySettings.showEmail ? 'bg-amber' : 'bg-silver/20'
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
+              className={`${privacySettings.showEmail ? 'bg-amber' : 'bg-silver/20'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
             >
-              <span
-                className={`${
-                  privacySettings.showEmail ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}
-              />
+              <span className={`${privacySettings.showEmail ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}/>
             </Switch>
           </div>
 
-          {/* Phone Privacy */}
           <div className="flex items-center justify-between p-4 bg-deep-space/50 rounded-lg">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faPhone} className="text-amber" />
@@ -249,21 +291,14 @@ const MovieBuddyForm = () => {
             <Switch
               checked={privacySettings.showPhone}
               onChange={(checked) => setPrivacySettings(prev => ({ ...prev, showPhone: checked }))}
-              className={`${
-                privacySettings.showPhone ? 'bg-amber' : 'bg-silver/20'
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
+              className={`${privacySettings.showPhone ? 'bg-amber' : 'bg-silver/20'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
             >
-              <span
-                className={`${
-                  privacySettings.showPhone ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}
-              />
+              <span className={`${privacySettings.showPhone ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}/>
             </Switch>
           </div>
         </div>
       </div>
 
-      {/* Privacy Terms - Full Width */}
       <div className="mt-8">
         <label className="flex items-start space-x-3 cursor-pointer">
           <input
@@ -284,7 +319,7 @@ const MovieBuddyForm = () => {
   if (!bookingData) {
     return (
       <div className="min-h-screen bg-deep-space text-silver flex items-center justify-center">
-        <div className="text-2xl text-amber">Invalid access. Please try again.</div>
+        <div className="text-2xl text-amber">Invalid access. Please complete a booking first.</div>
       </div>
     );
   }
@@ -296,23 +331,18 @@ const MovieBuddyForm = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-5xl mx-auto" // Consistent width
+          className="max-w-5xl mx-auto"
         >
           <div className="bg-electric-purple/10 rounded-xl p-8 border border-silver/10 shadow-lg">
-            {/* Progress Steps */}
             <div className="flex justify-between mb-8">
               {[1, 2, 3].map((stepNumber) => (
                 <div
                   key={stepNumber}
-                  className={`flex items-center ${
-                    stepNumber < 3 ? 'flex-1' : ''
-                  }`}
+                  className={`flex items-center ${stepNumber < 3 ? 'flex-1' : ''}`}
                 >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      step >= stepNumber
-                        ? 'bg-amber text-deep-space'
-                        : 'bg-deep-space/50 text-silver'
+                      step >= stepNumber ? 'bg-amber text-deep-space' : 'bg-deep-space/50 text-silver'
                     }`}
                   >
                     {stepNumber}
@@ -320,9 +350,7 @@ const MovieBuddyForm = () => {
                   {stepNumber < 3 && (
                     <div
                       className={`flex-1 h-1 mx-2 ${
-                        step > stepNumber
-                          ? 'bg-amber'
-                          : 'bg-deep-space/50'
+                        step > stepNumber ? 'bg-amber' : 'bg-deep-space/50'
                       }`}
                     />
                   )}
@@ -330,7 +358,6 @@ const MovieBuddyForm = () => {
               ))}
             </div>
 
-            {/* Movie Details */}
             <div className="mb-8 p-6 bg-deep-space/50 rounded-lg">
               <h2 className="text-xl font-bold text-amber mb-4">Your Movie Details</h2>
               <div className="grid grid-cols-3 gap-6">
@@ -349,7 +376,6 @@ const MovieBuddyForm = () => {
               </div>
             </div>
 
-            {/* Step 1: Basic Information */}
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-amber">Basic Information</h2>
@@ -363,6 +389,31 @@ const MovieBuddyForm = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
                       placeholder="Enter your name"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-semibold text-amber mb-2">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
+                      placeholder="Enter your email"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-semibold text-amber mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
+                      placeholder="Enter your phone number"
+                      disabled
                     />
                   </div>
                   <div>
@@ -409,7 +460,6 @@ const MovieBuddyForm = () => {
               </div>
             )}
 
-            {/* Step 2: Movie Preferences */}
             {step === 2 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-amber">Movie Preferences</h2>
@@ -449,7 +499,6 @@ const MovieBuddyForm = () => {
               </div>
             )}
 
-            {/* Step 3: Privacy Settings */}
             {step === 3 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-amber">Privacy Settings</h2>
@@ -464,14 +513,14 @@ const MovieBuddyForm = () => {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={!agreed}
+                    disabled={!agreed || loading}
                     className={`px-6 py-2 rounded-lg flex items-center ${
-                      agreed
+                      agreed && !loading
                         ? 'bg-amber text-deep-space hover:bg-amber/80'
                         : 'bg-deep-space/50 text-silver/50 cursor-not-allowed'
                     }`}
                   >
-                    Submit
+                    {loading ? 'Submitting...' : 'Submit'}
                   </button>
                 </div>
               </div>

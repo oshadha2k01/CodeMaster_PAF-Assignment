@@ -1,7 +1,6 @@
 const MovieBuddy = require('../../models/MovieBuddy/MovieBuddyModel');
-const Booking = require('../../models/BookingManagement/BookingModel');
 
-// Create or update movie buddy group
+// Create or update movie buddy
 const updateMovieBuddies = async (req, res) => {
   try {
     const { movieName, movieDate, movieTime, buddies } = req.body;
@@ -10,34 +9,38 @@ const updateMovieBuddies = async (req, res) => {
     if (!movieName || !movieDate || !movieTime || !buddies || !Array.isArray(buddies)) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'Missing required fields: movieName, movieDate, movieTime, or buddies'
       });
     }
 
-    // Validate each buddy
+    const results = [];
+
     for (const buddy of buddies) {
-      if (!buddy.name || !buddy.age || !buddy.gender || !buddy.bookingId) {
+      const { name, age, gender, email, phone, bookingId, seatNumbers, moviePreferences, privacySettings } = buddy;
+
+      // Validate buddy information
+      if (!name || !age || !gender || !bookingId || !email) {
         return res.status(400).json({
           success: false,
-          message: 'Missing required buddy information'
+          message: 'Missing required buddy information: name, age, gender, bookingId, or email'
         });
       }
 
       // Validate privacy settings
-      if (!buddy.privacySettings) {
+      if (!privacySettings) {
         return res.status(400).json({
           success: false,
-          message: 'Privacy settings are required'
+          message: 'Privacy settings are required for each buddy'
         });
       }
 
-      const { showName, showEmail, showPhone, petName } = buddy.privacySettings;
+      const { showName, showEmail, showPhone, petName } = privacySettings;
 
-      // Validate privacy settings
+      // Validate privacy settings types
       if (typeof showName !== 'boolean' || typeof showEmail !== 'boolean' || typeof showPhone !== 'boolean') {
         return res.status(400).json({
           success: false,
-          message: 'Invalid privacy settings format'
+          message: 'Invalid privacy settings format: showName, showEmail, and showPhone must be booleans'
         });
       }
 
@@ -49,62 +52,55 @@ const updateMovieBuddies = async (req, res) => {
         });
       }
 
-      // Handle email and phone based on privacy settings
-      if (!showEmail) {
-        buddy.email = undefined;
-      }
-      if (!showPhone) {
-        buddy.phone = undefined;
-      }
-    }
+      // Check if a movie buddy with the same bookingId exists
+      let movieBuddy = await MovieBuddy.findOne({ bookingId });
 
-    // Find existing movie buddy group
-    let movieBuddyGroup = await MovieBuddy.findOne({
-      movieName,
-      movieDate,
-      movieTime
-    });
-
-    if (movieBuddyGroup) {
-      // Update existing group
-      for (const newBuddy of buddies) {
-        const existingBuddyIndex = movieBuddyGroup.buddies.findIndex(
-          buddy => buddy.bookingId === newBuddy.bookingId
+      if (movieBuddy) {
+        // Update existing movie buddy
+        movieBuddy = await MovieBuddy.findOneAndUpdate(
+          { bookingId },
+          {
+            movieName,
+            movieDate,
+            movieTime,
+            name,
+            age,
+            gender,
+            email,
+            phone,
+            bookingId,
+            seatNumbers,
+            moviePreferences,
+            privacySettings
+          },
+          { new: true }
         );
-
-        if (existingBuddyIndex !== -1) {
-          // Update existing buddy
-          const existingBuddy = movieBuddyGroup.buddies[existingBuddyIndex];
-          movieBuddyGroup.buddies[existingBuddyIndex] = {
-            ...existingBuddy,
-            ...newBuddy,
-            // Preserve privacy settings
-            privacySettings: {
-              ...existingBuddy.privacySettings,
-              ...newBuddy.privacySettings
-            }
-          };
-        } else {
-          // Add new buddy
-          movieBuddyGroup.buddies.push(newBuddy);
-        }
+      } else {
+        // Create new movie buddy
+        movieBuddy = new MovieBuddy({
+          movieName,
+          movieDate,
+          movieTime,
+          name,
+          age,
+          gender,
+          email,
+          phone,
+          bookingId,
+          seatNumbers,
+          moviePreferences,
+          privacySettings
+        });
+        await movieBuddy.save();
       }
-    } else {
-      // Create new group
-      movieBuddyGroup = new MovieBuddy({
-        movieName,
-        movieDate,
-        movieTime,
-        buddies
-      });
-    }
 
-    await movieBuddyGroup.save();
+      results.push(movieBuddy);
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Movie buddy group updated successfully',
-      data: movieBuddyGroup
+      message: 'Movie buddies updated successfully',
+      data: results
     });
   } catch (error) {
     console.error('Error updating movie buddies:', error);
@@ -125,7 +121,10 @@ const getAllMovieBuddyGroups = async (req, res) => {
       data: movieBuddyGroups
     });
   } catch (error) {
-    console.error('Error fetching movie buddy groups:', error);
+    console.error('Error fetching movie buddy groups:', {
+      message: error.message,
+      stack: error.stack
+    });
     res.status(500).json({
       success: false,
       message: 'Error fetching movie buddy groups',
@@ -149,6 +148,10 @@ const getMovieBuddyGroupById = async (req, res) => {
       data: movieBuddyGroup
     });
   } catch (error) {
+    console.error('Error fetching movie buddy group:', {
+      message: error.message,
+      stack: error.stack
+    });
     res.status(500).json({
       success: false,
       message: 'Error fetching movie buddy group',
@@ -172,6 +175,10 @@ const deleteMovieBuddyGroup = async (req, res) => {
       message: 'Movie buddy group deleted successfully'
     });
   } catch (error) {
+    console.error('Error deleting movie buddy group:', {
+      message: error.message,
+      stack: error.stack
+    });
     res.status(500).json({
       success: false,
       message: 'Error deleting movie buddy group',
@@ -180,9 +187,81 @@ const deleteMovieBuddyGroup = async (req, res) => {
   }
 };
 
+// Get movie buddies with filtering
+const getMovieBuddies = async (filters) => {
+  try {
+    const { movieName, movieDate, movieTime, email } = filters;
+
+    // Find all movie buddies that match the exact movie details
+    // and exclude the current user
+    const buddies = await MovieBuddy.find({
+      movieName,
+      movieDate,
+      movieTime,
+      email: { $ne: email } // Exclude the current user
+    }).select('-__v -createdAt -updatedAt');
+
+    return buddies;
+  } catch (error) {
+    console.error('Error in getMovieBuddies:', error);
+    throw error;
+  }
+};
+
+// Check if user exists
+const checkExistingUser = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const existingUser = await MovieBuddy.findOne({ email });
+    res.json({ exists: !!existingUser });
+  } catch (error) {
+    console.error('Error in checkExistingUser:', error);
+    res.status(500).json({ error: 'Failed to check user existence' });
+  }
+};
+
+// Update movie buddy details
+const updateMovieBuddy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const updatedBuddy = await MovieBuddy.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedBuddy) {
+      return res.status(404).json({ error: 'Movie buddy not found' });
+    }
+
+    res.json(updatedBuddy);
+  } catch (error) {
+    console.error('Error in updateMovieBuddy:', error);
+    res.status(500).json({ error: 'Failed to update movie buddy' });
+  }
+};
+
+// Create new movie buddy
+const createMovieBuddy = async (req, res) => {
+  try {
+    const newBuddy = new MovieBuddy(req.body);
+    const savedBuddy = await newBuddy.save();
+    res.status(201).json(savedBuddy);
+  } catch (error) {
+    console.error('Error in createMovieBuddy:', error);
+    res.status(500).json({ error: 'Failed to create movie buddy' });
+  }
+};
+
 module.exports = {
   updateMovieBuddies,
   getAllMovieBuddyGroups,
   getMovieBuddyGroupById,
-  deleteMovieBuddyGroup
+  deleteMovieBuddyGroup,
+  getMovieBuddies,
+  checkExistingUser,
+  updateMovieBuddy,
+  createMovieBuddy
 };

@@ -26,8 +26,8 @@ import {
   faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
-import CustomerNavBar from '../../navbar/MainNavBar';
 import MovieBuddyPortal from './MovieBuddyPortal';
+import MovieBuddyNavBar from '../../navbar/MovieBuddyNavBar';
 
 const MovieBuddyList = () => {
   const navigate = useNavigate();
@@ -126,8 +126,8 @@ const MovieBuddyList = () => {
       movieName: group.movieName,
       movieDate: group.movieDate,
       movieTime: group.movieTime,
-      bookingDate: new Date().toISOString().split('T')[0], // Current date
-      seatNumbers: group.buddies[0]?.seatNumbers || [], // Add seat numbers from the first buddy
+      bookingDate: new Date().toISOString().split('T')[0],
+      seatNumbers: group.buddies[0]?.seatNumbers || [],
       preferences: {
         gender: group.buddies[0]?.gender || '',
         age: group.buddies[0]?.age || '',
@@ -149,6 +149,33 @@ const MovieBuddyList = () => {
   };
 
   const filteredGroups = movieBuddyGroups
+    .map(group => {
+      const storedEmail = localStorage.getItem('userEmail');
+      const storedPhone = localStorage.getItem('userPhone');
+
+      // Filter out the current user's buddy entry based on email and phone
+      const filteredBuddies = group.buddies.filter(buddy => 
+        !(buddy.email === storedEmail && buddy.phone === storedPhone)
+      );
+
+      // Skip groups with no remaining buddies after filtering
+      if (filteredBuddies.length === 0) {
+        return null;
+      }
+
+      return {
+        ...group,
+        buddies: filteredBuddies,
+        totalBuddies: filteredBuddies.length,
+        groupBookings: filteredBuddies.filter(buddy => buddy.isGroup).length,
+        singleBookings: filteredBuddies.filter(buddy => !buddy.isGroup).length,
+        totalSeats: filteredBuddies.reduce((acc, buddy) => {
+          const seatCount = Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.length : 0;
+          return acc + seatCount;
+        }, 0)
+      };
+    })
+    .filter(group => group !== null)
     .filter(group => {
       const matchesSearch = 
         group.movieName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,7 +213,7 @@ const MovieBuddyList = () => {
 
   return (
     <div className="min-h-screen bg-deep-space text-silver">
-      <CustomerNavBar />
+      <MovieBuddyNavBar />
       <div className="container mx-auto px-4 pt-24 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -222,7 +249,6 @@ const MovieBuddyList = () => {
               </div>
             </div>
 
-            {/* Add the Modal */}
             {showFilterModal && (
               <div className="fixed inset-0 bg-black/50 z-50">
                 <div className="fixed inset-y-0 right-0 w-full max-w-md bg-deep-space shadow-xl">
@@ -252,7 +278,6 @@ const MovieBuddyList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-electric-purple/10 rounded-xl p-6 border border-silver/10 hover:border-amber/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber/10"
                 >
-                  {/* Movie Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="p-3 bg-amber/20 rounded-full">
@@ -270,7 +295,6 @@ const MovieBuddyList = () => {
                     </div>
                   </div>
 
-                  {/* Buddies List */}
                   <div className="space-y-3 mb-6">
                     {group.buddies.slice(0, 3).map((buddy, index) => (
                       <div
@@ -332,7 +356,6 @@ const MovieBuddyList = () => {
                     )}
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex flex-col space-y-2">
                     <button
                       onClick={() => handleViewDetails(group.buddies[0], group)}
@@ -355,7 +378,6 @@ const MovieBuddyList = () => {
         </motion.div>
       </div>
 
-      {/* Filter Portal Modal */}
       {showFilterPortal && selectedBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -373,7 +395,6 @@ const MovieBuddyList = () => {
         </div>
       )}
 
-      {/* Group Details Modal */}
       {selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">

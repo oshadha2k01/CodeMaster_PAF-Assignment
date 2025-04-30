@@ -22,7 +22,8 @@ import {
   faUserFriends
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import CustomerNavBar from '../../navbar/MainNavBar';
+//import CustomerNavBar from '../../navbar/MainNavBar';
+import MovieBuddyNavBar from '../../navbar/MovieBuddyNavBar';
 
 const MovieBuddyProfile = () => {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ const MovieBuddyProfile = () => {
 
   return (
     <div className="min-h-screen bg-deep-space text-silver">
-      <CustomerNavBar />
+      <MovieBuddyNavBar />
       <div className="container mx-auto px-4 pt-24 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

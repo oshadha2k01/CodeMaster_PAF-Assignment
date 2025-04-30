@@ -54,13 +54,12 @@ const BookingDetails = () => {
     }
   }, [editFormData.movieDate, editFormData.movieTime]);
 
-  // Show movie buddy dialog after 2 seconds
   useEffect(() => {
     if (!loading && booking) {
       const timer = setTimeout(() => {
         setShowMovieBuddyDialog(true);
       }, 2000);
-      return () => clearTimeout(timer); // Cleanup timeout on unmount
+      return () => clearTimeout(timer);
     }
   }, [loading, booking]);
 
@@ -185,18 +184,42 @@ const BookingDetails = () => {
 
   const handleMovieBuddyConfirm = () => {
     setShowMovieBuddyDialog(false);
-    navigate('/movie-buddy-form', {
-      state: {
-        movieName: booking.movieName,
-        movieDate: booking.movieDate,
-        movieTime: booking.movieTime,
-        name: booking.name,
-        email: booking.email,
-        phone: booking.phone,
-        bookingId: booking._id,
-        seatNumbers: booking.seatNumbers
-      }
-    });
+    
+    // Check if email and phone match localStorage
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedPhone = localStorage.getItem('userPhone');
+    const bookingEmail = booking.email;
+    const bookingPhone = booking.phone;
+    
+    const isMovieBuddy = storedEmail === bookingEmail && storedPhone === bookingPhone;
+
+    if (isMovieBuddy) {
+      navigate('/movie-buddy-auth', {
+        state: {
+          movieName: booking.movieName,
+          movieDate: booking.movieDate,
+          movieTime: booking.movieTime,
+          name: booking.name,
+          email: booking.email,
+          phone: booking.phone,
+          bookingId: booking._id,
+          seatNumbers: booking.seatNumbers
+        }
+      });
+    } else {
+      navigate('/movie-buddy-form', {
+        state: {
+          movieName: booking.movieName,
+          movieDate: booking.movieDate,
+          movieTime: booking.movieTime,
+          name: booking.name,
+          email: booking.email,
+          phone: booking.phone,
+          bookingId: booking._id,
+          seatNumbers: booking.seatNumbers
+        }
+      });
+    }
   };
 
   const handleMovieBuddyCancel = () => {
@@ -398,7 +421,6 @@ const BookingDetails = () => {
         </motion.div>
       </div>
 
-      {/* Seat Selection Modal */}
       <SeatSelection
         isOpen={seatSelectionOpen}
         onClose={() => setSeatSelectionOpen(false)}
@@ -409,7 +431,6 @@ const BookingDetails = () => {
         isEditMode={editMode}
       />
 
-      {/* Delete Modal */}
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-md w-full">
@@ -435,7 +456,6 @@ const BookingDetails = () => {
         </div>
       )}
 
-      {/* Movie Buddy Dialog */}
       {showMovieBuddyDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-md w-full">
