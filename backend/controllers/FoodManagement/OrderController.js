@@ -71,7 +71,7 @@ exports.updateOrder = async (req,res)=>{
     try{
         const orderId = req.params.id;
         const updatedOrder = req.body;
-        const order = await Order.findByIdAndUpdate(orderId,updatedOrder,{new:true});
+        const order = await Order.findByIdAndUpdate(orderId,updatedOrder,{new:true}).populate('meals.food');
         if(!order){
             return res.status(404).json({message:"Order not found"});
         }

@@ -9,6 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 const Payment = () => {
   const location = useLocation();
@@ -126,24 +127,42 @@ const Payment = () => {
     }));
   };
 
+  const handleCashPayment = async () => {
+    try {
+      const response = await axios.post('http://localhost:3000/api/orders', {
+        items: cartItems,
+        totalAmount,
+        paymentMethod: 'cash',
+        status: 'pending'
+      });
+
+      if (response.status === 201) {
+        toast.success('Order placed successfully! Please pay at counter.');
+        localStorage.removeItem('foodCart');
+        setTimeout(() => {
+          navigate('/order-confirmation', { 
+            state: { 
+              orderDetails: {
+                items: cartItems,
+                total: totalAmount,
+                paymentMethod: 'cash',
+                orderId: response.data._id
+              }
+            }
+          });
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast.error('Failed to place order. Please try again.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (paymentMethod === 'cash') {
-      // Handle cash payment
-      toast.success('Order placed successfully! Please pay at counter.');
-      localStorage.removeItem('foodCart');
-      setTimeout(() => {
-        navigate('/order-confirmation', { 
-          state: { 
-            orderDetails: {
-              items: cartItems,
-              total: totalAmount,
-              paymentMethod: 'cash'
-            }
-          }
-        });
-      }, 2000);
+      handleCashPayment();
       return;
     }
 
@@ -170,20 +189,33 @@ const Payment = () => {
     // Process payment
     toast.info('Processing payment...');
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Payment successful!');
-      localStorage.removeItem('foodCart');
-      navigate('/order-confirmation', { 
-        state: { 
-          orderDetails: {
-            items: cartItems,
-            total: totalAmount,
-            paymentMethod: 'card'
-          }
+      const response = await axios.post('http://localhost:3000/api/orders', {
+        items: cartItems,
+        totalAmount,
+        paymentMethod: 'card',
+        status: 'paid',
+        cardDetails: {
+          lastFour: formData.cardNumber.slice(-4),
+          expiryDate: formData.expiryDate
         }
       });
+
+      if (response.status === 201) {
+        toast.success('Payment successful!');
+        localStorage.removeItem('foodCart');
+        navigate('/order-confirmation', { 
+          state: { 
+            orderDetails: {
+              items: cartItems,
+              total: totalAmount,
+              paymentMethod: 'card',
+              orderId: response.data._id
+            }
+          }
+        });
+      }
     } catch (error) {
+      console.error('Error processing payment:', error);
       toast.error('Payment failed. Please try again.');
     }
   };
@@ -363,6 +395,17 @@ const Payment = () => {
                 Pay ${totalAmount.toFixed(2)}
               </button>
             </form>
+          )}
+
+          {/* Cash Payment Button */}
+          {paymentMethod === 'cash' && (
+            <button
+              onClick={handleCashPayment}
+              className="w-full mt-6 bg-scarlet hover:bg-amber px-6 py-3 rounded-lg transition-colors duration-300 text-black font-bold flex items-center justify-center gap-2"
+            >
+              <FontAwesomeIcon icon={faMoneyBill} />
+              Pay ${totalAmount.toFixed(2)} at Counter
+            </button>
           )}
         </div>
       </div>
