@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const movieBuddySchema = new mongoose.Schema({
   movieName: {
@@ -19,7 +20,8 @@ const movieBuddySchema = new mongoose.Schema({
   },
   age: {
     type: Number,
-    required: true
+    required: true,
+    min: 18
   },
   gender: {
     type: String,
@@ -33,7 +35,12 @@ const movieBuddySchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    trim: true
+    trim: true,
+    required: true
+  },
+  password: {
+    type: String,
+    required: false
   },
   bookingId: {
     type: String,
@@ -72,8 +79,25 @@ const movieBuddySchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Removed the unique index to allow multiple buddies for the same showtime
-// movieBuddySchema.index({ movieName: 1, movieDate: 1, movieTime: 1 }, { unique: true });
+// Password hashing middleware
+movieBuddySchema.pre('save', async function(next) {
+  // Only hash the password if it's modified or new
+  if (!this.isModified('password')) return next();
+  
+  try {
+    // Generate salt and hash password
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Method to compare passwords for authentication
+movieBuddySchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 // Pre-save middleware to handle privacy settings
 movieBuddySchema.pre('save', function(next) {

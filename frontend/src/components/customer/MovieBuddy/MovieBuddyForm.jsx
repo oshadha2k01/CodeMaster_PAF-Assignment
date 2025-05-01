@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -26,7 +26,6 @@ const MovieBuddyForm = () => {
   const [formData, setFormData] = useState({
     name: bookingData?.name || '',
     email: bookingData?.email || '',
-    phone: bookingData?.phone || '',
     age: '',
     gender: '',
     preferredGroupSize: '1-2',
@@ -41,6 +40,16 @@ const MovieBuddyForm = () => {
     showPhone: false,
     petName: ''
   });
+
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (userEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: userEmail
+      }));
+    }
+  }, []);
 
   const movieGenres = [
     'Action', 'Comedy', 'Drama', 'Horror',
@@ -68,15 +77,6 @@ const MovieBuddyForm = () => {
   const validateStep = () => {
     switch (step) {
       case 1:
-        if (!formData.name.trim()) {
-          toast.error('Please enter your name');
-          return false;
-        }
-        if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
-          toast.error('Please enter a valid email');
-          return false;
-        }
-   
         if (!formData.age || formData.age < 18) {
           toast.error('Please enter a valid age (18 or above)');
           return false;
@@ -119,10 +119,10 @@ const MovieBuddyForm = () => {
     setLoading(true);
 
     try {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (!userData) {
-        toast.error('Please log in to continue');
-        navigate('/login');
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        toast.error('User information not found. Please log in again');
+        navigate('/movie-buddy-login');
         return;
       }
 
@@ -132,64 +132,27 @@ const MovieBuddyForm = () => {
         return;
       }
 
-      // Save phone and email to localStorage
-      localStorage.setItem('userPhone', formData.phone || userData.phone);
-      localStorage.setItem('userEmail', formData.email || userData.email);
-
-      const buddyData = {
-        name: formData.name || `${userData.firstName} ${userData.lastName}`,
+      const payload = {
+        email: userEmail,
+        movieName: bookingData.movieName,
+        movieDate: bookingData.movieDate,
+        movieTime: bookingData.movieTime,
+        bookingId: bookingData.bookingId,
         age: parseInt(formData.age),
         gender: formData.gender,
-        bookingId: bookingData.bookingId,
-        email: formData.email || userData.email,
-        phone: formData.phone || userData.phone,
+        moviePreferences: formData.moviePreferences,
         privacySettings: {
           showName: privacySettings.showName,
           showEmail: privacySettings.showEmail,
           showPhone: privacySettings.showPhone,
           petName: privacySettings.showName ? '' : privacySettings.petName
         },
-        moviePreferences: formData.moviePreferences,
-        seatNumbers: bookingData.seatNumbers || [],
-        bookingDate: new Date().toISOString()
+        seatNumbers: bookingData.seatNumbers || []
       };
 
-      const payload = {
-        movieName: bookingData.movieName,
-        movieDate: bookingData.movieDate,
-        movieTime: bookingData.movieTime,
-        buddies: [buddyData]
-      };
-
-      // Check if the user already exists
-      const checkResponse = await axios.post('http://localhost:3000/api/movie-buddies/check-existing', {
-        email: buddyData.email
-      });
-
-      if (checkResponse.data.exists) {
-        // If user exists, update movie details via WebSocket
-        const ws = new WebSocket('ws://localhost:3000');
-        ws.onopen = () => {
-          ws.send(JSON.stringify({
-            type: 'updateMovieDetails',
-            email: buddyData.email,
-            movieDetails: {
-              movieName: bookingData.movieName,
-              movieDate: bookingData.movieDate,
-              movieTime: bookingData.movieTime,
-              bookingId: bookingData.bookingId,
-              seatNumbers: bookingData.seatNumbers || []
-            }
-          }));
-          ws.close();
-        };
-      } else {
-        // If user doesn't exist, create new entry
-        const response = await axios.post('http://localhost:3000/api/movie-buddies/update', payload);
-        console.log('Movie buddy created:', response.data);
-      }
-
-      toast.success("Movie buddy preferences saved successfully!", {
+      const response = await axios.post('http://localhost:3000/api/movie-buddies', payload);
+      
+      toast.success("Movie buddy profile created successfully!", {
         duration: 4000,
         position: 'top-center',
         style: {
@@ -200,23 +163,28 @@ const MovieBuddyForm = () => {
         },
         icon: '🎉'
       });
-      navigate("/movie-buddies", { state: { bookingData } });
+
+      // Store movie details in localStorage for future reference
+      const movieDetails = {
+        movieName: bookingData.movieName,
+        movieDate: bookingData.movieDate,
+        movieTime: bookingData.movieTime
+      };
+      localStorage.setItem('currentMovieBuddy', JSON.stringify(movieDetails));
+
+      // Navigate to buddy list with properly structured state
+      navigate("/movie-buddies", { 
+        state: { 
+          movieDetails: {
+            movieName: bookingData.movieName,
+            movieDate: bookingData.movieDate,
+            movieTime: bookingData.movieTime
+          }
+        } 
+      });
     } catch (error) {
-      console.error("Error saving preferences:", error);
-      const errorMessage = error.response?.data?.message || "Error saving preferences";
-      if (error.response?.status === 400) {
-        toast.error(errorMessage, {
-          duration: 5000,
-          style: { background: '#f87171', color: '#fff' }
-        });
-      } else if (error.response?.status === 409) {
-        toast.error("This movie group already exists. Please join it or update your booking.", {
-          duration: 5000,
-          style: { background: '#f87171', color: '#fff' }
-        });
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      console.error("Error saving profile:", error);
+      toast.error(error.response?.data?.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -378,44 +346,8 @@ const MovieBuddyForm = () => {
 
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-amber">Basic Information</h2>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-lg font-semibold text-amber mb-2">Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                      placeholder="Enter your name"
-                      disabled
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-lg font-semibold text-amber mb-2">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                      placeholder="Enter your email"
-                      disabled
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-lg font-semibold text-amber mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                      placeholder="Enter your phone number"
-                      disabled
-                    />
-                  </div>
+                <h2 className="text-2xl font-bold text-amber">Demographics</h2>
+                <div className="grid grid-cols-1 gap-6">
                   <div>
                     <label className="block text-lg font-semibold text-amber mb-2">Age</label>
                     <input
@@ -428,12 +360,13 @@ const MovieBuddyForm = () => {
                       placeholder="Enter your age"
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <label className="block text-lg font-semibold text-amber mb-2">Gender</label>
                     <div className="flex space-x-6">
                       {['Male', 'Female', 'Other'].map((gender) => (
                         <button
                           key={gender}
+                          type="button"
                           onClick={() => setFormData(prev => ({ ...prev, gender }))}
                           className={`px-6 py-2 rounded-lg flex items-center ${
                             formData.gender === gender
@@ -450,6 +383,7 @@ const MovieBuddyForm = () => {
                 </div>
                 <div className="flex justify-end">
                   <button
+                    type="button"
                     onClick={handleNext}
                     className="bg-amber text-deep-space px-6 py-2 rounded-lg hover:bg-amber/80 flex items-center"
                   >

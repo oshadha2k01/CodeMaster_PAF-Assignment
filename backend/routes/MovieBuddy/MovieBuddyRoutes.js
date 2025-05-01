@@ -1,42 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const {
-  updateMovieBuddies,
-  getAllMovieBuddyGroups,
-  getMovieBuddyGroupById,
-  deleteMovieBuddyGroup,
-  createMovieBuddy,
-  updateMovieBuddy,
-  checkExistingUser,
-  getMovieBuddies
-} = require('../../controllers/MovieBuddy/MovieBuddyController');
+const movieBuddyController = require('../../controllers/MovieBuddy/MovieBuddyController');
 const MovieBuddy = require('../../models/MovieBuddy/MovieBuddyModel');
 
 // Verify all imported functions are defined
 if (
-  !updateMovieBuddies ||
-  !getAllMovieBuddyGroups ||
-  !getMovieBuddyGroupById ||
-  !deleteMovieBuddyGroup ||
-  !createMovieBuddy ||
-  !updateMovieBuddy ||
-  !checkExistingUser ||
-  !getMovieBuddies
+  !movieBuddyController.updateMovieBuddies ||
+  !movieBuddyController.getAllMovieBuddyGroups ||
+  !movieBuddyController.getMovieBuddyGroupById ||
+  !movieBuddyController.deleteMovieBuddyGroup ||
+  !movieBuddyController.createMovieBuddy ||
+  !movieBuddyController.updateMovieBuddy ||
+  !movieBuddyController.checkExistingUser ||
+  !movieBuddyController.getMovieBuddies ||
+  !movieBuddyController.loginMovieBuddy
 ) {
   throw new Error('One or more required controller functions are undefined.');
 }
 
-// Create or update movie buddy group
-router.post('/update', updateMovieBuddies);
+// Route to create/update a movie buddy profile
+router.post('/', movieBuddyController.createMovieBuddy);
+
+// Update route to handle the movie buddy update (for backward compatibility)
+router.post('/update', movieBuddyController.updateMovieBuddy);
 
 // Get all movie buddy groups
-router.get('/all', getAllMovieBuddyGroups);
+router.get('/all', movieBuddyController.getAllMovieBuddyGroups);
 
-// Check if user exists
-router.post('/check-existing', checkExistingUser);
+// Check if a movie buddy exists
+router.post('/check-existing', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    const exists = await MovieBuddy.findOne({ email });
+    return res.status(200).json({ exists: !!exists });
+  } catch (error) {
+    console.error('Error checking movie buddy:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 // Create new movie buddy profile
-router.post('/create', createMovieBuddy);
+router.post('/create', movieBuddyController.createMovieBuddy);
 
 // Get movie buddies for a specific show with filtering
 router.get('/buddies', async (req, res) => {
@@ -128,13 +136,16 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+// Add login route
+router.post('/login', movieBuddyController.loginMovieBuddy);
+
 // Get movie buddy group by ID
-router.get('/:id', getMovieBuddyGroupById);
+router.get('/:id', movieBuddyController.getMovieBuddyGroupById);
 
 // Delete movie buddy group
-router.delete('/:id', deleteMovieBuddyGroup);
+router.delete('/:id', movieBuddyController.deleteMovieBuddyGroup);
 
 // Update movie buddy profile
-router.put('/:id', updateMovieBuddy);
+router.put('/:id', movieBuddyController.updateMovieBuddy);
 
 module.exports = router;

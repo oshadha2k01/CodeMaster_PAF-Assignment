@@ -194,7 +194,7 @@ const BookingDetails = () => {
     const isMovieBuddy = storedEmail === bookingEmail && storedPhone === bookingPhone;
 
     if (isMovieBuddy) {
-      navigate('/movie-buddy-auth', {
+      navigate('/movie-buddy-login', {
         state: {
           movieName: booking.movieName,
           movieDate: booking.movieDate,
@@ -207,7 +207,7 @@ const BookingDetails = () => {
         }
       });
     } else {
-      navigate('/movie-buddy-form', {
+      navigate('/movie-buddy-login', {
         state: {
           movieName: booking.movieName,
           movieDate: booking.movieDate,

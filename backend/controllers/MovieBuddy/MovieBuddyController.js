@@ -1,4 +1,5 @@
 const MovieBuddy = require('../../models/MovieBuddy/MovieBuddyModel');
+const User = require('../../models/Auth/UserModel'); // Import User model for auth data
 
 // Create or update movie buddy
 const updateMovieBuddies = async (req, res) => {
@@ -16,13 +17,13 @@ const updateMovieBuddies = async (req, res) => {
     const results = [];
 
     for (const buddy of buddies) {
-      const { name, age, gender, email, phone, bookingId, seatNumbers, moviePreferences, privacySettings } = buddy;
+      const { name, age, gender, email, phone, password, bookingId, seatNumbers, moviePreferences, privacySettings } = buddy;
 
       // Validate buddy information
-      if (!name || !age || !gender || !bookingId || !email) {
+      if (!name || !age || !gender || !bookingId || !email || !password) {
         return res.status(400).json({
           success: false,
-          message: 'Missing required buddy information: name, age, gender, bookingId, or email'
+          message: 'Missing required buddy information: name, age, gender, bookingId, email, or password'
         });
       }
 
@@ -68,6 +69,7 @@ const updateMovieBuddies = async (req, res) => {
             gender,
             email,
             phone,
+            password,
             bookingId,
             seatNumbers,
             moviePreferences,
@@ -86,6 +88,7 @@ const updateMovieBuddies = async (req, res) => {
           gender,
           email,
           phone,
+          password,
           bookingId,
           seatNumbers,
           moviePreferences,
@@ -107,6 +110,80 @@ const updateMovieBuddies = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error updating movie buddies',
+      error: error.message
+    });
+  }
+};
+
+// Create/update a movie buddy
+const updateMovieBuddy = async (req, res) => {
+  try {
+    const {
+      movieName,
+      movieDate,
+      movieTime,
+      buddies
+    } = req.body;
+
+    if (!buddies || !buddies.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'No buddy information provided'
+      });
+    }
+
+    const buddy = buddies[0]; // assuming single buddy for now
+
+    // Find user by email but don't auto-fill fields
+    // Just verify that the user exists in our system
+    const user = await User.findOne({ email: buddy.email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found. Please login again.'
+      });
+    }
+
+    // Find existing MovieBuddy or create new one
+    const existingBuddy = await MovieBuddy.findOne({ email: buddy.email });
+    
+    // Use values provided in the form instead of auto-filling from User model
+    const buddyData = {
+      name: buddy.name, // Use name from form input
+      email: buddy.email, // Use email from form input
+      phone: buddy.phone, // Use phone from form input
+      age: buddy.age,
+      gender: buddy.gender,
+      movieName,
+      movieDate,
+      movieTime,
+      bookingId: buddy.bookingId,
+      privacySettings: buddy.privacySettings,
+      moviePreferences: buddy.moviePreferences,
+      seatNumbers: buddy.seatNumbers,
+      bookingDate: buddy.bookingDate || new Date()
+    };
+
+    let result;
+    if (existingBuddy) {
+      // Update existing buddy
+      result = await MovieBuddy.findByIdAndUpdate(existingBuddy._id, buddyData, { new: true });
+    } else {
+      // Create new buddy
+      const newBuddy = new MovieBuddy(buddyData);
+      result = await newBuddy.save();
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Movie buddy updated successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error updating movie buddy:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating movie buddy',
       error: error.message
     });
   }
@@ -252,7 +329,7 @@ const checkExistingUser = async (req, res) => {
 };
 
 // Update movie buddy details
-const updateMovieBuddy = async (req, res) => {
+const updateMovieBuddyDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -274,15 +351,195 @@ const updateMovieBuddy = async (req, res) => {
   }
 };
 
-// Create new movie buddy
+// Create/update movie buddy profile
 const createMovieBuddy = async (req, res) => {
   try {
-    const newBuddy = new MovieBuddy(req.body);
-    const savedBuddy = await newBuddy.save();
-    res.status(201).json(savedBuddy);
+    const {
+      email,
+      movieName,
+      movieDate,
+      movieTime,
+      bookingId,
+      age,
+      gender,
+      moviePreferences,
+      privacySettings,
+      seatNumbers
+    } = req.body;
+
+    // Validate required data
+    if (!email || !movieName || !movieDate || !movieTime || !bookingId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Find user in the User model to get their basic information
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found. Please register or login first.'
+      });
+    }
+
+    // Check if this specific user already has a movie buddy profile for this specific movie showing
+    const existingUserMovieBuddy = await MovieBuddy.findOne({ 
+      email,
+      movieName,
+      movieDate,
+      movieTime
+    });
+
+    // Only check for bookingId if we don't find a user-specific match
+    const existingBuddyByBookingId = !existingUserMovieBuddy ? 
+      await MovieBuddy.findOne({ bookingId }) : null;
+    
+    let movieBuddy;
+    
+    if (existingUserMovieBuddy) {
+      // Update existing movie buddy for this user and movie showing
+      movieBuddy = await MovieBuddy.findOneAndUpdate(
+        { _id: existingUserMovieBuddy._id },
+        {
+          // Basic info from User model
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+
+          // Movie-specific info from form
+          movieName,
+          movieDate,
+          movieTime,
+          bookingId,
+          age,
+          gender,
+          moviePreferences: moviePreferences || [],
+          privacySettings: privacySettings || {
+            showName: true,
+            showEmail: false,
+            showPhone: false,
+            petName: ''
+          },
+          seatNumbers: seatNumbers || []
+        },
+        { new: true }
+      );
+    } else if (existingBuddyByBookingId) {
+      // If another user has the same bookingId, generate a unique one
+      const uniqueBookingId = `${bookingId}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      
+      // Create a new movie buddy record with unique bookingId
+      movieBuddy = new MovieBuddy({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        movieName,
+        movieDate,
+        movieTime,
+        bookingId: uniqueBookingId, // Use the unique bookingId
+        age,
+        gender,
+        moviePreferences: moviePreferences || [],
+        privacySettings: privacySettings || {
+          showName: true,
+          showEmail: false,
+          showPhone: false,
+          petName: ''
+        },
+        seatNumbers: seatNumbers || []
+      });
+      
+      await movieBuddy.save();
+    } else {
+      // Create a new movie buddy record
+      movieBuddy = new MovieBuddy({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        movieName,
+        movieDate,
+        movieTime,
+        bookingId,
+        age,
+        gender,
+        moviePreferences: moviePreferences || [],
+        privacySettings: privacySettings || {
+          showName: true,
+          showEmail: false,
+          showPhone: false,
+          petName: ''
+        },
+        seatNumbers: seatNumbers || []
+      });
+      
+      await movieBuddy.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Movie buddy profile created/updated successfully',
+      data: movieBuddy
+    });
   } catch (error) {
-    console.error('Error in createMovieBuddy:', error);
-    res.status(500).json({ error: 'Failed to create movie buddy' });
+    console.error('Error creating movie buddy:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// Add this new function for handling login
+const loginMovieBuddy = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate inputs
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
+      });
+    }
+
+    // Find user by email
+    const buddy = await MovieBuddy.findOne({ email });
+    if (!buddy) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Compare passwords
+    const isMatch = await buddy.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Return success with user data (excluding password)
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      name: buddy.name,
+      email: buddy.email,
+      phone: buddy.phone,
+      id: buddy._id
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error during login',
+      error: error.message
+    });
   }
 };
 
@@ -293,6 +550,8 @@ module.exports = {
   deleteMovieBuddyGroup,
   getMovieBuddies,
   checkExistingUser,
+  updateMovieBuddyDetails,
+  createMovieBuddy,
   updateMovieBuddy,
-  createMovieBuddy
+  loginMovieBuddy
 };

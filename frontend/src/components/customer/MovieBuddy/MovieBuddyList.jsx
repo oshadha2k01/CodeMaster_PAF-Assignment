@@ -29,8 +29,8 @@ import {
   faUserCheck,
   faFilm
 } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate, useLocation } from 'react-router-dom';
-import MovieBuddyPortal from './MovieBuddyPortal';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+// import MovieBuddyPortal from './MovieBuddyPortal';
 import MovieBuddyNavBar from '../../navbar/MovieBuddyNavBar';
 
 const MovieBuddyList = () => {
@@ -352,20 +352,7 @@ const MovieBuddyList = () => {
               </div>
             )}
 
-            {movieFilter.isActive && !showAllBuddies && (
-              <div className="mb-6 p-4 bg-electric-purple/20 rounded-lg">
-                <h3 className="text-lg text-amber font-medium mb-2">
-                  Showing movie buddies for:
-                </h3>
-                <div className="flex items-center space-x-4">
-                  <span className="text-white font-bold">{movieFilter.movieName}</span>
-                  <span className="text-silver">•</span>
-                  <span className="text-silver">{formatDate(movieFilter.movieDate)}</span>
-                  <span className="text-silver">•</span>
-                  <span className="text-silver">{movieFilter.movieTime}</span>
-                </div>
-              </div>
-            )}
+            
 
             {displayedBuddies.length === 0 ? (
               <div className="text-center py-12">
