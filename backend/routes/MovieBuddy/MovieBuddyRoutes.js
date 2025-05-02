@@ -148,4 +148,38 @@ router.delete('/:id', movieBuddyController.deleteMovieBuddyGroup);
 // Update movie buddy profile
 router.put('/:id', movieBuddyController.updateMovieBuddy);
 
+// Delete movie buddy group by movie details
+router.delete('/:movieName/:movieDate/:movieTime', async (req, res) => {
+  try {
+    const { movieName, movieDate, movieTime } = req.params;
+    
+    // Delete all buddies for this specific movie showing
+    const result = await MovieBuddy.deleteMany({
+      movieName,
+      movieDate,
+      movieTime
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No movie buddy groups found to delete'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Movie buddy group deleted successfully',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting movie buddy group:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting movie buddy group',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

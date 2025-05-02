@@ -114,13 +114,19 @@ const MovieBuddy = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/movie-buddies/${groupToDelete.movieName}/${groupToDelete.movieDate}/${groupToDelete.movieTime}`);
-      toast.success('Movie buddy group deleted successfully');
-      fetchMovieBuddyGroups();
-      setDeleteModalOpen(false);
+      const response = await axios.delete(`http://localhost:3000/api/movie-buddies/${groupToDelete.movieName}/${groupToDelete.movieDate}/${groupToDelete.movieTime}`);
+      
+      if (response.data.success) {
+        toast.success('Movie buddy group deleted successfully');
+        fetchMovieBuddyGroups(); // Refresh the list
+        setDeleteModalOpen(false);
+        setGroupToDelete(null);
+      } else {
+        toast.error(response.data.message || 'Failed to delete movie buddy group');
+      }
     } catch (error) {
       console.error('Error deleting movie buddy group:', error);
-      toast.error('Failed to delete movie buddy group');
+      toast.error(error.response?.data?.message || 'Failed to delete movie buddy group');
     }
   };
 
