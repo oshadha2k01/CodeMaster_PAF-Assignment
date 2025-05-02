@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const FoodController = require('../controllers/FoodController');
-
+const FoodController = require('../../controllers/FoodManagement/FoodController');
 
 router.get('/', FoodController.getFood);
 router.get('/:id', FoodController.viewOneFood);

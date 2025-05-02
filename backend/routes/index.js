@@ -1,5 +1,14 @@
 const express = require('express');
+
+
 const router = express.Router();
+
+
+//new route for food
+const foodRoute = require('./FoodManagement/FoodRoutes.js');
+
+//new route for order
+const orderRoute = require('./FoodManagement/OrderRoute.js');
 
 // New route for Movie
 const movieRoute = require('./MovieManagement/MovieRoutes.js');
@@ -23,5 +32,14 @@ router.use('/bookings', bookingRoute);
 
 // New route usage for Movie Buddy
 router.use('/movie-buddies', movieBuddyRoute);
+
+// New route usage for Food
+router.use('/foods', foodRoute);
+
+// New route usage for Order        
+router.use('/orders', orderRoute);
+
+
+
 
 module.exports = router;

@@ -3,26 +3,8 @@ const Schema = mongoose.Schema;
 
 
 const OrderSchema = new Schema({
-    
-    // user id, email should added after the customer model created
-    /*userId : {
-        type: schema.Types.ObjectId,
-        ref: "Customer",
-        required: true},
-    Email:{
-      type:schema.Types.ObjectId,
-      ref:"Customer"
-    },*/
 
-    meals : {
-        type: Schema.Types.ObjectId,
-        ref: "Food",
-        required: true
-    },
-    quantity : {
-        type: Number,
-        required: true
-    },
+   
     date : {
         type: Date,
         default: Date.now
@@ -35,6 +17,10 @@ const OrderSchema = new Schema({
         type: Number,
         required: true
     },
+    meals : [{
+        food: {type: Schema.Types.ObjectId, ref: "Food", required: true},
+        quantity: {type: Number, required: true},
+    }]
 
 });
 
