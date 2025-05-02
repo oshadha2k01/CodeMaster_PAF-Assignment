@@ -114,7 +114,7 @@ const MovieBuddy = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/movie-buddies/${groupToDelete.movieName}/${groupToDelete.movieDate}/${groupToDelete.movieTime}`);
+      await axios.delete(`http://localhost:3000/api/movie-buddies/${groupToDelete._id}`);
       toast.success('Movie buddy group deleted successfully');
       fetchMovieBuddyGroups();
       setDeleteModalOpen(false);
