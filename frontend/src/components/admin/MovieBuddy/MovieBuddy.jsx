@@ -86,9 +86,31 @@ const MovieBuddy = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/movie-buddies/stats');
+      const response = await axios.get('http://localhost:3000/api/movie-buddies/all');
       if (response.data.success) {
-        setStats(response.data.data);
+        const groups = response.data.data;
+        
+        // Calculate statistics
+        const stats = {
+          totalGroups: groups.length,
+          totalBuddies: groups.reduce((acc, group) => acc + (group.buddies?.length || 0), 0),
+          totalSeats: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.reduce((seatAcc, buddy) => {
+              return seatAcc + (Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.length : 0);
+            }, 0) || 0);
+          }, 0),
+          totalGroupBookings: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.filter(buddy => buddy.isGroup).length || 0);
+          }, 0),
+          totalSingleBookings: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.filter(buddy => !buddy.isGroup).length || 0);
+          }, 0),
+          averageGroupSize: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.length || 0);
+          }, 0) / (groups.length || 1)
+        };
+        
+        setStats(stats);
       } else {
         toast.error('Failed to load statistics');
       }
