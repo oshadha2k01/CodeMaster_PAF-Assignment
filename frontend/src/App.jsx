@@ -25,10 +25,10 @@ import AddFood from './components/admin/Foodmanagement/AddFood';
 import FoodList from './components/admin/Foodmanagement/FoodList';
 import ShowFoods from './components/customer/FoodManagement/ShowFoods';
 import Cart from './components/customer/FoodManagement/Cart';
-import Payment from './components/customer/Payment/Payment';
-import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
-import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
-import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+//import Payment from './components/customer/Payment/Payment';
+//import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
+//import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
+//import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
 import Payment from './components/customer/BookingManagement/Payment';
 
 import Login from './components/login';
@@ -66,7 +66,7 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
-          <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          {/* <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} /> */}
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
