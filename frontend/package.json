@@ -18,7 +18,7 @@
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.0.14",
     "axios": "^1.8.4",
-    "electron-to-chromium": "^1.5.132",
+    "electron-to-chromium": "^1.5.149",
     "framer-motion": "^12.5.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
