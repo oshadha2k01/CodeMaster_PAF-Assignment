@@ -52,7 +52,7 @@ function App() {
           <Route path="/admin/movies/add" element={<MovieForm />} />
           <Route path="/admin/movies/edit/:id" element={<MovieForm />} />
           <Route path="/admin/bookings" element={<BookingList />} />
-          <Route path="/admin/food" element={<AdminDashboard />} />
+          {/* <Route path="/foodlist" element={<AdminDashboard />} /> */}
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
