@@ -1,4 +1,4 @@
-const Food = require("../models/FoodModel");
+const Food = require('../../models/FoodManagement/FoodModel');
 
 // Get all foods
 exports.getFood = async (req, res) => {
@@ -21,12 +21,17 @@ exports.AddFood = async (req, res) => {
             return res.status(400).json({ success: false, error: "Please fill all the fields" });
         }
 
+        // Validate that imageUrl is a base64 string
+        if (!imageUrl.startsWith('data:image/')) {
+            return res.status(400).json({ success: false, error: "Invalid image format" });
+        }
+
         // Create a new food item
         const newFood = new Food({
             name,
-            ingrediants,
+            ingrediants: ingrediants.split(',').map(item => item.trim()), // Convert string to array
             category,
-            price,
+            price: Number(price),
             imageUrl
         });
 

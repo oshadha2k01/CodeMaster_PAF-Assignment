@@ -49,6 +49,7 @@ const BookingDetails = () => {
     }
   }, [editFormData.movieDate, editFormData.movieTime]);
 
+  // Show movie buddy dialog after 2 seconds
   useEffect(() => {
     if (!loading && booking) {
       const timer = setTimeout(() => {
