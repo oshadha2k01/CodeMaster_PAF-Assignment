@@ -30,6 +30,7 @@ import Cart from './components/customer/FoodManagement/Cart';
 //import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 //import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
 import Payment from './components/customer/BookingManagement/Payment';
+import Locations from "./components/customer/Locations";
 
 import Login from './components/login';
 import Register from './components/register';
