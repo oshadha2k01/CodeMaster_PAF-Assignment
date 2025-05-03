@@ -15,14 +15,8 @@ build/
 .vite/
 *.local
 
-<<<<<<< HEAD
-
 # Editor directories and files
 .vscode/*
-=======
-# Editor files
-.vscode/
->>>>>>> origin/dev
 !.vscode/extensions.json
 .idea/
 .DS_Store
