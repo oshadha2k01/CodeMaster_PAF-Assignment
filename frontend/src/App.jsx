@@ -21,6 +21,7 @@ import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfil
 import OrderConfirm from './components/customer/Payment/OrderConfirm';
 import Login from './components/login';
 import Register from './components/register';
+import Order from './components/customer/FoodManagement/Order';
 function App() {
   return (
     <Router>
@@ -49,7 +50,11 @@ function App() {
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/order-confirmation" element={<OrderConfirm/>}/>
+          <Route path='/order' element={<Order/>}/>
+
           
+
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>
