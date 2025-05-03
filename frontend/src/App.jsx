@@ -10,9 +10,25 @@ import BookingForm from './components/customer/BookingManagement/BookingForm';
 import BookingDetails from './components/customer/BookingManagement/BookingDetails';
 import MovieBuddyList from './components/customer/MovieBuddy/MovieBuddyList';
 import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
-import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
+// import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
 import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+// import MovieBuddyAuth from './components/customer/MovieBuddy/MovieBuddyAuth';
+import MovieBuddyMainProfile from './components/customer/MovieBuddy/MovieBuddyMainProfile';
+// import MovieBuddyFilter from './components/customer/MovieBuddy/MovieBuddyFilter';
+import MovieBuddyLogin from './components/customer/MovieBuddy/MovieBuddyLogin';
+import MovieBuddySignUp from './components/customer/MovieBuddy/MovieBuddySignup';
+
+// import Login from './components/login';
+// import Register from './components/register';
+import AddFood from './components/admin/Foodmanagement/AddFood';
+import FoodList from './components/admin/Foodmanagement/FoodList';
+import ShowFoods from './components/customer/FoodManagement/ShowFoods';
+import Cart from './components/customer/FoodManagement/Cart';
+//import Payment from './components/customer/Payment/Payment';
+//import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
+//import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
+//import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
 import Payment from './components/customer/BookingManagement/Payment';
 import Locations from "./components/customer/Locations";
 
@@ -36,7 +52,22 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
-          <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          {/* <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} /> */}
+          <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
+          <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
+          {/* <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} /> */}
+          {/* <Route path="/movie-buddy-auth" element={<MovieBuddyAuth />} /> */}
+          <Route path="/movie-buddy-main-profile" element={<MovieBuddyMainProfile />} />
+          {/* <Route path="/movie-buddy-filter" element={<MovieBuddyFilter />} /> */}
+          <Route path="/movie-buddy-login" element={<MovieBuddyLogin />} />
+          <Route path="/movie-buddy-signup" element={<MovieBuddySignUp />} />
+          
+          <Route path="/admin/food" element={<FoodList />} />
+          <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
+          <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
+          <Route path="/movie-buddies" element={<MovieBuddyList />} />
+          {/* <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} /> */}
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
