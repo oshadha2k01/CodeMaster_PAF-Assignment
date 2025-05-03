@@ -23,7 +23,8 @@ import {
   faFilter,
   faUserCircle,
   faUserFriends,
-  faTimes
+  faTimes,
+  faIdCard
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import CustomerNavBar from '../../navbar/MainNavBar';
@@ -43,6 +44,8 @@ const MovieBuddyList = () => {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showFilterPortal, setShowFilterPortal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     fetchMovieBuddyGroups();
@@ -156,6 +159,11 @@ const MovieBuddyList = () => {
     
     // Open WhatsApp in a new tab
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleViewProfile = (buddy) => {
+    setSelectedProfile(buddy);
+    setShowProfileModal(true);
   };
 
   const filteredGroups = movieBuddyGroups
@@ -328,6 +336,13 @@ const MovieBuddyList = () => {
                             </span>
                           )}
                         </div>
+                        <button
+                          onClick={() => handleViewProfile(buddy)}
+                          className="p-2 text-amber hover:text-amber/80 transition-colors duration-200"
+                          title="View Profile"
+                        >
+                          <FontAwesomeIcon icon={faIdCard} />
+                        </button>
                       </div>
                     ))}
                     {group.buddies.length > 3 && (
@@ -398,6 +413,111 @@ const MovieBuddyList = () => {
               </button>
             </div>
             {/* Add group details rendering logic here */}
+          </div>
+        </div>
+      )}
+
+      {/* Add Profile Modal */}
+      {showProfileModal && selectedProfile && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-deep-space p-8 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-amber">Profile Details</h2>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="text-silver hover:text-amber"
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Profile Header */}
+              <div className="flex items-center space-x-4">
+                <div className="p-4 bg-amber/20 rounded-full">
+                  <FontAwesomeIcon icon={faUserCircle} className="text-amber text-4xl" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-amber">
+                    {selectedProfile.privacySettings?.showName ? selectedProfile.name : selectedProfile.privacySettings?.petName || 'Anonymous'}
+                  </h3>
+                  <p className="text-silver/75">
+                    {selectedProfile.isGroup ? 'Group Booking' : 'Single Booking'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Profile Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-electric-purple/10 p-4 rounded-lg">
+                  <h4 className="text-amber font-semibold mb-2">Personal Information</h4>
+                  <div className="space-y-2">
+                    <p className="text-silver">
+                      <span className="text-silver/60">Age:</span> {selectedProfile.age}
+                    </p>
+                    <p className="text-silver">
+                      <span className="text-silver/60">Gender:</span> {selectedProfile.gender}
+                    </p>
+                    {selectedProfile.privacySettings?.showEmail && (
+                      <p className="text-silver">
+                        <span className="text-silver/60">Email:</span> {selectedProfile.email}
+                      </p>
+                    )}
+                    {selectedProfile.privacySettings?.showPhone && (
+                      <p className="text-silver">
+                        <span className="text-silver/60">Phone:</span> {selectedProfile.phone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-electric-purple/10 p-4 rounded-lg">
+                  <h4 className="text-amber font-semibold mb-2">Booking Details</h4>
+                  <div className="space-y-2">
+                    <p className="text-silver">
+                      <span className="text-silver/60">Seat Numbers:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedProfile.seatNumbers?.map((seat, index) => (
+                          <span
+                            key={index}
+                            className="bg-amber/20 text-amber px-2 py-0.5 rounded-full text-xs flex items-center"
+                          >
+                            <FontAwesomeIcon icon={faChair} className="mr-1" />
+                            {seat}
+                          </span>
+                        ))}
+                      </div>
+                    </p>
+                    {selectedProfile.moviePreferences && (
+                      <p className="text-silver">
+                        <span className="text-silver/60">Movie Preferences:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedProfile.moviePreferences.map((pref, index) => (
+                            <span
+                              key={index}
+                              className="bg-electric-purple/20 text-electric-purple px-2 py-0.5 rounded-full text-xs"
+                            >
+                              {pref}
+                            </span>
+                          ))}
+                        </div>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4 mt-6">
+                <button
+                  onClick={() => handleWhatsAppChat(selectedProfile)}
+                  className="px-6 py-2 bg-amber/20 text-amber hover:bg-amber/30 rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                >
+                  <FontAwesomeIcon icon={faUserFriends} />
+                  <span>Chat on WhatsApp</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
