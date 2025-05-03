@@ -4,14 +4,7 @@ import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faEdit, 
-  faTrash, 
-  faChair,
-  faTimes,
-  faSave,
-  faCreditCard,
-} from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faChair, faTimes, faSave, faCreditCard } from '@fortawesome/free-solid-svg-icons';
 import SeatSelection from './SeatSelection';
 import MainNavBar from '../../navbar/MainNavBar';
 
@@ -30,12 +23,14 @@ const BookingDetails = () => {
     email: '',
     phone: ''
   });
+  const [totalAmount, setTotalAmount] = useState(0); // New state for total amount
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [showTimes, setShowTimes] = useState([]);
   const [seatSelectionOpen, setSeatSelectionOpen] = useState(false);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [movieData, setMovieData] = useState(null);
   const [showMovieBuddyDialog, setShowMovieBuddyDialog] = useState(false);
+  const seatPrice = 500; // Cost per seat in rupees
 
   useEffect(() => {
     fetchBookingDetails();
@@ -60,9 +55,18 @@ const BookingDetails = () => {
       const timer = setTimeout(() => {
         setShowMovieBuddyDialog(true);
       }, 2000);
-      return () => clearTimeout(timer); // Cleanup timeout on unmount
+      return () => clearTimeout(timer);
     }
   }, [loading, booking]);
+
+  useEffect(() => {
+    // Update total amount when booking or editFormData changes
+    if (!editMode && booking) {
+      setTotalAmount(booking.seatNumbers.length * seatPrice);
+    } else if (editMode) {
+      setTotalAmount(editFormData.seatNumbers.length * seatPrice);
+    }
+  }, [booking, editFormData.seatNumbers, editMode]);
 
   const fetchMovieData = async () => {
     try {
@@ -70,16 +74,11 @@ const BookingDetails = () => {
       if (response.data && response.data.data) {
         const movieData = response.data.data;
         setMovieData(movieData);
-        
         const validShowTimes = movieData.show_times || [];
         if (Array.isArray(validShowTimes) && validShowTimes.length > 0) {
           setShowTimes(validShowTimes);
-          
           if (!validShowTimes.includes(editFormData.movieTime)) {
-            setEditFormData(prev => ({
-              ...prev,
-              movieTime: validShowTimes[0]
-            }));
+            setEditFormData(prev => ({ ...prev, movieTime: validShowTimes[0] }));
           }
         } else {
           setShowTimes([]);
@@ -117,7 +116,6 @@ const BookingDetails = () => {
       const response = await axios.get(`http://localhost:3000/api/bookings/${bookingId}`);
       setBooking(response.data);
       setEditFormData(response.data);
-      
       if (response.data.movie_id) {
         const movieResponse = await axios.get(`http://localhost:3000/api/movies/${response.data.movie_id}`);
         if (movieResponse.data && movieResponse.data.data) {
@@ -125,12 +123,8 @@ const BookingDetails = () => {
           setMovieData(movieData);
           const validShowTimes = movieData.show_times || [];
           setShowTimes(validShowTimes);
-          
           if (!validShowTimes.includes(response.data.movieTime)) {
-            setEditFormData(prev => ({
-              ...prev,
-              movieTime: validShowTimes[0] || ''
-            }));
+            setEditFormData(prev => ({ ...prev, movieTime: validShowTimes[0] || '' }));
           }
         }
       }
@@ -152,7 +146,6 @@ const BookingDetails = () => {
         toast.error('Please select at least one seat');
         return;
       }
-
       await axios.put(`http://localhost:3000/api/bookings/${bookingId}`, editFormData);
       toast.success('Booking updated successfully');
       setEditMode(false);
@@ -174,13 +167,13 @@ const BookingDetails = () => {
     }
   };
 
-  const handleSeatSelect = (seats) => {
+  const handleSeatSelect = (seats, total) => {
     setEditFormData({ ...editFormData, seatNumbers: seats });
-    setSeatSelectionOpen(false);
+    setTotalAmount(total);
   };
 
   const handleProceedToPayment = () => {
-    navigate('/payment', { state: { booking } });
+    navigate('/Payment', { state: { booking, totalAmount } });
   };
 
   const handleMovieBuddyConfirm = () => {
@@ -255,9 +248,7 @@ const BookingDetails = () => {
             {editMode ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Movie Name
-                  </label>
+                  <label className="block text-sm font-medium text-silver mb-2">Movie Name</label>
                   <input
                     type="text"
                     value={editFormData.movieName}
@@ -267,9 +258,7 @@ const BookingDetails = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Date
-                  </label>
+                  <label className="block text-sm font-medium text-silver mb-2">Date</label>
                   <input
                     type="date"
                     value={editFormData.movieDate}
@@ -278,9 +267,7 @@ const BookingDetails = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Seats
-                  </label>
+                  <label className="block text-sm font-medium text-silver mb-2">Seats</label>
                   <div
                     onClick={() => {
                       if (!editFormData.movieDate || !editFormData.movieTime) {
@@ -297,9 +284,7 @@ const BookingDetails = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Customer Name
-                  </label>
+                  <label className="block text-sm font-medium text-silver mb-2">Customer Name</label>
                   <input
                     type="text"
                     value={editFormData.name}
@@ -308,9 +293,7 @@ const BookingDetails = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-silver mb-2">Email</label>
                   <input
                     type="email"
                     value={editFormData.email}
@@ -319,15 +302,16 @@ const BookingDetails = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-silver mb-2">
-                    Phone
-                  </label>
+                  <label className="block text-sm font-medium text-silver mb-2">Phone</label>
                   <input
                     type="tel"
                     value={editFormData.phone}
                     onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
                     className="w-full px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
                   />
+                </div>
+                <div className="text-silver">
+                  Total Amount: <span className="font-bold text-amber">₹{totalAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-end space-x-4 mt-6">
                   <button
@@ -381,6 +365,10 @@ const BookingDetails = () => {
                     <h3 className="text-lg font-semibold text-amber mb-2">Phone</h3>
                     <p className="text-silver">{booking.phone}</p>
                   </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-amber mb-2">Total Amount</h3>
+                    <p className="text-silver">₹{totalAmount.toLocaleString('en-IN')}</p>
+                  </div>
                 </div>
 
                 <div className="mt-8 flex justify-end">
@@ -433,7 +421,6 @@ const BookingDetails = () => {
         </div>
       )}
 
-      {/* Movie Buddy Dialog */}
       {showMovieBuddyDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-md w-full">

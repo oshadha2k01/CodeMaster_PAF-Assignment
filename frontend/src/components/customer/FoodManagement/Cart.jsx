@@ -175,7 +175,7 @@ const Cart = () => {
                       totalAmount: calculateTotal()
                     }
                   })}
-                  className="w-full mt-6 bg-scarlet hover:bg-amber px-6 py-3 rounded-lg transition-colors duration-300 text-black font-bold"
+                  className="px-6 py-2.5 bg-scarlet hover:bg-amber text-white rounded-lg transition-colors duration-300 flex items-center"
                 >
                   Proceed to Checkout
                 </button>

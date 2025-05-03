@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import ShowFoods from '../customer/FoodManagement/ShowFoods';
 import {
   faFilm,
   faCalendar,
@@ -23,7 +22,7 @@ const MainNavBar = () => {
     { path: '/now-showing', label: 'Now Showing', icon: faFilm },
     { path: '/upcoming', label: 'Upcoming', icon: faCalendar },
     { path: '/ShowFoods', label: 'Beverages', icon: faGlassMartiniAlt },
-    { path: '/show-times', label: 'Show Times', icon: faClock }
+    { path: '/show-times', label: 'Locations', icon: faClock }
     
     
   ];

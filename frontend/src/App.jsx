@@ -29,6 +29,7 @@ import Payment from './components/customer/Payment/Payment';
 import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
 import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+import Payment from './components/customer/BookingManagement/Payment';
 
 import Login from './components/login';
 import Register from './components/register';
@@ -65,19 +66,12 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
-              
-
-
-           <Route path='/admin/add-food' element={<AddFood />}></Route>
-          <Route path='/foodlist' element={<FoodList/>}></Route>
-          <Route path='/showfoods' element={<ShowFoods/>}></Route>
-          <Route path='/cart' element={<Cart/>}></Route>
-          <Route path="/payment" element={<Payment/>} /> 
           <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<Register />}/>
+          <Route path="/Payment" element={<Payment />} />
         </Routes>
       </div>
     </Router>

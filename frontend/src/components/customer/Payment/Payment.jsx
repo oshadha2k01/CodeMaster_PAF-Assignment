@@ -9,6 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 const Payment = () => {
   const location = useLocation();
@@ -26,6 +27,16 @@ const Payment = () => {
   const [errors, setErrors] = useState({});
 
   // Validation functions
+  const validateCart = () => {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+      return 'Cart is empty. Please add items to your cart.';
+    }
+    if (typeof totalAmount !== 'number' || totalAmount <= 0) {
+      return 'Invalid total amount. Please check your cart.';
+    }
+    return '';
+  };
+
   const validateCardNumber = (number) => {
     const cleanNumber = number.replace(/\s/g, '');
     if (!cleanNumber) return 'Card number is required';
@@ -67,7 +78,6 @@ const Payment = () => {
 
     switch (name) {
       case 'cardNumber':
-        // Only allow digits and format with spaces
         formattedValue = value
           .replace(/\D/g, '')
           .slice(0, 16)
@@ -75,12 +85,10 @@ const Payment = () => {
         break;
 
       case 'cardHolder':
-        // Only allow letters and spaces
         formattedValue = value.replace(/[^A-Za-z\s]/g, '');
         break;
 
       case 'expiryDate':
-        // Format as MM/YY
         formattedValue = value
           .replace(/\D/g, '')
           .slice(0, 4)
@@ -88,7 +96,6 @@ const Payment = () => {
         break;
 
       case 'cvv':
-        // Only allow 3 digits
         formattedValue = value.replace(/\D/g, '').slice(0, 3);
         break;
 
@@ -101,7 +108,6 @@ const Payment = () => {
       [name]: formattedValue
     }));
 
-    // Validate in real-time
     let error = '';
     switch (name) {
       case 'cardNumber':
@@ -126,28 +132,61 @@ const Payment = () => {
     }));
   };
 
+  const handleCashPayment = async () => {
+    const cartError = validateCart();
+    if (cartError) {
+      toast.error(cartError);
+      return;
+    }
+
+    try {
+      const payload = {
+        items: cartItems,
+        totalAmount,
+        paymentMethod: 'cash',
+        status: 'pending'
+      };
+      console.log('Cash Payment Request Payload:', payload);
+      
+      const response = await axios.post('http://localhost:3000/api/orders', payload);
+      console.log('Cash Payment Response:', response.data);
+
+      if (response.status === 201) {
+        toast.success('Order placed successfully! Please pay at counter.');
+        localStorage.removeItem('foodCart');
+        setTimeout(() => {
+          navigate('/order-confirmation', { 
+            state: { 
+              orderDetails: {
+                items: cartItems,
+                total: totalAmount,
+                paymentMethod: 'cash',
+                orderId: response.data._id
+              }
+            }
+          });
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error placing cash order:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to place order. Please try again.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (paymentMethod === 'cash') {
-      // Handle cash payment
-      toast.success('Order placed successfully! Please pay at counter.');
-      localStorage.removeItem('foodCart');
-      setTimeout(() => {
-        navigate('/order-confirmation', { 
-          state: { 
-            orderDetails: {
-              items: cartItems,
-              total: totalAmount,
-              paymentMethod: 'cash'
-            }
-          }
-        });
-      }, 2000);
+      handleCashPayment();
       return;
     }
 
-    // Validate card payment
+    const cartError = validateCart();
+    if (cartError) {
+      toast.error(cartError);
+      return;
+    }
+
     const newErrors = {};
     if (!formData.cardNumber || formData.cardNumber.replace(/\s/g, '').length !== 16) {
       newErrors.cardNumber = 'Valid card number is required';
@@ -167,24 +206,40 @@ const Payment = () => {
       return;
     }
 
-    // Process payment
     toast.info('Processing payment...');
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Payment successful!');
-      localStorage.removeItem('foodCart');
-      navigate('/order-confirmation', { 
-        state: { 
-          orderDetails: {
-            items: cartItems,
-            total: totalAmount,
-            paymentMethod: 'card'
-          }
+      const payload = {
+        items: cartItems,
+        totalAmount,
+        paymentMethod: 'card',
+        status: 'paid',
+        cardDetails: {
+          lastFour: formData.cardNumber.slice(-4),
+          expiryDate: formData.expiryDate
         }
-      });
+      };
+      console.log('Card Payment Request Payload:', payload);
+
+      const response = await axios.post('http://localhost:3000/api/orders', payload);
+      console.log('Card Payment Response:', response.data);
+
+      if (response.status === 201) {
+        toast.success('Payment successful!');
+        localStorage.removeItem('foodCart');
+        navigate('/order-confirmation', { 
+          state: { 
+            orderDetails: {
+              items: cartItems,
+              total: totalAmount,
+              paymentMethod: 'card',
+              orderId: response.data._id
+            }
+          }
+        });
+      }
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
+      console.error('Error processing card payment:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Payment failed. Please try again.');
     }
   };
 
@@ -202,7 +257,6 @@ const Payment = () => {
         <div className="bg-electric-purple/10 rounded-lg p-6">
           <h1 className="text-2xl font-bold text-amber mb-6">Payment</h1>
 
-          {/* Order Summary */}
           <div className="mb-6 p-4 bg-deep-space/50 rounded-lg">
             <h2 className="text-lg font-semibold text-silver mb-3">Order Summary</h2>
             <div className="space-y-2">
@@ -221,7 +275,6 @@ const Payment = () => {
             </div>
           </div>
 
-          {/* Payment Method Selection */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-silver mb-3">Payment Method</h2>
             <div className="grid grid-cols-2 gap-4">
@@ -252,10 +305,8 @@ const Payment = () => {
             </div>
           </div>
 
-          {/* Card Payment Form */}
           {paymentMethod === 'card' && (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Card Number Input */}
               <div>
                 <label className="block text-silver mb-2">
                   Card Number <span className="text-red-500">*</span>
@@ -278,7 +329,6 @@ const Payment = () => {
                 </p>
               </div>
 
-              {/* Cardholder Name Input */}
               <div>
                 <label className="block text-silver mb-2">
                   Cardholder Name <span className="text-red-500">*</span>
@@ -302,7 +352,6 @@ const Payment = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Expiry Date Input */}
                 <div>
                   <label className="block text-silver mb-2">
                     Expiry Date <span className="text-red-500">*</span>
@@ -325,7 +374,6 @@ const Payment = () => {
                   </p>
                 </div>
 
-                {/* CVV Input */}
                 <div>
                   <label className="block text-silver mb-2">
                     CVV <span className="text-red-500">*</span>
@@ -349,7 +397,6 @@ const Payment = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={Object.keys(errors).some(key => errors[key])}
@@ -364,6 +411,16 @@ const Payment = () => {
               </button>
             </form>
           )}
+
+          {paymentMethod === 'cash' && (
+            <button
+              onClick={handleCashPayment}
+              className="w-full mt-6 bg-scarlet hover:bg-amber px-6 py-3 rounded-lg transition-colors duration-300 text-black font-bold flex items-center justify-center gap-2"
+            >
+              <FontAwesomeIcon icon={faMoneyBill} />
+              Pay ${totalAmount.toFixed(2)} at Counter
+            </button>
+          )}
         </div>
       </div>
       <ToastContainer theme="dark" />
@@ -371,4 +428,4 @@ const Payment = () => {
   );
 };
 
-export default Payment; 
+export default Payment;
