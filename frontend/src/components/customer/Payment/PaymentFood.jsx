@@ -63,29 +63,27 @@ const Payment = () => {
   const validateExpiryDate = (date) => {
     if (!date) return 'Expiry date is required';
     if (!/^\d{2}\/\d{2}$/.test(date)) return 'Invalid format (MM/YY)';
-
     const [month, year] = date.split('/');
     const expiry = new Date(2000 + parseInt(year), parseInt(month) - 1);
     const today = new Date();
-    
-    if (parseInt(month) < 1 || parseInt(month) > 12) return 'Invalid month';
-    if (expiry < today) return 'Card has expired';
+    if (expiry <= today) return 'Card has expired';
     return '';
   };
 
   const validateCVV = (cvv) => {
     if (!cvv) return 'CVV is required';
-    if (!/^\d{3}$/.test(cvv)) return 'CVV must be 3 digits';
+    if (!/^\d+$/.test(cvv)) return 'CVV must contain only digits';
+    if (cvv.length !== 3) return 'CVV must be exactly 3 digits';
     return '';
   };
 
-  // Handle input changes with real-time validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let formattedValue = value;
 
     switch (name) {
       case 'cardNumber':
+        // Only allow digits and format with spaces
         formattedValue = value
           .replace(/\D/g, '')
           .slice(0, 16)
@@ -93,10 +91,12 @@ const Payment = () => {
         break;
 
       case 'cardHolder':
+        // Only allow letters and spaces
         formattedValue = value.replace(/[^A-Za-z\s]/g, '');
         break;
 
       case 'expiryDate':
+        // Format as MM/YY
         formattedValue = value
           .replace(/\D/g, '')
           .slice(0, 4)
@@ -104,6 +104,7 @@ const Payment = () => {
         break;
 
       case 'cvv':
+        // Only allow 3 digits
         formattedValue = value.replace(/\D/g, '').slice(0, 3);
         break;
 
@@ -116,6 +117,7 @@ const Payment = () => {
       [name]: formattedValue
     }));
 
+    // Validate in real-time
     let error = '';
     switch (name) {
       case 'cardNumber':
@@ -156,13 +158,12 @@ const Payment = () => {
       const payload = {
         meals,
         totalprice: totalAmount,
+        paymentMethod: 'cash',
         status: 'pending'
       };
-      console.log('Cash Payment Request Payload:', payload);
 
       const response = await axios.post('http://localhost:3000/api/orders', payload);
-      console.log('Cash Payment Response:', response.data);
-
+      
       if (response.status === 201) {
         toast.success('Order placed successfully! Please pay at counter.');
         localStorage.removeItem('foodCart');
@@ -173,7 +174,7 @@ const Payment = () => {
                 items: cartItems,
                 total: totalAmount,
                 paymentMethod: 'cash',
-                orderId: response.data._id
+                orderId: response.data.data._id
               }
             }
           });
@@ -189,10 +190,11 @@ const Payment = () => {
     e.preventDefault();
     
     if (paymentMethod === 'cash') {
-      handleCashPayment();
+      await handleCashPayment();
       return;
     }
 
+    // Validate card payment
     const cartError = validateCart();
     if (cartError) {
       toast.error(cartError);
@@ -218,40 +220,83 @@ const Payment = () => {
       return;
     }
 
+    // Process card payment
     toast.info('Processing payment...');
     try {
       const meals = cartItems.map(item => ({
         food: item._id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        price: item.price,
+        name: item.name
       }));
+
+      const paymentDetails = {
+        cardNumber: formData.cardNumber.replace(/\s/g, '').slice(-4), // Only send last 4 digits
+        cardHolder: formData.cardHolder,
+        expiryDate: formData.expiryDate,
+        paymentMethod: 'card'
+      };
 
       const payload = {
         meals,
         totalprice: totalAmount,
-        status: 'paid'
+        paymentMethod: 'card',
+        status: 'paid',
+        paymentDetails,
+        orderDate: new Date().toISOString(),
+        customerDetails: {
+          // Add any customer details you have access to
+          // For example, if you have user info in localStorage or context
+          // customerId: localStorage.getItem('userId'),
+          // customerName: localStorage.getItem('userName'),
+        }
       };
-      console.log('Card Payment Request Payload:', payload);
 
       const response = await axios.post('http://localhost:3000/api/orders', payload);
-      console.log('Card Payment Response:', response.data);
 
       if (response.status === 201) {
-        toast.success('Payment successful!');
-        localStorage.removeItem('foodCart');
-        navigate('/order-confirmation', { 
-          state: { 
-            orderDetails: {
-              items: cartItems,
-              total: totalAmount,
-              paymentMethod: 'card',
-              orderId: response.data._id
-            }
+        // Show success notification with more details
+        toast.success(
+          <div>
+            <h3 className="font-bold mb-2">Payment Successful! 🎉</h3>
+            <p>Order ID: {response.data.data._id}</p>
+            <p>Amount: ${totalAmount.toFixed(2)}</p>
+            <p>Payment Method: Card</p>
+            <p className="text-sm mt-2">Redirecting to order confirmation...</p>
+          </div>,
+          {
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
           }
-        });
+        );
+
+        localStorage.removeItem('foodCart');
+        setTimeout(() => {
+          navigate('/order-confirm', { 
+            state: { 
+              orderDetails: {
+                items: cartItems,
+                total: totalAmount,
+                paymentMethod: 'card',
+                orderId: response.data.data._id,
+                paymentDetails: {
+                  ...paymentDetails,
+                  transactionId: response.data.data._id
+                }
+              }
+            }
+          });
+        }, 2000);
       }
     } catch (error) {
       console.error('Error processing card payment:', error.response?.data || error.message);
-      toast.error(error.response?.data?.message || JSON.stringify(error.response?.data) || 'Payment failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Payment failed. Please try again.');
     }
   };
 
@@ -269,6 +314,7 @@ const Payment = () => {
         <div className="bg-electric-purple/10 rounded-lg p-6">
           <h1 className="text-2xl font-bold text-amber mb-6">Payment</h1>
 
+          {/* Order Summary */}
           <div className="mb-6 p-4 bg-deep-space/50 rounded-lg">
             <h2 className="text-lg font-semibold text-silver mb-3">Order Summary</h2>
             <div className="space-y-2">
@@ -287,6 +333,7 @@ const Payment = () => {
             </div>
           </div>
 
+          {/* Payment Method Selection */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-silver mb-3">Payment Method</h2>
             <div className="grid grid-cols-2 gap-4">
@@ -317,8 +364,10 @@ const Payment = () => {
             </div>
           </div>
 
+          {/* Card Payment Form */}
           {paymentMethod === 'card' && (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Card Number Input */}
               <div>
                 <label className="block text-silver mb-2">
                   Card Number <span className="text-red-500">*</span>
@@ -341,6 +390,7 @@ const Payment = () => {
                 </p>
               </div>
 
+              {/* Cardholder Name Input */}
               <div>
                 <label className="block text-silver mb-2">
                   Cardholder Name <span className="text-red-500">*</span>
@@ -364,6 +414,7 @@ const Payment = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                {/* Expiry Date Input */}
                 <div>
                   <label className="block text-silver mb-2">
                     Expiry Date <span className="text-red-500">*</span>
@@ -386,6 +437,7 @@ const Payment = () => {
                   </p>
                 </div>
 
+                {/* CVV Input */}
                 <div>
                   <label className="block text-silver mb-2">
                     CVV <span className="text-red-500">*</span>
@@ -409,6 +461,7 @@ const Payment = () => {
                 </div>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={Object.keys(errors).some(key => errors[key])}
@@ -424,6 +477,7 @@ const Payment = () => {
             </form>
           )}
 
+          {/* Cash Payment Button */}
           {paymentMethod === 'cash' && (
             <button
               onClick={handleCashPayment}

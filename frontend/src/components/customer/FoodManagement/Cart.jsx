@@ -13,6 +13,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ShowFoods from './ShowFoods';
 
+
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
@@ -169,7 +170,7 @@ const Cart = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => navigate('/payment', { 
+                  onClick={() => navigate('/PaymentFood', { 
                     state: { 
                       cartItems: cartItems,
                       totalAmount: calculateTotal()

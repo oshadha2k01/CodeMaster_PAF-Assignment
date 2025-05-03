@@ -66,8 +66,6 @@ const Order = () => {
     switch (status.toLowerCase()) {
       case 'paid':
         return 'text-green-500';
-      case 'pending':
-        return 'text-yellow-500';
       case 'cancelled':
         return 'text-red-500';
       default:
@@ -104,8 +102,8 @@ const Order = () => {
                   <th className="pb-4 text-silver">Order ID</th>
                   <th className="pb-4 text-silver">Items</th>
                   <th className="pb-4 text-silver">Total</th>
-                  <th className="pb-4 text-silver">Payment Method</th>
-                  <th className="pb-4 text-silver">Status</th>
+                  <th className="pb-4 text-silver text-balance">Payment Method</th>
+                  
                   <th className="pb-4 text-silver">Actions</th>
                 </tr>
               </thead>
@@ -117,31 +115,15 @@ const Order = () => {
                       <td className="py-4 text-silver">
                         {order.meals.map((meal, index) => (
                           <div key={index} className="text-sm">
-                            {meal.food.name} × {meal.quantity}
+                            {meal.food ? `${meal.food.name} × ${meal.quantity}` : `Unknown Item × ${meal.quantity}`}
                           </div>
                         ))}
                       </td>
                       <td className="py-4 text-amber">${order.totalprice.toFixed(2)}</td>
-                      <td className="py-4">{getPaymentIcon(order.paymentMethod)}</td>
-                      <td className="py-4">
-                        <span className={`${getStatusColor(order.status)}`}>{order.status}</span>
-                      </td>
+                      <td className="py-4 text-justify">{getPaymentIcon(order.paymentMethod)}</td>
+                      
                       <td className="py-4">
                         <div className="flex space-x-3">
-                          <button
-                            onClick={() => handleStatusUpdate(order._id, 'paid')}
-                            className="text-green-500 hover:text-green-600"
-                            title="Mark as Paid"
-                          >
-                            <FontAwesomeIcon icon={faCheck} />
-                          </button>
-                          <button
-                            onClick={() => handleStatusUpdate(order._id, 'cancelled')}
-                            className="text-red-500 hover:text-red-600"
-                            title="Cancel Order"
-                          >
-                            <FontAwesomeIcon icon={faTimes} />
-                          </button>
                           <button
                             onClick={() => handleDelete(order._id)}
                             className="text-red-500 hover:text-red-600"

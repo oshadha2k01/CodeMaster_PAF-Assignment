@@ -34,6 +34,9 @@ import Payment from './components/customer/BookingManagement/Payment';
 import Login from './components/login';
 import Register from './components/register';
 import Order from './components/customer/FoodManagement/Order';
+import PaymentFood from './components/customer/Payment/PaymentFood';
+import OrderConfirm from './components/customer/Payment/OrderConfirm';
+
 function App() {
   return (
     <Router>
@@ -73,18 +76,21 @@ function App() {
           <Route path='/showfoods' element={<ShowFoods/>}></Route>
           <Route path='/cart' element={<Cart/>}></Route>
           <Route path="/payment" element={<Payment/>} /> 
-          <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          {/* <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} /> */}
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
-          <Route path="/order-confirmation" element={<OrderConfirm/>}/>
+          
           <Route path='/order' element={<Order/>}/>
+          <Route path='/paymentfood' element={<PaymentFood/>}/>
+          <Route path='/order-confirm' element={<OrderConfirm/>}/>
 
           
 
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />}/>
-          <Route path="/Payment" element={<Payment />} />
+          
+          
         </Routes>
       </div>
     </Router>
