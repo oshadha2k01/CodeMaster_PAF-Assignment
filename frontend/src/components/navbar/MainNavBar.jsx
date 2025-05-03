@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ShowFoods from '../customer/FoodManagement/ShowFoods';
 import {
   faFilm,
   faCalendar,
@@ -19,9 +20,11 @@ const MainNavBar = () => {
   const navigate = useNavigate(); 
 
   const navItems = [
-    { path: '/now-showing', label: 'Now Showing', icon: faCalendar },
-    { path: '/upcoming', label: 'Upcoming', icon: faClock },
-    { path: '/beverages', label: 'Beverages', icon: faGlassMartiniAlt }
+    { path: '/now-showing', label: 'Now Showing', icon: faFilm },
+    { path: '/upcoming', label: 'Upcoming', icon: faCalendar },
+    { path: '/ShowFoods', label: 'Beverages', icon: faGlassMartiniAlt },
+    { path: '/show-times', label: 'Show Times', icon: faClock }
+    
     
   ];
 
@@ -31,7 +34,7 @@ const MainNavBar = () => {
 
   // Function to handle login button click
   const handleLoginClick = () => {
-    navigate('/login'); // Navigate to the /login route
+    navigate('/Login'); // Navigate to the /login route
     setIsOpen(false); // Close the mobile menu if open
   };
 
@@ -79,7 +82,7 @@ const MainNavBar = () => {
               className="flex items-center space-x-2 px-3 py-2 rounded-lg text-silver hover:text-amber hover:bg-electric-purple/10 transition-colors duration-300"
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="text-sm" />
-              <span className="text-sm font-medium">Login</span>
+              <span className="text-sm font-medium">Admin Login</span>
             </button>
           </div>
 

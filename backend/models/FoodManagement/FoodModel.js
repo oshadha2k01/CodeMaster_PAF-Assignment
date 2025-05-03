@@ -5,7 +5,7 @@ const FoodSchema = new schema({
 
     name :{type : String , required : true},
     ingrediants :{type : [String] , required : true},
-    category :{type : String ,enum:['foods','drinks'], required : true},
+    category :{type : String ,enum:['Food','Drinks'], required : true},
     price :{type : Number , required : true},
     imageUrl :{type : String , required : true},
 
