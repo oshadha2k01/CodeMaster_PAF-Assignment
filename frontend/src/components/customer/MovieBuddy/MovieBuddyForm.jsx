@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast';
+import MovieBuddyNavBar from '../../navbar/MovieBuddyNavBar';
 import { 
   faUser, 
   faCalendar, 
@@ -294,6 +295,7 @@ const MovieBuddyForm = () => {
 
   return (
     <div className="min-h-screen bg-deep-space text-silver py-12">
+      <MovieBuddyNavBar />
       <Toaster position="top-right" />
       <div className="container mx-auto px-4">
         <motion.div

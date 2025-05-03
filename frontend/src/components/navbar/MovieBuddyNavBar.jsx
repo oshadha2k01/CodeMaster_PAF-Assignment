@@ -27,21 +27,45 @@ const MovieBuddyNavBar = () => {
   ];
 
   useEffect(() => {
-    // Get user name from localStorage
+    // Get user information from localStorage
     const email = localStorage.getItem('userEmail');
+    
     if (email) {
-      fetch(`http://localhost:3000/api/movie-buddies/profile?email=${email}&phone=${localStorage.getItem('userPhone') || ''}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.name) {
-            // Extract first name for greeting
-            const firstName = data.name.split(' ')[0];
-            setUserName(firstName);
-          }
-        })
-        .catch(err => {
-          console.error('Error fetching user profile:', err);
-        });
+      // First try to get name directly from localStorage if available
+      const storedName = localStorage.getItem('userName');
+      
+      if (storedName) {
+        // If name is already in localStorage, use it
+        const firstName = storedName.split(' ')[0];
+        setUserName(firstName);
+      } else {
+        // Otherwise fetch from user model in database
+        fetch(`http://localhost:3000/api/users/profile?email=${email}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.name) {
+              // Extract first name for greeting
+              const firstName = data.name.split(' ')[0];
+              setUserName(firstName);
+              // Save to localStorage for future use
+              localStorage.setItem('userName', data.name);
+            } else {
+              // Fallback to searching in movie buddies collection
+              return fetch(`http://localhost:3000/api/movie-buddies/profile?email=${email}`);
+            }
+          })
+          .then(res => res ? res.json() : null)
+          .then(data => {
+            if (data && data.name) {
+              const firstName = data.name.split(' ')[0];
+              setUserName(firstName);
+              localStorage.setItem('userName', data.name);
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching user profile:', err);
+          });
+      }
     }
   }, []);
 
@@ -81,7 +105,7 @@ const MovieBuddyNavBar = () => {
             {userName && (
               <div className="px-3 py-2 rounded-lg bg-amber/20 text-amber flex items-center space-x-2">
                 <FontAwesomeIcon icon={faUserCircle} className="text-sm" />
-                <span className="text-sm font-medium">Hi, {userName}</span>
+                <span className="text-sm font-medium">Hi {userName} Movie Buddy</span>
               </div>
             )}
           </div>
@@ -109,7 +133,7 @@ const MovieBuddyNavBar = () => {
           {userName && (
             <div className="px-3 py-2 rounded-lg bg-amber/20 text-amber flex items-center space-x-2">
               <FontAwesomeIcon icon={faUserCircle} className="text-sm" />
-              <span className="text-sm font-medium">Hi, {userName}</span>
+              <span className="text-sm font-medium">Hi {userName} Movie Buddy</span>
             </div>
           )}
           
