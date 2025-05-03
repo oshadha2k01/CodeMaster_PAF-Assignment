@@ -282,49 +282,49 @@ const Home = () => {
     <div className="min-h-screen bg-deep-space text-silver">
       <MainNavBar />
       {/* Hero Section */}
-      <section className="relative h-screen flex flex-col justify-center items-center text-center px-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-electric-purple/10 to-scarlet/10 z-0"></div>
-        
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-          className="relative z-10  from-electric-purple/20 to-scarlet/20 p-8 rounded-xl shadow-2xl"
-        >
-          <TypeAnimation
-            sequence={[
-              'Welcome to GalaxyX Cinema',
-              2000,
-              'Experience Cinematic Excellence',
-              2000,
-              'Dive into a Universe of Stories',
-              2000,
-            ]}
-            wrapper="h1"
-            repeat={Infinity}
-            className="text-4xl md:text-6xl font-bold text-amber mb-6 glow-text"
-          />
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-lg md:text-xl max-w-2xl mb-8 text-silver/90"
-          >
-            Immerse yourself in state-of-the-art technology and unparalleled comfort at GalaxyX Cinema.
-          </motion.p>
-          <motion.button
-            whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(255, 191, 0, 0.5)' }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-scarlet hover:bg-amber text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300"
-            onClick={() => navigate('/now-showing')}
-          >
-            Book Now
-          </motion.button>
-        </motion.div>
-      </section>
+      <section className="relative h-[70vh] flex flex-col justify-center items-center text-center px-4">
+  <div className="absolute inset-0 bg-gradient-to-r from-electric-purple/10 to-scarlet/10 z-0"></div>
+
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.8, ease: 'easeOut' }}
+    className="relative z-10 shadow-glow p-6 rounded-lg"
+  >
+    <TypeAnimation
+      sequence={[
+        'Welcome to GalaxyX Cinema',
+        1500,
+        'Experience Cinematic Excellence',
+        1500,
+        'Dive into a Universe of Stories',
+        1500,
+      ]}
+      wrapper="h1"
+      repeat={Infinity}
+      className="text-3xl md:text-4xl font-bold text-amber glow-text"
+    />
+    <motion.p
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="text-base md:text-lg max-w-xl mb-8 text-silver/90"
+    >
+      Immerse yourself in state-of-the-art technology and unparalleled comfort at GalaxyX Cinema.
+    </motion.p>
+    <motion.button
+      whileHover={{ scale: 1.05, boxShadow: '0 0 12px rgba(255, 191, 0, 0.5)' }}
+      whileTap={{ scale: 0.95 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, delay: 0.3 }}
+      className="bg-scarlet hover:bg-amber text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300"
+      onClick={() => navigate('/now-showing')}
+    >
+      Book Now
+    </motion.button>
+  </motion.div>
+</section>
 
       {/* Movie Slideshow Section */}
       <section className="py-8 px-4 md:px-8 lg:px-16 bg-deep-space">
