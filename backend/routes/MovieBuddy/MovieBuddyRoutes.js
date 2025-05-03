@@ -13,13 +13,16 @@ if (
   !movieBuddyController.updateMovieBuddy ||
   !movieBuddyController.checkExistingUser ||
   !movieBuddyController.getMovieBuddies ||
-  !movieBuddyController.loginMovieBuddy
+  !movieBuddyController.loginMovieBuddy ||
+  !movieBuddyController.getMovieBuddiesByEmail
 ) {
   throw new Error('One or more required controller functions are undefined.');
 }
 
 // Route to create/update a movie buddy profile
 router.post('/', movieBuddyController.createMovieBuddy);
+
+router.post('/email',movieBuddyController.getMovieBuddiesByEmail);
 
 // Update route to handle the movie buddy update (for backward compatibility)
 router.post('/update', movieBuddyController.updateMovieBuddy);

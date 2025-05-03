@@ -1,6 +1,38 @@
 const MovieBuddy = require('../../models/MovieBuddy/MovieBuddyModel');
 const User = require('../../models/Auth/UserModel'); // Import User model for auth data
 
+
+const getMovieBuddiesByEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+    const buddies = await MovieBuddy.find({ email }).select('-__v -createdAt -updatedAt');
+    if (!buddies.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'No movie buddies found for this email'
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: buddies
+    });
+  } catch (error) {
+    console.error('Error fetching movie buddies by email:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching movie buddies',
+      error: error.message
+    });
+  }
+};
+
+
 // Create or update movie buddy
 const updateMovieBuddies = async (req, res) => {
   try {
@@ -189,12 +221,69 @@ const updateMovieBuddy = async (req, res) => {
   }
 };
 
-// Get all movie buddy groups
+// // Get all movie buddy groups
+// const getAllMovieBuddyGroups = async (req, res) => {
+//   try {
+//     // Get all movie buddies from the database
+//     const allBuddies = await MovieBuddy.find().lean();
+
+    
+//     // Group buddies by movie details (movieName, movieDate, movieTime)
+//     const groupedBuddies = allBuddies.reduce((acc, buddy) => {
+//       // Create a unique key for each movie showing
+//       const key = `${buddy.movieName}|${buddy.movieDate}|${buddy.movieTime}`;
+      
+//       if (!acc[key]) {
+//         // Initialize a new group
+//         acc[key] = {
+//           movieName: buddy.movieName,
+//           movieDate: buddy.movieDate,
+//           movieTime: buddy.movieTime,
+//           buddies: []
+//         };
+//       }
+      
+//       // Add this buddy to the appropriate group
+//       // Determine if this is a group booking based on seat numbers
+//       const isGroup = buddy.seatNumbers && buddy.seatNumbers.length > 1;
+      
+//       acc[key].buddies.push({
+//         ...buddy,
+//         isGroup: isGroup // Add isGroup flag for frontend
+//       });
+      
+//       return acc;
+//     }, {});
+    
+//     // Convert the grouped object to an array
+//     const movieBuddyGroups = Object.values(groupedBuddies);
+    
+//     res.status(200).json({
+//       success: true,
+//       data: movieBuddyGroups
+//     });
+//   } catch (error) {
+//     console.error('Error fetching movie buddy groups:', {
+//       message: error.message,
+//       stack: error.stack
+//     });
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error fetching movie buddy groups',
+//       error: error.message
+//     });
+//   }
+// };
+
+
 const getAllMovieBuddyGroups = async (req, res) => {
   try {
+    // Get user email from request (assuming it's passed in the request body or headers)
+    const userEmail = req.body.userEmail || req.headers['user-email'];
+
     // Get all movie buddies from the database
     const allBuddies = await MovieBuddy.find().lean();
-    
+
     // Group buddies by movie details (movieName, movieDate, movieTime)
     const groupedBuddies = allBuddies.reduce((acc, buddy) => {
       // Create a unique key for each movie showing
@@ -222,8 +311,11 @@ const getAllMovieBuddyGroups = async (req, res) => {
       return acc;
     }, {});
     
-    // Convert the grouped object to an array
-    const movieBuddyGroups = Object.values(groupedBuddies);
+    // Convert the grouped object to an array and filter out groups containing the user's email
+    const movieBuddyGroups = Object.values(groupedBuddies).filter(group => {
+      // Check if any buddy in the group has the user's email
+      return !group.buddies.some(buddy => buddy.email === userEmail);
+    });
     
     res.status(200).json({
       success: true,
@@ -553,5 +645,6 @@ module.exports = {
   updateMovieBuddyDetails,
   createMovieBuddy,
   updateMovieBuddy,
-  loginMovieBuddy
+  loginMovieBuddy,
+  getMovieBuddiesByEmail
 };

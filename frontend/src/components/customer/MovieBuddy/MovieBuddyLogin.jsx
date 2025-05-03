@@ -80,6 +80,17 @@ const MovieBuddyLogin = () => {
       });
       
       console.log('Login response data:', response.data);
+      localStorage.setItem('userEmail', response.data.email);
+      localStorage.setItem('userName', response.data.name);
+      localStorage.setItem('userPhone', response.data.phone);
+      localStorage.setItem('userId', response.data.id);
+
+      console.log('User data stored in localStorage:', {
+        email: response.data.email,
+        name: response.data.name,
+        phone: response.data.phone,
+        userId: response.data.id
+      });
       
       // Check if login was successful with proper response structure
       if (response.data && (response.data.success || response.data.token)) {

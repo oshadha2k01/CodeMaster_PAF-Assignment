@@ -27,7 +27,7 @@ import {
   faIdCard
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
-import CustomerNavBar from '../../navbar/MainNavBar';
+import CustomerNavBar from '../../navbar/MovieBuddyNavBar';
 
 const MovieBuddyList = () => {
   const navigate = useNavigate();
@@ -54,7 +54,14 @@ const MovieBuddyList = () => {
   const fetchMovieBuddyGroups = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/movie-buddies/all');
+      // Get user email from localStorage
+      const userEmail = localStorage.getItem('userEmail');
+      
+      const response = await axios.get('http://localhost:3000/api/movie-buddies/all', {
+        headers: {
+          'user-email': userEmail || ''
+        }
+      });
       
       if (response.data.success) {
         const processedGroups = response.data.data.map(group => {
@@ -128,8 +135,8 @@ const MovieBuddyList = () => {
       movieName: group.movieName,
       movieDate: group.movieDate,
       movieTime: group.movieTime,
-      bookingDate: new Date().toISOString().split('T')[0], // Current date
-      seatNumbers: group.buddies[0]?.seatNumbers || [], // Add seat numbers from the first buddy
+      bookingDate: new Date().toISOString().split('T')[0],
+      seatNumbers: group.buddies[0]?.seatNumbers || [],
       preferences: {
         gender: group.buddies[0]?.gender || '',
         age: group.buddies[0]?.age || '',
@@ -151,13 +158,8 @@ const MovieBuddyList = () => {
   };
 
   const handleWhatsAppChat = (buddy) => {
-    // Format the message with movie details
     const message = `Hi! I'm interested in connecting with you for the movie. Let's chat about it!`;
-    
-    // Create WhatsApp URL with the phone number and message
     const whatsappUrl = `https://wa.me/${buddy.phone}?text=${encodeURIComponent(message)}`;
-    
-    // Open WhatsApp in a new tab
     window.open(whatsappUrl, '_blank');
   };
 
@@ -240,7 +242,6 @@ const MovieBuddyList = () => {
               </div>
             </div>
 
-            {/* Add the Modal */}
             {showFilterModal && (
               <div className="fixed inset-0 bg-black/50 z-50">
                 <div className="fixed inset-y-0 right-0 w-full max-w-md bg-deep-space shadow-xl">
@@ -270,7 +271,6 @@ const MovieBuddyList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-electric-purple/10 rounded-xl p-6 border border-silver/10 hover:border-amber/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber/10"
                 >
-                  {/* Movie Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="p-3 bg-amber/20 rounded-full">
@@ -288,7 +288,6 @@ const MovieBuddyList = () => {
                     </div>
                   </div>
 
-                  {/* Buddies List */}
                   <div className="space-y-3 mb-6">
                     {group.buddies.slice(0, 3).map((buddy, index) => (
                       <div
@@ -357,7 +356,6 @@ const MovieBuddyList = () => {
                     )}
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex flex-col space-y-2">
                     <button
                       onClick={() => handleViewDetails(group.buddies[0], group)}
@@ -381,7 +379,6 @@ const MovieBuddyList = () => {
         </motion.div>
       </div>
 
-      {/* Filter Portal Modal */}
       {showFilterPortal && selectedBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -399,7 +396,6 @@ const MovieBuddyList = () => {
         </div>
       )}
 
-      {/* Group Details Modal */}
       {selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -412,12 +408,10 @@ const MovieBuddyList = () => {
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
-            {/* Add group details rendering logic here */}
           </div>
         </div>
       )}
 
-      {/* Add Profile Modal */}
       {showProfileModal && selectedProfile && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-deep-space p-8 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -432,7 +426,6 @@ const MovieBuddyList = () => {
             </div>
             
             <div className="space-y-6">
-              {/* Profile Header */}
               <div className="flex items-center space-x-4">
                 <div className="p-4 bg-amber/20 rounded-full">
                   <FontAwesomeIcon icon={faUserCircle} className="text-amber text-4xl" />
@@ -447,7 +440,6 @@ const MovieBuddyList = () => {
                 </div>
               </div>
 
-              {/* Profile Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-electric-purple/10 p-4 rounded-lg">
                   <h4 className="text-amber font-semibold mb-2">Personal Information</h4>
@@ -507,7 +499,6 @@ const MovieBuddyList = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end space-x-4 mt-6">
                 <button
                   onClick={() => handleWhatsAppChat(selectedProfile)}

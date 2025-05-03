@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faUser, 
+  faUser,
   faEnvelope, 
   faPhone, 
   faFilm, 
@@ -19,7 +19,8 @@ import {
   faBirthdayCake,
   faTicketAlt,
   faUserSecret,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast';
@@ -42,6 +43,19 @@ const MovieBuddyMainProfile = () => {
     phone: ''
   });
 
+  const getUserDataByEmail = async (email) => {
+    try {
+      const response = await axios.post('http://localhost:3000/api/movie-buddies/email', { email });
+      if (response.data.success && response.data.data.length > 0) {
+        return response.data.data[0];
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user data by email:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -56,158 +70,96 @@ const MovieBuddyMainProfile = () => {
           return;
         }
         
-        console.log('Fetching profile for email:', userEmail);
-        
-        // Create basic profile with email to ensure we at least have this data
-        setPersonalInfo({
-          name: localStorage.getItem('userName') || 'User',
-          email: userEmail,
-          phone: localStorage.getItem('userPhone') || 'Not provided',
-          createdAt: new Date().toISOString()
-        });
-        
-        setEditForm({
-          name: localStorage.getItem('userName') || 'User',
-          email: userEmail,
-          phone: localStorage.getItem('userPhone') || ''
-        });
-        
-        // Try common API patterns for user data
+        // Fetch user details from Auth/UserModel
         try {
-          // Try simple REST pattern first - most common approach
           const userResponse = await axios.get(`http://localhost:3000/api/auth/user`, {
             params: { email: userEmail }
           });
           
-          console.log('User data response:', userResponse);
-          
           if (userResponse.data) {
             const userData = userResponse.data.user || userResponse.data;
-            
-            // Update with server data if available
+            const userName = localStorage.getItem('userName');
             setPersonalInfo({
-              name: userData.name || userData.fullName || 'User',
+              name: userData.name || userName || 'User',
               email: userData.email || userEmail,
-              phone: userData.phone || userData.phoneNumber || 'Not provided',
-              createdAt: userData.createdAt || userData.created_at || new Date().toISOString()
+              phone: userData.phone || 'Not provided',
+              createdAt: userData.createdAt || new Date().toISOString()
             });
             
             setEditForm({
-              name: userData.name || userData.fullName || 'User',
+              name: userData.name || userName || 'User',
               email: userData.email || userEmail,
-              phone: userData.phone || userData.phoneNumber || ''
+              phone: userData.phone || ''
             });
             
-            localStorage.setItem('userName', userData.name || userData.fullName || '');
-            localStorage.setItem('userPhone', userData.phone || userData.phoneNumber || '');
+            localStorage.setItem('userName', userData.name || userName || '');
+            localStorage.setItem('userPhone', userData.phone || '');
           }
         } catch (userError) {
-          console.log('Standard user endpoint failed, trying login endpoint');
-          
-          try {
-            // Try login endpoint as fallback
-            const loginResponse = await axios.post(`http://localhost:3000/api/auth/login`, {
-              email: userEmail,
-              getProfile: true
-            });
-            
-            if (loginResponse.data && loginResponse.data.user) {
-              const userData = loginResponse.data.user;
-              
-              setPersonalInfo({
-                name: userData.name || 'User',
-                email: userData.email || userEmail,
-                phone: userData.phone || 'Not provided',
-                createdAt: userData.createdAt || new Date().toISOString()
-              });
-              
-              setEditForm({
-                name: userData.name || '',
-                email: userData.email || userEmail,
-                phone: userData.phone || ''
-              });
-            }
-          } catch (loginError) {
-            console.log('Could not fetch user data from login endpoint');
-          }
+          console.error('Error fetching user data:', userError);
+          // Fallback to localStorage data
+          setPersonalInfo({
+            name: localStorage.getItem('userName') || 'User',
+            email: userEmail,
+            phone: localStorage.getItem('userPhone') || 'Not provided',
+            createdAt: new Date().toISOString()
+          });
         }
         
-        // Don't try to fetch MovieBuddy data if all user endpoints failed
+        // Fetch MovieBuddy profile using getUserDataByEmail
         try {
-          // Try simple movies API endpoint - more likely to exist
-          const movieResponse = await axios.get(`http://localhost:3000/api/movies/user-bookings`, {
-            params: { email: userEmail }
-          });
+          const buddyData = await getUserDataByEmail(userEmail);
           
-          console.log('Movie bookings response:', movieResponse);
-          
-          if (movieResponse.data && movieResponse.data.length > 0) {
-            const latestBooking = movieResponse.data[0];
-            
-            setProfile(latestBooking);
+          if (buddyData) {
+            setProfile(buddyData);
             
             setMovieDetails({
-              movieName: latestBooking.movieName || latestBooking.title || 'Not set',
-              movieDate: latestBooking.date || latestBooking.movieDate || 'Not set',
-              movieTime: latestBooking.time || latestBooking.movieTime || 'Not set',
-              seatNumbers: latestBooking.seats || latestBooking.seatNumbers || [],
-              bookingId: latestBooking._id || latestBooking.bookingId || 'Not set'
+              movieName: buddyData.movieName || 'Not set',
+              movieDate: buddyData.movieDate || 'Not set',
+              movieTime: buddyData.movieTime || 'Not set',
+              seatNumbers: buddyData.seatNumbers || [],
+              bookingId: buddyData.bookingId || 'Not set'
             });
             
-            // If booking has preference data
-            if (latestBooking.preferences || latestBooking.moviePreferences) {
-              const prefData = latestBooking.preferences || latestBooking;
-              
-              setPreferences({
-                age: prefData.age || 'Not set',
-                gender: prefData.gender || 'Not set',
-                moviePreferences: prefData.moviePreferences || [],
-                privacySettings: prefData.privacySettings || {
-                  showName: true,
-                  showEmail: false,
-                  showPhone: false,
-                  petName: ''
-                }
-              });
-            }
-          }
-        } catch (movieError) {
-          console.log('Could not fetch movie booking data');
-          
-          // Try direct access to MovieBuddy API - fallback
-          try {
-            const buddyResponse = await axios.get(`http://localhost:3000/api/movie-buddies`, {
-              params: { email: userEmail }
+            setPreferences({
+              age: buddyData.age || 'Not set',
+              gender: buddyData.gender || 'Not set',
+              moviePreferences: buddyData.moviePreferences || [],
+              privacySettings: buddyData.privacySettings || {
+                showName: true,
+                showEmail: false,
+                showPhone: false,
+                petName: ''
+              }
             });
-            
-            if (buddyResponse.data && buddyResponse.data.length > 0) {
-              const buddyData = buddyResponse.data[0];
-              
-              setProfile(buddyData);
-              
-              setMovieDetails({
-                movieName: buddyData.movieName || 'Not set',
-                movieDate: buddyData.movieDate || 'Not set',
-                movieTime: buddyData.movieTime || 'Not set',
-                seatNumbers: buddyData.seatNumbers || [],
-                bookingId: buddyData.bookingId || 'Not set'
-              });
-              
-              setPreferences({
-                age: buddyData.age || 'Not set',
-                gender: buddyData.gender || 'Not set',
-                moviePreferences: buddyData.moviePreferences || [],
-                privacySettings: buddyData.privacySettings || {
-                  showName: true,
-                  showEmail: false,
-                  showPhone: false,
-                  petName: ''
-                }
-              });
-            }
-          } catch (buddyError) {
-            console.log('Could not fetch movie buddy data');
+          } else {
+            // Set default empty values if no MovieBuddy profile exists
+            setPreferences({
+              age: 'Not set',
+              gender: 'Not set',
+              moviePreferences: [],
+              privacySettings: {
+                showName: true,
+                showEmail: false,
+                showPhone: false,
+                petName: ''
+              }
+            });
           }
+        } catch (buddyError) {
+          console.error('Error fetching movie buddy data:', buddyError);
+          // Set default empty values
+          setPreferences({
+            age: 'Not set',
+            gender: 'Not set',
+            moviePreferences: [],
+            privacySettings: {
+              showName: true,
+              showEmail: false,
+              showPhone: false,
+              petName: ''
+            }
+          });
         }
       } catch (error) {
         console.error('General error in profile fetch:', error);
@@ -247,6 +199,7 @@ const MovieBuddyMainProfile = () => {
     try {
       setLoading(true);
       
+      // Update user profile
       try {
         await axios.put(`http://localhost:3000/api/users/update-profile`, {
           email: editForm.email,
@@ -259,31 +212,30 @@ const MovieBuddyMainProfile = () => {
         throw new Error('Failed to update personal information');
       }
       
+      // Update MovieBuddy profile if it exists
       if (profile && profile._id) {
         try {
           const payload = {
-            buddies: [{
-              name: editForm.name,
-              email: editForm.email,
-              phone: editForm.phone,
-              bookingId: profile.bookingId,
-              age: profile.age,
-              gender: profile.gender,
-              moviePreferences: profile.moviePreferences || [],
-              privacySettings: profile.privacySettings || {
-                showName: true,
-                showEmail: false,
-                showPhone: false,
-                petName: ''
-              },
-              seatNumbers: profile.seatNumbers || []
-            }],
+            name: editForm.name,
+            email: editForm.email,
+            phone: editForm.phone,
+            bookingId: profile.bookingId,
+            age: profile.age,
+            gender: profile.gender,
+            moviePreferences: profile.moviePreferences || [],
+            privacySettings: profile.privacySettings || {
+              showName: true,
+              showEmail: false,
+              showPhone: false,
+              petName: ''
+            },
+            seatNumbers: profile.seatNumbers || [],
             movieName: profile.movieName,
             movieDate: profile.movieDate,
             movieTime: profile.movieTime
           };
           
-          await axios.put(`http://localhost:3000/api/movie-buddies/update`, payload);
+          await axios.put(`http://localhost:3000/api/movie-buddies/${profile._id}`, payload);
         } catch (movieBuddyUpdateError) {
           console.error('Error updating movie buddy profile:', movieBuddyUpdateError);
           throw new Error('Failed to update movie buddy information');
@@ -299,6 +251,7 @@ const MovieBuddyMainProfile = () => {
       
       localStorage.setItem('userEmail', editForm.email);
       localStorage.setItem('userPhone', editForm.phone);
+      localStorage.setItem('userName', editForm.name);
       
       toast.success('Profile updated successfully');
       setShowEditModal(false);
@@ -313,7 +266,8 @@ const MovieBuddyMainProfile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
-    localStorage.removeItem('userPhone');
+    localStorage.removeItem('userPhoneicado');
+    localStorage.removeItem('userName');
     localStorage.removeItem('authToken');
     
     toast.success('Logged out successfully');
@@ -341,6 +295,7 @@ const MovieBuddyMainProfile = () => {
       
       localStorage.removeItem('userEmail');
       localStorage.removeItem('userPhone');
+      localStorage.removeItem('userName');
       localStorage.removeItem('authToken');
       
       toast.success('Profile deleted successfully');
@@ -543,114 +498,102 @@ const MovieBuddyMainProfile = () => {
               </div>
             )}
 
-            {preferences ? (
-              <div className="bg-deep-space/50 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-amber mb-6">Preferences & Settings</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faBirthdayCake} className="text-amber mr-3 w-5" />
-                    <div>
-                      <p className="text-silver/80">Age</p>
-                      <p className="text-amber font-semibold">{preferences.age}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faVenusMars} className="text-amber mr-3 w-5" />
-                    <div>
-                      <p className="text-silver/80">Gender</p>
-                      <p className="text-amber font-semibold">{preferences.gender}</p>
-                    </div>
+            <div className="bg-deep-space/50 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-amber mb-6">Preferences & Settings</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="flex items-center">
+                  <FontAwesomeIcon icon={faBirthdayCake} className="text-amber mr-3 w-5" />
+                  <div>
+                    <p className="text-silver/80">Age</p>
+                    <p className="text-amber font-semibold">{preferences?.age || 'Not set'}</p>
                   </div>
                 </div>
-                
-                {preferences.moviePreferences && preferences.moviePreferences.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-amber mb-3">Movie Preferences</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {preferences.moviePreferences.map((pref, index) => (
-                        <span
-                          key={index}
-                          className="bg-electric-purple/20 text-electric-purple px-3 py-1 rounded-full text-sm flex items-center"
-                        >
-                          <FontAwesomeIcon icon={faHeart} className="mr-2" />
-                          {pref}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {preferences.privacySettings && (
+                <div className="flex items-center">
+                  <FontAwesomeIcon icon={faVenusMars} className="text-amber mr-3 w-5" />
                   <div>
-                    <h3 className="text-lg font-semibold text-amber mb-3">Privacy Settings</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                        <div>
-                          <p className="text-amber font-medium">Show Real Name</p>
-                          <p className="text-silver/70 text-sm">Display your real name to other movie buddies</p>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full text-sm ${
-                          preferences.privacySettings.showName ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                        }`}>
-                          {preferences.privacySettings.showName ? 'Enabled' : 'Disabled'}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                        <div>
-                          <p className="text-amber font-medium">Show Email</p>
-                          <p className="text-silver/70 text-sm">Let other movie buddies see your email</p>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full text-sm ${
-                          preferences.privacySettings.showEmail ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                        }`}>
-                          {preferences.privacySettings.showEmail ? 'Enabled' : 'Disabled'}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                        <div>
-                          <p className="text-amber font-medium">Show Phone</p>
-                          <p className="text-silver/70 text-sm">Let other movie buddies see your phone number</p>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full text-sm ${
-                          preferences.privacySettings.showPhone ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                        }`}>
-                          {preferences.privacySettings.showPhone ? 'Enabled' : 'Disabled'}
-                        </div>
-                      </div>
-                      
-                      {!preferences.privacySettings.showName && (
-                        <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                          <div>
-                            <p className="text-amber font-medium">Pet Name</p>
-                            <p className="text-silver/70 text-sm">Your display name for other movie buddies</p>
-                          </div>
-                          <div className="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">
-                            {preferences.privacySettings.petName || 'Anonymous'}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-silver/80">Gender</p>
+                    <p className="text-amber font-semibold">{preferences?.gender || 'Not set'}</p>
                   </div>
-                )}
-              </div>
-            ) : movieDetails ? (
-              <div className="bg-deep-space/50 rounded-lg p-6 border border-amber/20">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-amber mb-2">Your Preferences</h2>
-                    <p className="text-silver/80 mb-4">Your preferences need to be updated</p>
-                  </div>
-                  <button
-                    onClick={handleCreateMovieBuddyProfile}
-                    className="px-4 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80"
-                  >
-                    Update Now
-                  </button>
                 </div>
               </div>
-            ) : null}
+              
+              {preferences?.moviePreferences && preferences.moviePreferences.length > 0 ? (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-amber mb-3">Movie Preferences</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {preferences.moviePreferences.map((pref, index) => (
+                      <span
+                        key={index}
+                        className="bg-electric-purple/20 text-electric-purple px-3 py-1 rounded-full text-sm flex items-center"
+                      >
+                        <FontAwesomeIcon icon={faHeart} className="mr-2" />
+                        {pref}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-amber mb-3">Movie Preferences</h3>
+                  <p className="text-silver/80">No movie preferences set</p>
+                </div>
+              )}
+              
+              {preferences?.privacySettings && (
+                <div>
+                  <h3 className="text-lg font-semibold text-amber mb-3">Privacy Settings</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
+                      <div>
+                        <p className="text-amber font-medium">Show Real Name</p>
+                        <p className="text-silver/70 text-sm">Display your real name to other movie buddies</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-sm ${
+                        preferences.privacySettings.showName ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                      }`}>
+                        {preferences.privacySettings.showName ? 'Enabled' : 'Disabled'}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
+                      <div>
+                        <p className="text-amber font-medium">Show Email</p>
+                        <p className="text-silver/70 text-sm">Let other movie buddies see your email</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-sm ${
+                        preferences.privacySettings.showEmail ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                      }`}>
+                        {preferences.privacySettings.showEmail ? 'Enabled' : 'Disabled'}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
+                      <div>
+                        <p className="text-amber font-medium">Show Phone</p>
+                        <p className="text-silver/70 text-sm">Let other movie buddies see your phone number</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-sm ${
+                        preferences.privacySettings.showPhone ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                      }`}>
+                        {preferences.privacySettings.showPhone ? 'Enabled' : 'Disabled'}
+                      </div>
+                    </div>
+                    
+                    {!preferences.privacySettings.showName && (
+                      <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
+                        <div>
+                          <p className="text-amber font-medium">Pet Name</p>
+                          <p className="text-silver/70 text-sm">Your display name for other movie buddies</p>
+                        </div>
+                        <div className="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">
+                          {preferences.privacySettings.petName || 'Anonymous'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             
             {movieDetails && (
               <div className="mt-8 text-center">

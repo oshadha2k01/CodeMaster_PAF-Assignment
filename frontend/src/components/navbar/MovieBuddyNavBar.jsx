@@ -2,82 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUsers, 
-  faUserCircle, 
-  faTicket, 
-  faFilm, 
-  faHome, 
-  faBars, 
-  faTimes 
-} from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faUserCircle, faFilm, faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const MovieBuddyNavBar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [userName, setUserName] = useState('');
-  
-  // Define navigation items
+
   const navItems = [
-    // { label: 'Home', path: '/', icon: faHome },
-    // { label: 'Movies', path: '/now-showing', icon: faFilm },
     { label: 'Movie Buddies', path: '/movie-buddies', icon: faUsers },
     { label: 'My Profile', path: '/movie-buddy-main-profile', icon: faUserCircle },
-    // { label: 'My Bookings', path: '/bookings', icon: faTicket }
   ];
 
   useEffect(() => {
-    // Get user information from localStorage
-    const email = localStorage.getItem('userEmail');
-    
-    if (email) {
-      // First try to get name directly from localStorage if available
+    const fetchUserName = async () => {
+      const email = localStorage.getItem('userEmail');
+      if (!email) return;
+
+      // Check if name is already in localStorage
       const storedName = localStorage.getItem('userName');
-      
       if (storedName) {
-        // If name is already in localStorage, use it
-        const firstName = storedName.split(' ')[0];
-        setUserName(firstName);
-      } else {
-        // Otherwise fetch from user model in database
-        fetch(`http://localhost:3000/api/users/profile?email=${email}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.name) {
-              // Extract first name for greeting
-              const firstName = data.name.split(' ')[0];
-              setUserName(firstName);
-              // Save to localStorage for future use
-              localStorage.setItem('userName', data.name);
-            } else {
-              // Fallback to searching in movie buddies collection
-              return fetch(`http://localhost:3000/api/movie-buddies/profile?email=${email}`);
-            }
-          })
-          .then(res => res ? res.json() : null)
-          .then(data => {
-            if (data && data.name) {
-              const firstName = data.name.split(' ')[0];
-              setUserName(firstName);
-              localStorage.setItem('userName', data.name);
-            }
-          })
-          .catch(err => {
-            console.error('Error fetching user profile:', err);
-          });
+        setUserName(storedName.split(' ')[0]);
+        return;
       }
-    }
+
+      try {
+        // Fetch user profile from API
+        const response = await fetch(`http://localhost:3000/api/users/profile?email=${email}`);
+        const data = await response.json();
+        if (data && data.name) {
+          const firstName = data.name.split(' ')[0];
+          setUserName(firstName);
+          localStorage.setItem('userName', data.name);
+        }
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+      }
+    };
+
+    fetchUserName();
   }, []);
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-deep-space/90 backdrop-blur-md py-4 shadow-lg shadow-black/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Brand */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <FontAwesomeIcon icon={faFilm} className="text-amber text-2xl" />
@@ -85,44 +56,34 @@ const MovieBuddyNavBar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300
-                  ${isActive(item.path)
-                    ? 'bg-electric-purple/20 text-amber'
-                    : 'text-silver hover:text-amber hover:bg-electric-purple/10'
-                  }`}
+                  ${isActive(item.path) ? 'bg-electric-purple/20 text-amber' : 'text-silver hover:text-amber hover:bg-electric-purple/10'}`}
               >
                 <FontAwesomeIcon icon={item.icon} className="text-sm" />
                 <span className="text-sm font-medium">{item.label}</span>
               </Link>
             ))}
-            
             {userName && (
               <div className="px-3 py-2 rounded-lg bg-amber/20 text-amber flex items-center space-x-2">
                 <FontAwesomeIcon icon={faUserCircle} className="text-sm" />
-                <span className="text-sm font-medium">Hi {userName} Movie Buddy</span>
+                <span className="text-sm font-medium">Hi, {userName}</span>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-silver hover:text-amber p-2"
-            >
+            <button onClick={() => setIsOpen(!isOpen)} className="text-silver hover:text-amber p-2">
               <FontAwesomeIcon icon={isOpen ? faTimes : faBars} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       <motion.div
         animate={isOpen ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
         initial={{ height: 0, opacity: 0 }}
@@ -133,20 +94,16 @@ const MovieBuddyNavBar = () => {
           {userName && (
             <div className="px-3 py-2 rounded-lg bg-amber/20 text-amber flex items-center space-x-2">
               <FontAwesomeIcon icon={faUserCircle} className="text-sm" />
-              <span className="text-sm font-medium">Hi {userName} Movie Buddy</span>
+              <span className="text-sm font-medium">Hi, {userName}</span>
             </div>
           )}
-          
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setIsOpen(false)}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-300
-                ${isActive(item.path)
-                  ? 'bg-electric-purple/20 text-amber'
-                  : 'text-silver hover:text-amber hover:bg-electric-purple/10'
-                }`}
+                ${isActive(item.path) ? 'bg-electric-purple/20 text-amber' : 'text-silver hover:text-amber hover:bg-electric-purple/10'}`}
             >
               <FontAwesomeIcon icon={item.icon} className="text-sm" />
               <span className="text-sm font-medium">{item.label}</span>
