@@ -38,7 +38,8 @@ const MovieBuddyList = () => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [filterOptions, setFilterOptions] = useState({
     bookingType: 'all',
-    privacy: 'all'
+    privacy: 'all',
+    movieName: ''
   });
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -46,6 +47,9 @@ const MovieBuddyList = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Get unique movie names for navigation
+  const uniqueMovieNames = [...new Set(movieBuddyGroups.map(group => group.movieName))];
 
   useEffect(() => {
     fetchMovieBuddyGroups();
@@ -159,13 +163,26 @@ const MovieBuddyList = () => {
 
   const handleWhatsAppChat = (buddy) => {
     const message = `Hi! I'm interested in connecting with you for the movie. Let's chat about it!`;
-    const whatsappUrl = `https://wa.me/${buddy.phone}?text=${encodeURIComponent(message)}`;
+    // Format phone number to ensure it has +94 country code
+    let phoneNumber = buddy.phone;
+    // Remove any existing country code or leading zeros
+    phoneNumber = phoneNumber.replace(/^\+94|^0/, '');
+    // Add +94 country code
+    phoneNumber = `+94${phoneNumber}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleViewProfile = (buddy) => {
     setSelectedProfile(buddy);
     setShowProfileModal(true);
+  };
+
+  const handleMovieFilter = (movieName) => {
+    setFilterOptions(prev => ({
+      ...prev,
+      movieName: prev.movieName === movieName ? '' : movieName
+    }));
   };
 
   const filteredGroups = movieBuddyGroups
@@ -213,6 +230,29 @@ const MovieBuddyList = () => {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-7xl mx-auto"
         >
+          {/* Movie Name Navigation Bar */}
+          <div className="bg-electric-purple/10 rounded-xl p-4 mb-6 border border-silver/10 overflow-x-auto">
+            <div className="flex items-center space-x-4 min-w-max">
+              <div className="flex items-center space-x-3">
+                <FontAwesomeIcon icon={faTicketAlt} className="text-amber text-xl" />
+                <span className="text-amber font-semibold">Movies:</span>
+              </div>
+              {uniqueMovieNames.map((movieName) => (
+                <button
+                  key={movieName}
+                  onClick={() => handleMovieFilter(movieName)}
+                  className={`px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap ${
+                    filterOptions.movieName === movieName
+                      ? 'bg-amber text-deep-space'
+                      : 'bg-deep-space text-silver hover:bg-amber/20 hover:text-amber'
+                  }`}
+                >
+                  {movieName}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="bg-electric-purple/10 rounded-xl p-8 border border-silver/10 shadow-lg">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-4">

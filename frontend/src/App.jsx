@@ -30,9 +30,14 @@ import Cart from './components/customer/FoodManagement/Cart';
 //import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 //import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
 import Payment from './components/customer/BookingManagement/Payment';
+import Locations from "./components/customer/Locations";
 
 import Login from './components/login';
 import Register from './components/register';
+import Order from './components/customer/FoodManagement/Order';
+import PaymentFood from './components/customer/Payment/PaymentFood';
+import OrderConfirm from './components/customer/Payment/OrderConfirm';
+
 function App() {
   return (
     <Router>
@@ -47,7 +52,7 @@ function App() {
           <Route path="/admin/movies/add" element={<MovieForm />} />
           <Route path="/admin/movies/edit/:id" element={<MovieForm />} />
           <Route path="/admin/bookings" element={<BookingList />} />
-          <Route path="/admin/food" element={<AdminDashboard />} />
+          {/* <Route path="/foodlist" element={<AdminDashboard />} /> */}
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
@@ -66,12 +71,27 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
+
+           <Route path='/admin/add-food' element={<AddFood />}></Route>
+          <Route path='/foodlist' element={<FoodList/>}></Route>
+          <Route path='/showfoods' element={<ShowFoods/>}></Route>
+          <Route path='/cart' element={<Cart/>}></Route>
+          <Route path="/payment" element={<Payment/>} /> 
           {/* <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} /> */}
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
+          
+          <Route path='/order' element={<Order/>}/>
+          <Route path='/paymentfood' element={<PaymentFood/>}/>
+          <Route path='/order-confirm' element={<OrderConfirm/>}/>
+
+          
+
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />}/>
-          <Route path="/Payment" element={<Payment />} />
+          
+          
         </Routes>
       </div>
     </Router>

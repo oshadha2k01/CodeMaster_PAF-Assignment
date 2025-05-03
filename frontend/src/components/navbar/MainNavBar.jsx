@@ -22,7 +22,7 @@ const MainNavBar = () => {
     { path: '/now-showing', label: 'Now Showing', icon: faFilm },
     { path: '/upcoming', label: 'Upcoming', icon: faCalendar },
     { path: '/ShowFoods', label: 'Beverages', icon: faGlassMartiniAlt },
-    { path: '/show-times', label: 'Locations', icon: faClock }
+    { path: '/Locations', label: 'Locations', icon: faClock }
     
     
   ];

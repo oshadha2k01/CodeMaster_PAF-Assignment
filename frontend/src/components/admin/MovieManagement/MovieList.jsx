@@ -4,10 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faEye,
   faPlus,
   faSearch,
-  faFilter,
   faSpinner,
   faExclamationTriangle,
   faTimes,
@@ -96,67 +94,204 @@ const MovieList = () => {
     navigate(`/admin/movies/edit/${movieId}`);
   };
 
-  const handleGeneratePDF = async () => {
+  const handleGeneratePDF = () => {
     const nowShowing = movies.filter((movie) => movie.status === "Now Showing");
     const upcoming = movies.filter((movie) => movie.status === "Upcoming");
 
     try {
-      const response = await fetch("http://localhost:3000/api/generate-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nowShowing, upcoming }),
-      });
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "GalaxyX_Cinema_Movie_List.pdf";
-        a.click();
-        window.URL.revokeObjectURL(url);
-        toast.success("PDF downloaded successfully");
-        return; // Exit the function to avoid showing the error message
+      // Define colors for GalaxyX Cinema branding
+      const galaxyPurple = [102, 51, 153];
+      const galaxyAmber = [255, 191, 0];
+      const galaxySilver = [0, 0, 0];
+
+      // Helper function to sanitize strings
+      const sanitizeString = (str) => {
+        return typeof str === "string" ? str.replace(/[^\w\s.,-]/g, "") : "N/A";
+      };
+
+      // Helper function to format date
+      const formatDate = (dateStr) => {
+        try {
+          const date = new Date(dateStr);
+          return isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString("en-GB");
+        } catch {
+          return "N/A";
+        }
+      };
+
+      // Cover Page
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(24);
+      doc.setTextColor(...galaxyPurple);
+      doc.text("GalaxyX Cinema Movie List", 20, 20, { align: "left" });
+
+      doc.setFontSize(16);
+      doc.setTextColor(...galaxySilver);
+      doc.text("Now Showing and Upcoming Movies", 20, 30);
+
+      doc.setFontSize(12);
+      doc.setTextColor(...galaxyAmber);
+      const today = new Date().toLocaleDateString("en-GB");
+      doc.text(`Generated on ${today}`, 20, 40);
+
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(...galaxySilver);
+      doc.text("Prepared by GalaxyX Cinema Administration", 20, 50);
+
+      // Add new page for content
+      doc.addPage();
+
+      // Now Showing Movies
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(...galaxyPurple);
+      doc.text("Now Showing Movies", 20, 20);
+
+      let y = 30;
+      if (nowShowing.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(...galaxySilver);
+        doc.text("#", 20, y);
+        doc.text("Movie Name", 30, y);
+        doc.text("Genre", 100, y);
+        doc.text("Release Date", 150, y);
+
+        y += 5;
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(...galaxySilver);
+        doc.line(20, y, 190, y);
+        y += 5;
+
+        doc.setFont("helvetica", "normal");
+        nowShowing.forEach((movie, index) => {
+          try {
+            const movieName = sanitizeString(movie.movie_name);
+            const genre = sanitizeString(movie.genre);
+            const releaseDate = formatDate(movie.release_date);
+
+            doc.text(`${index + 1}`, 20, y);
+            doc.text(movieName, 30, y, { maxWidth: 60 });
+            doc.text(genre, 100, y, { maxWidth: 40 });
+            doc.text(releaseDate, 150, y);
+            y += 10;
+
+            // Add new page if content exceeds page height
+            if (y > 260) {
+              doc.addPage();
+              y = 20;
+            }
+          } catch (error) {
+            console.error(`Error processing movie ${movie.movie_name}:`, error);
+            doc.text(`${index + 1}. Error`, 20, y);
+            y += 10;
+          }
+        });
       } else {
-        throw new Error("Server-side PDF generation failed");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.setTextColor(...galaxySilver);
+        doc.text("No movies currently showing.", 20, y);
+        y += 10;
       }
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      //toast.error("Server-side PDF generation failed. Generating client-side PDF...");
 
-      const doc = new jsPDF();
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(20);
-      doc.text("GalaxyX Cinema Movie List", 20, 20);
-
-      doc.setFontSize(14);
-      doc.text("Now Showing", 20, 40);
-      let y = 50;
-      nowShowing.forEach((movie, index) => {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(12);
-        doc.text(`${index + 1}. ${movie.movie_name} (${movie.genre})`, 20, y);
-        y += 10;
-      });
+      // Upcoming Movies
+      y += 10;
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      }
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("Upcoming", 20, y + 10);
-      y += 20;
-      upcoming.forEach((movie, index) => {
+      doc.setFontSize(16);
+      doc.setTextColor(...galaxyPurple);
+      doc.text("Upcoming Movies", 20, y);
+
+      y += 10;
+      if (upcoming.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(...galaxySilver);
+        doc.text("#", 20, y);
+        doc.text("Movie Name", 30, y);
+        doc.text("Genre", 100, y);
+        doc.text("Release Date", 150, y);
+
+        y += 5;
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(...galaxySilver);
+        doc.line(20, y, 190, y);
+        y += 5;
+
+        doc.setFont("helvetica", "normal");
+        upcoming.forEach((movie, index) => {
+          try {
+            const movieName = sanitizeString(movie.movie_name);
+            const genre = sanitizeString(movie.genre);
+            const releaseDate = formatDate(movie.release_date);
+
+            doc.text(`${index + 1}`, 20, y);
+            doc.text(movieName, 30, y, { maxWidth: 60 });
+            doc.text(genre, 100, y, { maxWidth: 40 });
+            doc.text(releaseDate, 150, y);
+            y += 10;
+
+            // Add new page if content exceeds page height
+            if (y > 260) {
+              doc.addPage();
+              y = 20;
+            }
+          } catch (error) {
+            console.error(`Error processing movie ${movie.movie_name}:`, error);
+            doc.text(`${index + 1}. Error`, 20, y);
+            y += 10;
+          }
+        });
+      } else {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(12);
-        doc.text(`${index + 1}. ${movie.movie_name} (${movie.genre})`, 20, y);
+        doc.setTextColor(...galaxySilver);
+        doc.text("No upcoming movies.", 20, y);
         y += 10;
-      });
+      }
 
+      // Approval Section
+      if (y > 220) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...galaxyPurple);
+      doc.text("Approval", 20, y);
+
+      y += 10;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.text("Generated by GalaxyX Cinema Admin", 20, y + 20);
-      doc.text("Signature: ______________________", 20, y + 30);
+      doc.setTextColor(...galaxySilver);
+      doc.text(
+        "This movie list has been verified and approved by the GalaxyX Cinema Administration.",
+        20,
+        y,
+        { maxWidth: 170 }
+      );
 
+      y += 20;
+      doc.setFont("helvetica", "bold");
+      doc.text("Signature: ______________________", 20, y);
+      y += 10;
+      doc.text(`Date: ${today}`, 20, y);
+
+      // Save the PDF
       doc.save("GalaxyX_Cinema_Movie_List.pdf");
-      toast.success("Client-side PDF downloaded");
+      toast.success("PDF downloaded successfully");
+    } catch (error) {
+      console.error("Detailed PDF generation error:", error);
+      toast.error(`Failed to generate PDF: ${error.message}`);
     }
   };
 
@@ -296,13 +431,6 @@ const MovieList = () => {
           <h1 className="text-2xl font-bold text-amber mb-4 md:mb-0">
             Movie Management
           </h1>
-          <Link
-            to="/admin/movies/add"
-            className="bg-scarlet hover:bg-amber text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center"
-          >
-            <FontAwesomeIcon icon={faPlus} className="mr-2" />
-            Add New Movie
-          </Link>
           <div className="flex space-x-4">
             <button
               onClick={handleGeneratePDF}
@@ -333,16 +461,14 @@ const MovieList = () => {
               placeholder="Search by name, director, or genre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-deep-space/50 border border-silver/30 rounded-lg pl-10 pr-4 py-2 text-silver
-                       focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
+              className="w-full bg-deep-space/50 border border-silver/30 rounded-lg pl-10 pr-4 py-2 text-silver focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-deep-space/50 border border-silver/30 rounded-lg px-4 py-2 text-silver
-                     focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
+            className="bg-deep-space/50 border border-silver/30 rounded-lg px-4 py-2 text-silver focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
           >
             <option value="All">All Status</option>
             <option value="Upcoming">Upcoming</option>
@@ -353,8 +479,7 @@ const MovieList = () => {
           <select
             value={sortField}
             onChange={(e) => handleSort(e.target.value)}
-            className="bg-deep-space/50 border border-silver/30 rounded-lg px-4 py-2 text-silver
-                     focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
+            className="bg-deep-space/50 border border-silver/30 rounded-lg px-4 py-2 text-silver focus:border-electric-purple focus:ring-1 focus:ring-electric-purple outline-none"
           >
             <option value="movie_name">Sort by Name</option>
             <option value="release_date">Sort by Release Date</option>
