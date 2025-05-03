@@ -15,6 +15,11 @@ build/
 .vite/
 *.local
 
+
+
+# Editor directories and files
+.vscode/*
+
 # Editor files
 .vscode/
 !.vscode/extensions.json

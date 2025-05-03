@@ -21,6 +21,17 @@ import MovieBuddySignUp from './components/customer/MovieBuddy/MovieBuddySignup'
 
 // import Login from './components/login';
 // import Register from './components/register';
+import AddFood from './components/admin/Foodmanagement/AddFood';
+import FoodList from './components/admin/Foodmanagement/FoodList';
+import ShowFoods from './components/customer/FoodManagement/ShowFoods';
+import Cart from './components/customer/FoodManagement/Cart';
+import Payment from './components/customer/Payment/Payment';
+import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
+import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
+import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+
+import Login from './components/login';
+import Register from './components/register';
 function App() {
   return (
     <Router>
@@ -50,6 +61,23 @@ function App() {
           <Route path="/movie-buddy-login" element={<MovieBuddyLogin />} />
           <Route path="/movie-buddy-signup" element={<MovieBuddySignUp />} />
           
+          <Route path="/admin/food" element={<FoodList />} />
+          <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
+          <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
+          <Route path="/movie-buddies" element={<MovieBuddyList />} />
+              
+
+
+           <Route path='/admin/add-food' element={<AddFood />}></Route>
+          <Route path='/foodlist' element={<FoodList/>}></Route>
+          <Route path='/showfoods' element={<ShowFoods/>}></Route>
+          <Route path='/cart' element={<Cart/>}></Route>
+          <Route path="/payment" element={<Payment/>} /> 
+          <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
+          <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
+          <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>
