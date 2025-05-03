@@ -38,7 +38,7 @@ const MovieBuddyForm = () => {
   const [privacySettings, setPrivacySettings] = useState({
     showName: true,
     showEmail: false,
-    showPhone: false,
+    showPhone: true,
     petName: ''
   });
 
@@ -254,16 +254,12 @@ const MovieBuddyForm = () => {
               <FontAwesomeIcon icon={faPhone} className="text-amber" />
               <div>
                 <p className="font-semibold text-amber">Phone Number</p>
-                <p className="text-sm text-silver/80">Share your phone number with other movie-goers</p>
+                <p className="text-sm text-silver/80">Your phone number will be shared with other movie-goers</p>
               </div>
             </div>
-            <Switch
-              checked={privacySettings.showPhone}
-              onChange={(checked) => setPrivacySettings(prev => ({ ...prev, showPhone: checked }))}
-              className={`${privacySettings.showPhone ? 'bg-amber' : 'bg-silver/20'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber focus:ring-offset-2`}
-            >
-              <span className={`${privacySettings.showPhone ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform`}/>
-            </Switch>
+            <div className="bg-amber relative inline-flex h-6 w-11 items-center rounded-full">
+              <span className="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-deep-space transition-transform"/>
+            </div>
           </div>
         </div>
       </div>
