@@ -7,9 +7,9 @@ import { toast } from 'react-hot-toast';
 const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSeats = [], maxSeats = 4, isEditMode = false }) => {
   const rows = ['A', 'B', 'C', 'D', 'E'];
   const seatsPerRow = 10;
+  const seatPrice = 500; // Cost per seat in rupees
 
   const isSeatBooked = (seatNumber) => {
-    // In edit mode, don't treat currently selected seats as booked
     if (isEditMode) {
       return bookedSeats.includes(seatNumber) && !selectedSeats.includes(seatNumber);
     }
@@ -23,18 +23,28 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
   const handleSeatClick = (seatNumber) => {
     if (!isSeatBooked(seatNumber)) {
       if (isSeatSelected(seatNumber)) {
-        // Remove seat if already selected
-        onSelect(selectedSeats.filter(seat => seat !== seatNumber));
+        const newSelectedSeats = selectedSeats.filter(seat => seat !== seatNumber);
+        onSelect(newSelectedSeats, newSelectedSeats.length * seatPrice);
       } else {
-        // Add seat if not selected and under max limit
         if (selectedSeats.length < maxSeats) {
-          onSelect([...selectedSeats, seatNumber]);
+          const newSelectedSeats = [...selectedSeats, seatNumber];
+          onSelect(newSelectedSeats, newSelectedSeats.length * seatPrice);
         } else {
           toast.error(`You can only select up to ${maxSeats} seats`);
         }
       }
     }
   };
+
+  const handleConfirm = () => {
+    if (selectedSeats.length > 0) {
+      onClose();
+    } else {
+      toast.error('Please select at least one seat before confirming');
+    }
+  };
+
+  const totalAmount = selectedSeats.length * seatPrice;
 
   if (!isOpen) return null;
 
@@ -55,15 +65,11 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
           <h2 className="text-2xl font-bold text-amber">
             {isEditMode ? 'Change Your Seats' : 'Select Your Seats'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-silver/70 hover:text-silver"
-          >
+          <button onClick={onClose} className="text-silver/70 hover:text-silver">
             <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
         </div>
 
-        {/* Screen */}
         <div className="mb-8">
           <div className="bg-silver/10 rounded-lg p-4 text-center">
             <div className="h-2 bg-amber/20 rounded-full"></div>
@@ -71,43 +77,26 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
           </div>
         </div>
 
-        {/* Seat Legend */}
         <div className="flex justify-center gap-6 mb-6">
           <div className="flex items-center gap-2">
             <FontAwesomeIcon icon={faChair} className="text-silver" />
             <span className="text-silver text-sm">Available</span>
           </div>
-          {isEditMode ? (
-            <>
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faChair} className="text-electric-purple" />
-                <span className="text-silver text-sm">Currently Selected</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faChair} className="text-amber" />
-                <span className="text-silver text-sm">New Selection</span>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <FontAwesomeIcon icon={faChair} className="text-amber" />
             <span className="text-silver text-sm">
               Selected
               {selectedSeats.length > 0 && (
-                <span className="text-amber ml-1">
-                  : {selectedSeats.join(', ')}
-                </span>
+                <span className="text-amber ml-1">: {selectedSeats.join(', ')}</span>
               )}
             </span>
           </div>
-          )}
           <div className="flex items-center gap-2">
             <FontAwesomeIcon icon={faChair} className="text-scarlet" />
             <span className="text-silver text-sm">Booked</span>
           </div>
         </div>
 
-        {/* Seat Grid */}
         <div className="space-y-4">
           {rows.map((row) => (
             <div key={row} className="flex justify-center gap-2">
@@ -125,9 +114,7 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
                       isBooked
                         ? 'bg-scarlet cursor-not-allowed'
                         : isSelected
-                        ? isEditMode
-                          ? 'bg-amber text-black'
-                          : 'bg-electric-purple text-white'
+                        ? 'bg-amber text-black'
                         : 'bg-silver/20 hover:bg-silver/30 text-silver'
                     }`}
                   >
@@ -139,29 +126,30 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
           ))}
         </div>
 
-        {/* Selected Seats Info */}
         <div className="mt-6 text-center space-y-2">
           <p className="text-silver">
-            Selected Seats: <span className={`font-bold ${isEditMode ? 'text-amber' : 'text-electric-purple'}`}>
+            Selected Seats: <span className="font-bold text-amber">
               {selectedSeats.join(', ') || 'None'}
             </span>
           </p>
           <p className="text-silver text-sm">
             {selectedSeats.length}/{maxSeats} seats selected
           </p>
+          <p className="text-silver">
+            Total Amount: <span className="font-bold text-amber">
+              ₹{totalAmount.toLocaleString('en-IN')}
+            </span>
+          </p>
         </div>
 
-        {/* Confirm Button */}
         <div className="mt-6 flex justify-center">
           <button
-            onClick={() => onClose()}
+            onClick={handleConfirm}
             disabled={selectedSeats.length === 0}
             className={`px-6 py-2 rounded-lg transition-colors duration-300 ${
               selectedSeats.length === 0
                 ? 'bg-deep-space/50 text-silver/50 cursor-not-allowed'
-                : isEditMode
-                ? 'bg-amber text-black hover:bg-amber/90'
-                : 'bg-electric-purple text-white hover:bg-electric-purple/90'
+                : 'bg-amber text-black hover:bg-amber/90'
             }`}
           >
             {isEditMode ? 'Update Selection' : 'Confirm Selection'}
@@ -172,4 +160,4 @@ const SeatSelection = ({ isOpen, onClose, onSelect, selectedSeats = [], bookedSe
   );
 };
 
-export default SeatSelection; 
+export default SeatSelection;

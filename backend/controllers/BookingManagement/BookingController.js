@@ -107,22 +107,23 @@ exports.getMovieBuddies = async (req, res) => {
     try {
         const { movieName, movieDate, movieTime, excludeBookingId } = req.query;
         
+        // Proper validation
         if (!movieName || !movieDate || !movieTime) {
             return res.status(400).json({ message: 'Movie name, date, and time are required' });
         }
 
-        // Find all bookings for the same movie, date, and time
+        // Exact match query
         const query = {
             movieName,
             movieDate,
             movieTime
         };
 
-        // Exclude the current booking if excludeBookingId is provided
         if (excludeBookingId) {
             query._id = { $ne: excludeBookingId };
         }
 
+        // Find all bookings for the same movie, date, and time
         const movieBuddies = await Booking.find(query)
             .select('name email phone seatNumbers createdAt')
             .sort({ createdAt: -1 });

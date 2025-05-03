@@ -86,9 +86,31 @@ const MovieBuddy = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/movie-buddies/stats');
+      const response = await axios.get('http://localhost:3000/api/movie-buddies/all');
       if (response.data.success) {
-        setStats(response.data.data);
+        const groups = response.data.data;
+        
+        // Calculate statistics
+        const stats = {
+          totalGroups: groups.length,
+          totalBuddies: groups.reduce((acc, group) => acc + (group.buddies?.length || 0), 0),
+          totalSeats: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.reduce((seatAcc, buddy) => {
+              return seatAcc + (Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.length : 0);
+            }, 0) || 0);
+          }, 0),
+          totalGroupBookings: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.filter(buddy => buddy.isGroup).length || 0);
+          }, 0),
+          totalSingleBookings: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.filter(buddy => !buddy.isGroup).length || 0);
+          }, 0),
+          averageGroupSize: groups.reduce((acc, group) => {
+            return acc + (group.buddies?.length || 0);
+          }, 0) / (groups.length || 1)
+        };
+        
+        setStats(stats);
       } else {
         toast.error('Failed to load statistics');
       }
@@ -114,13 +136,19 @@ const MovieBuddy = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/movie-buddies/${groupToDelete._id}`);
-      toast.success('Movie buddy group deleted successfully');
-      fetchMovieBuddyGroups();
-      setDeleteModalOpen(false);
+      const response = await axios.delete(`http://localhost:3000/api/movie-buddies/${groupToDelete.movieName}/${groupToDelete.movieDate}/${groupToDelete.movieTime}`);
+      
+      if (response.data.success) {
+        toast.success('Movie buddy group deleted successfully');
+        fetchMovieBuddyGroups(); // Refresh the list
+        setDeleteModalOpen(false);
+        setGroupToDelete(null);
+      } else {
+        toast.error(response.data.message || 'Failed to delete movie buddy group');
+      }
     } catch (error) {
       console.error('Error deleting movie buddy group:', error);
-      toast.error('Failed to delete movie buddy group');
+      toast.error(error.response?.data?.message || 'Failed to delete movie buddy group');
     }
   };
 
