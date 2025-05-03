@@ -22,8 +22,11 @@ import {
   faPhone,
   faUserSecret,
   faEye,
-  faEyeSlash
+  faEyeSlash,
+  faFileDownload
 } from '@fortawesome/free-solid-svg-icons';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import AdminNavBar from '../../navbar/AdminNavbar';
 
 const MovieBuddy = () => {
@@ -152,6 +155,182 @@ const MovieBuddy = () => {
     }
   };
 
+  const generateReport = async () => {
+    if (filteredGroups.length === 0) {
+      toast.error('No movie buddy groups available to generate a report');
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    // Cover Page
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(33, 33, 33);
+    doc.text('Movie Buddy Group Report', 105, 50, { align: 'center' });
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 70, { align: 'center' });
+    doc.text(`Total Groups: ${filteredGroups.length}`, 105, 80, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text('Prepared by: GalaxyX Cinema Admin', 105, 100, { align: 'center' });
+    doc.text('Contact: support@galaxyxcinema.com', 105, 110, { align: 'center' });
+    
+    // Add new page for content
+    doc.addPage();
+
+    // Detailed Group Sections
+    let yPos = 20;
+    filteredGroups.forEach((group, index) => {
+      // Check if we need a new page
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Section Header
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(242, 101, 34); // Amber-like color
+      doc.text(`Group ${index + 1}: ${group.movieName}`, 14, yPos);
+      yPos += 10;
+
+      // Group Details
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(33, 33, 33);
+      const groupDetails = [
+        { label: 'Date:', value: formatDate(group.movieDate) || 'N/A' },
+        { label: 'Time:', value: group.movieTime || 'N/A' },
+        { label: 'Total Buddies:', value: group.totalBuddies.toString() || '0' },
+        { label: 'Total Seats:', value: group.totalSeats.toString() || '0' },
+        { label: 'Group Bookings:', value: group.groupBookings.toString() || '0' },
+        { label: 'Single Bookings:', value: group.singleBookings.toString() || '0' },
+      ];
+
+      groupDetails.forEach((item) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(item.label, 14, yPos);
+        doc.setFont('helvetica', 'normal');
+        const valueLines = doc.splitTextToSize(item.value, 130); // Wrap long text
+        doc.text(valueLines, 50, yPos);
+        yPos += 8 * valueLines.length;
+      });
+
+      // Buddies Subheader
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(242, 101, 34);
+      doc.text('Buddies:', 14, yPos);
+      yPos += 8;
+
+      // Buddies Details
+      group.buddies.forEach((buddy, buddyIndex) => {
+        if (yPos > 260) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(33, 33, 33);
+        const buddyDetails = [
+          { label: `Buddy ${buddyIndex + 1} Name:`, value: buddy.privacySettings?.showName ? buddy.name : buddy.privacySettings?.petName || 'Anonymous' },
+          { label: 'Email:', value: buddy.privacySettings?.showEmail ? buddy.email : 'Hidden' },
+          { label: 'Phone:', value: buddy.privacySettings?.showPhone ? buddy.phone : 'Hidden' },
+          { label: 'Seats:', value: Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.join(', ') : 'N/A' },
+          { label: 'Booking Type:', value: buddy.isGroup ? 'Group' : 'Single' },
+          { label: 'Age:', value: buddy.age?.toString() || 'N/A' },
+          { label: 'Gender:', value: buddy.gender || 'N/A' },
+          { label: 'Booking ID:', value: buddy.bookingId || 'N/A' },
+          { label: 'Booked on:', value: new Date(buddy.bookingDate).toLocaleDateString() || 'N/A' },
+        ];
+
+        buddyDetails.forEach((item) => {
+          doc.setFont('helvetica', 'bold');
+          doc.text(item.label, 20, yPos);
+          doc.setFont('helvetica', 'normal');
+          const valueLines = doc.splitTextToSize(item.value, 120); // Wrap long text
+          doc.text(valueLines, 60, yPos);
+          yPos += 8 * valueLines.length;
+        });
+        yPos += 4;
+      });
+
+      // Horizontal line
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(150, 150, 150);
+      doc.line(14, yPos, 196, yPos);
+      yPos += 10;
+    });
+
+    // Summary Table
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(242, 101, 34);
+    doc.text('Summary Table', 14, 20);
+    yPos = 30;
+
+    const tableData = filteredGroups.map(group => [
+      group.movieName || 'N/A',
+      formatDate(group.movieDate) || 'N/A',
+      group.movieTime || 'N/A',
+      group.totalBuddies.toString() || '0',
+      group.totalSeats.toString() || '0',
+      group.groupBookings.toString() || '0',
+      group.singleBookings.toString() || '0',
+    ]);
+
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({
+        startY: yPos,
+        head: [['Movie Name', 'Date', 'Time', 'Total Buddies', 'Total Seats', 'Group Bookings', 'Single Bookings']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [66, 66, 66], textColor: [255, 255, 255] },
+        styles: { fontSize: 10 },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+        },
+      });
+    } else {
+      console.error('autoTable is not available. Skipping summary table.');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(33, 33, 33);
+      doc.text('Summary table could not be generated due to missing autoTable plugin.', 14, yPos);
+      yPos += 10;
+    }
+
+    // Footer
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 100, 100);
+    doc.text('Thank you for choosing GalaxyX Cinema.', 105, doc.internal.pageSize.height - 20, { align: 'center' });
+    doc.text('For inquiries: support@galaxyxcinema.com | www.galaxyxcinema.com', 105, doc.internal.pageSize.height - 10, { align: 'center' });
+
+    // Add page numbers
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+    }
+
+    // Save the PDF
+    doc.save('movie_buddy_group_report.pdf');
+  };
+
   const filteredGroups = movieBuddyGroups
     .filter(group => {
       const searchLower = searchTerm.toLowerCase();
@@ -224,6 +403,13 @@ const MovieBuddy = () => {
                 >
                   <FontAwesomeIcon icon={faChartBar} />
                   <span>{viewMode === 'list' ? 'View Stats' : 'View List'}</span>
+                </button>
+                <button
+                  onClick={generateReport}
+                  className="px-4 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80 flex items-center"
+                >
+                  <FontAwesomeIcon icon={faFileDownload} className="mr-2" />
+                  Generate Report
                 </button>
               </div>
             </div>
