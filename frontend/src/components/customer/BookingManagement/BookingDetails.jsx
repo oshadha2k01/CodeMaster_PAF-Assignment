@@ -178,7 +178,7 @@ const BookingDetails = () => {
 
   const handleMovieBuddyConfirm = () => {
     setShowMovieBuddyDialog(false);
-    navigate('/movie-buddy-form', {
+    navigate('/movie-buddy-login', {
       state: {
         movieName: booking.movieName,
         movieDate: booking.movieDate,

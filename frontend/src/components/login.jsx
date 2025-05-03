@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Added Link for navigation to register page
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faExclamationCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { Toaster, toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const LoginForm = () => {
+const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -15,7 +15,15 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Validation function for email and password
+  useEffect(() => {
+    // Check if admin is already logged in
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      navigate('/admin');
+    }
+  }, [navigate]);
+
+  // Validation function for all fields
   const validateInput = (name, value) => {
     const newErrors = { ...errors };
 
@@ -33,8 +41,6 @@ const LoginForm = () => {
       case 'password':
         if (value.trim() === '') {
           newErrors.password = 'Password is required';
-        } else if (value.length < 6) {
-          newErrors.password = 'Password must be at least 6 characters';
         } else {
           delete newErrors.password;
         }
@@ -73,18 +79,19 @@ const LoginForm = () => {
 
     setLoading(true);
     try {
-      // Replace with your actual API endpoint for login
       const response = await axios.post('http://localhost:3000/api/auth/login', {
         email: formData.email,
         password: formData.password,
       });
 
+      // Store admin info in localStorage
+      localStorage.setItem('userInfo', JSON.stringify(response.data));
+      
       toast.success('Login successful!');
-      // Navigate to a dashboard or home page after successful login
-      navigate('/dashboard');
+      navigate('/admin');
     } catch (error) {
       console.error('Error logging in:', error);
-      toast.error(error.response?.data?.message || 'Failed to login');
+      toast.error(error.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -97,10 +104,10 @@ const LoginForm = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-xl mx-auto w-full"
+        className="max-w-md mx-auto w-full"
       >
         <div className="bg-electric-purple/10 rounded-xl p-10 border border-silver/10 shadow-lg">
-          <h1 className="text-3xl font-bold text-amber mb-8 text-center">Login</h1>
+          <h1 className="text-3xl font-bold text-amber mb-8 text-center">Admin Login</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -145,18 +152,11 @@ const LoginForm = () => {
               )}
             </div>
 
-            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-silver/20">
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="px-6 py-2.5 bg-deep-space/50 text-silver hover:bg-deep-space/70 rounded-lg transition-colors duration-300"
-              >
-                Cancel
-              </button>
+            <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 bg-scarlet hover:bg-amber text-white rounded-lg transition-colors duration-300 flex items-center"
+                className="w-full px-6 py-2.5 bg-scarlet hover:bg-amber text-white rounded-lg transition-colors duration-300 flex items-center justify-center"
               >
                 {loading ? (
                   <>
@@ -168,24 +168,20 @@ const LoginForm = () => {
                 )}
               </button>
             </div>
+            
+            <div className="text-center mt-4">
+              <p className="text-silver">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-amber hover:underline">
+                  Register
+                </Link>
+              </p>
+            </div>
           </form>
-
-          {/* Added Register Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-silver">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="text-amber hover:underline focus:outline-none"
-              >
-                Register
-              </Link>
-            </p>
-          </div>
         </div>
       </motion.div>
     </div>
   );
 };
 
-export default LoginForm;
+export default Login;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEnvelope, faLock, faPhone, faExclamationCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
@@ -9,12 +9,12 @@ import axios from 'axios';
 const RegistrationForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
+    role: 'admin' // Always set to 'admin'
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -24,27 +24,15 @@ const RegistrationForm = () => {
     const newErrors = { ...errors };
 
     switch (name) {
-      case 'firstName':
+      case 'name':
         if (/[^a-zA-Z\s]/.test(value)) {
-          newErrors.firstName = 'Please use letters only';
+          newErrors.name = 'Please use letters only';
         } else if (value.trim() === '') {
-          newErrors.firstName = 'First name is required';
+          newErrors.name = 'Name is required';
         } else if (value.length < 2) {
-          newErrors.firstName = 'First name must be at least 2 characters';
+          newErrors.name = 'Name must be at least 2 characters';
         } else {
-          delete newErrors.firstName;
-        }
-        break;
-
-      case 'lastName':
-        if (/[^a-zA-Z\s]/.test(value)) {
-          newErrors.lastName = 'Please use letters only';
-        } else if (value.trim() === '') {
-          newErrors.lastName = 'Last name is required';
-        } else if (value.length < 2) {
-          newErrors.lastName = 'Last name must be at least 2 characters';
-        } else {
-          delete newErrors.lastName;
+          delete newErrors.name;
         }
         break;
 
@@ -113,8 +101,7 @@ const RegistrationForm = () => {
 
     // Real-time input restrictions
     switch (name) {
-      case 'firstName':
-      case 'lastName':
+      case 'name':
         if (/[^a-zA-Z\s]/.test(value)) {
           return; // Prevent numbers and special characters
         }
@@ -136,13 +123,13 @@ const RegistrationForm = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!formData.password.trim()) newErrors.password = 'Password is required';
     if (!formData.confirmPassword.trim()) newErrors.confirmPassword = 'Confirm password is required';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    if (formData.role !== 'admin') newErrors.role = 'Role must be admin';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -155,17 +142,15 @@ const RegistrationForm = () => {
 
     setLoading(true);
     try {
-      // Replace with your actual API endpoint for registration
       const response = await axios.post('http://localhost:3000/api/auth/register', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        name: formData.name,
         email: formData.email,
         password: formData.password,
         phone: formData.phone,
+        role: formData.role
       });
 
       toast.success('Registration successful! Please login.');
-      // Navigate to the login page after successful registration
       navigate('/login');
     } catch (error) {
       console.error('Error registering:', error);
@@ -185,51 +170,28 @@ const RegistrationForm = () => {
         className="max-w-xl mx-auto w-full"
       >
         <div className="bg-electric-purple/10 rounded-xl p-10 border border-silver/10 shadow-lg">
-          <h1 className="text-3xl font-bold text-amber mb-8 text-center">Register</h1>
+          <h1 className="text-3xl font-bold text-amber mb-8 text-center">Register Admin</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-silver mb-2">
-                  <FontAwesomeIcon icon={faUser} className="mr-2 text-amber" />
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                  placeholder="Enter your first name"
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-scarlet flex items-center">
-                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
-                    {errors.firstName}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-silver mb-2">
-                  <FontAwesomeIcon icon={faUser} className="mr-2 text-amber" />
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
-                  placeholder="Enter your last name"
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-scarlet flex items-center">
-                    <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
-                    {errors.lastName}
-                  </p>
-                )}
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-silver mb-2">
+                <FontAwesomeIcon icon={faUser} className="mr-2 text-amber" />
+                Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
+                placeholder="Enter your full name"
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-scarlet flex items-center">
+                  <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             <div>
@@ -252,6 +214,7 @@ const RegistrationForm = () => {
                 </p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-silver mb-2">
                 <FontAwesomeIcon icon={faPhone} className="mr-2 text-amber" />
@@ -273,6 +236,7 @@ const RegistrationForm = () => {
                 </p>
               )}
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-silver mb-2">
@@ -317,16 +281,23 @@ const RegistrationForm = () => {
               </div>
             </div>
 
-            
+            {/* Hidden role field */}
+            <input
+              type="hidden"
+              name="role"
+              value={formData.role}
+            />
 
             <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-silver/20">
+              <Link to='/login'>
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/login')}
                 className="px-6 py-2.5 bg-deep-space/50 text-silver hover:bg-deep-space/70 rounded-lg transition-colors duration-300"
               >
                 Cancel
               </button>
+              </Link>
               <button
                 type="submit"
                 disabled={loading}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFilm,
@@ -7,12 +7,33 @@ import {
   faUtensils,
   faUserFriends,
   faBars,
-  faTimes
+  faTimes,
+  faSignOutAlt,
+  faUser
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdminNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [userName, setUserName] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for user info in localStorage when component mounts
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const user = JSON.parse(userInfo);
+      setUserName(user.name);
+    } else {
+      // Redirect to login if no user info found
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userInfo');
+    navigate('/login');
+  };
 
   const navItems = [
     { path: '/admin/movies', icon: faFilm, text: 'Movie Management' },
@@ -52,6 +73,23 @@ const AdminNavbar = () => {
             </div>
           </div>
 
+          {/* User greeting and logout */}
+          <div className="hidden md:flex items-center space-x-4">
+            {userName && (
+              <div className="text-amber flex items-center">
+                <FontAwesomeIcon icon={faUser} className="mr-2" />
+                <span>Hi, {userName}</span>
+              </div>
+            )}
+            <button
+              onClick={handleLogout}
+              className="text-silver hover:text-amber flex items-center"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+              Logout
+            </button>
+          </div>
+
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
@@ -84,6 +122,21 @@ const AdminNavbar = () => {
                 {item.text}
               </Link>
             ))}
+            
+            {/* User info and logout for mobile */}
+            {userName && (
+              <div className="block px-3 py-2 rounded-md text-base font-medium text-amber">
+                <FontAwesomeIcon icon={faUser} className="mr-2" />
+                Hi, {userName}
+              </div>
+            )}
+            <button
+              onClick={handleLogout}
+              className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-silver hover:text-amber"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+              Logout
+            </button>
           </div>
         </div>
       )}
@@ -91,4 +144,4 @@ const AdminNavbar = () => {
   );
 };
 
-export default AdminNavbar; 
+export default AdminNavbar;

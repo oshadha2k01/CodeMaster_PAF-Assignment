@@ -337,7 +337,7 @@ const MovieBuddyLogin = () => {
               ) : (
                 <>
                   <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
-                  Sign in
+                  Sign in to Movie Buddy
                 </>
               )}
             </button>

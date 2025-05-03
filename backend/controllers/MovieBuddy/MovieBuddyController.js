@@ -221,68 +221,20 @@ const updateMovieBuddy = async (req, res) => {
   }
 };
 
-// // Get all movie buddy groups
-// const getAllMovieBuddyGroups = async (req, res) => {
-//   try {
-//     // Get all movie buddies from the database
-//     const allBuddies = await MovieBuddy.find().lean();
-
-    
-//     // Group buddies by movie details (movieName, movieDate, movieTime)
-//     const groupedBuddies = allBuddies.reduce((acc, buddy) => {
-//       // Create a unique key for each movie showing
-//       const key = `${buddy.movieName}|${buddy.movieDate}|${buddy.movieTime}`;
-      
-//       if (!acc[key]) {
-//         // Initialize a new group
-//         acc[key] = {
-//           movieName: buddy.movieName,
-//           movieDate: buddy.movieDate,
-//           movieTime: buddy.movieTime,
-//           buddies: []
-//         };
-//       }
-      
-//       // Add this buddy to the appropriate group
-//       // Determine if this is a group booking based on seat numbers
-//       const isGroup = buddy.seatNumbers && buddy.seatNumbers.length > 1;
-      
-//       acc[key].buddies.push({
-//         ...buddy,
-//         isGroup: isGroup // Add isGroup flag for frontend
-//       });
-      
-//       return acc;
-//     }, {});
-    
-//     // Convert the grouped object to an array
-//     const movieBuddyGroups = Object.values(groupedBuddies);
-    
-//     res.status(200).json({
-//       success: true,
-//       data: movieBuddyGroups
-//     });
-//   } catch (error) {
-//     console.error('Error fetching movie buddy groups:', {
-//       message: error.message,
-//       stack: error.stack
-//     });
-//     res.status(500).json({
-//       success: false,
-//       message: 'Error fetching movie buddy groups',
-//       error: error.message
-//     });
-//   }
-// };
-
-
+// Modify getAllMovieBuddyGroups to handle query parameters
 const getAllMovieBuddyGroups = async (req, res) => {
   try {
-    // Get user email from request (assuming it's passed in the request body or headers)
-    const userEmail = req.body.userEmail || req.headers['user-email'];
-
-    // Get all movie buddies from the database
-    const allBuddies = await MovieBuddy.find().lean();
+    const userEmail = req.body.userEmail || req.headers['user-email'] || req.query.userEmail;
+    const { movieName, movieDate, movieTime } = req.query;
+    
+    // Build query object
+    const query = {};
+    if (movieName) query.movieName = movieName;
+    if (movieDate) query.movieDate = movieDate;
+    if (movieTime) query.movieTime = movieTime;
+    
+    // Only fetch buddies matching the query if specified
+    const allBuddies = await MovieBuddy.find(query).lean();
 
     // Group buddies by movie details (movieName, movieDate, movieTime)
     const groupedBuddies = allBuddies.reduce((acc, buddy) => {
