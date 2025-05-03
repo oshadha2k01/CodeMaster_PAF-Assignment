@@ -11,7 +11,13 @@ const OrderSchema = new Schema({
     },
     status : {
         type: String,
-        default: "pending"
+        enum: ['pending', 'paid', 'cancelled'],
+        default: 'pending'
+    },
+    paymentMethod: {
+        type: String,
+        enum: ['card', 'cash'],
+        required: true
     },
     totalprice : {
         type: Number,
@@ -21,6 +27,7 @@ const OrderSchema = new Schema({
         food: {type: Schema.Types.ObjectId, ref: "Food", required: true},
         quantity: {type: Number, required: true},
     }]
+    
 
 });
 
