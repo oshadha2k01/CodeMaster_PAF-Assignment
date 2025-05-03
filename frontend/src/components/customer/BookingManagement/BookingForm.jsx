@@ -29,22 +29,26 @@ const BookingForm = () => {
   const [seatSelectionOpen, setSeatSelectionOpen] = useState(false);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const [filteredShowTimes, setFilteredShowTimes] = useState([]);
 
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
+        let movie;
         if (location.state?.movieData) {
-          setMovieData({
+          movie = {
             movie_name: location.state.movieData.movie_name,
             show_times: location.state.movieData.show_times || []
-          });
+          };
         } else {
           const response = await axios.get(`http://localhost:3000/api/movies/${id}`);
-          setMovieData({
+          movie = {
             movie_name: response.data.movie_name,
             show_times: response.data.show_times || []
-          });
+          };
         }
+        setMovieData(movie);
+        filterShowTimes(movie.show_times, formData.movieDate);
       } catch (error) {
         console.error('Error fetching movie data:', error);
         toast.error('Failed to load movie data');
@@ -53,6 +57,43 @@ const BookingForm = () => {
     };
     fetchMovieData();
   }, [id, navigate, location.state]);
+
+  useEffect(() => {
+    filterShowTimes(movieData.show_times, formData.movieDate);
+  }, [formData.movieDate, movieData.show_times]);
+
+  const filterShowTimes = (showTimes, selectedDate) => {
+    if (!showTimes || showTimes.length === 0) {
+      setFilteredShowTimes([]);
+      return;
+    }
+
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+
+    let validTimes = showTimes;
+
+    if (selectedDate === currentDate) {
+      validTimes = showTimes.filter((time) => {
+        const [timeStr, period] = time.split(' ');
+        let [hours, minutes] = timeStr.split(':').map(Number);
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        const showTimeInMinutes = hours * 60 + minutes;
+        const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+        return showTimeInMinutes > currentTimeInMinutes;
+      });
+    }
+
+    setFilteredShowTimes(validTimes);
+
+    // Reset movieTime if it's no longer valid
+    if (formData.movieTime && !validTimes.includes(formData.movieTime)) {
+      setFormData((prev) => ({ ...prev, movieTime: validTimes[0] || '' }));
+    }
+  };
 
   useEffect(() => {
     const fetchBookedSeats = async () => {
@@ -124,23 +165,22 @@ const BookingForm = () => {
     const { name, value } = e.target;
     let newValue = value;
 
-    // Real-time validation and input restriction
     switch (name) {
       case 'name':
         if (/[^a-zA-Z\s]/.test(value)) {
-          return; // Prevent numbers and special characters
+          return;
         }
         break;
       case 'phone':
         if (/[^0-9]/.test(value) || value.length > 10) {
-          return; // Prevent non-numbers and limit to 10 digits
+          return;
         }
         break;
       default:
         break;
     }
 
-    setFormData(prev => ({ ...prev, [name]: newValue }));
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
     validateInput(name, newValue);
 
     if (name === 'movieDate' || name === 'movieTime') {
@@ -151,7 +191,6 @@ const BookingForm = () => {
   const handleSeatSelect = (seats) => {
     setSelectedSeats(seats);
     setFormData({ ...formData, seatNumbers: seats });
-    //setSeatSelectionOpen(false);
   };
 
   const validateForm = () => {
@@ -160,7 +199,7 @@ const BookingForm = () => {
     if (!formData.movieDate) newErrors.movieDate = 'Please select a date';
     if (!formData.movieTime) newErrors.movieTime = 'Please select a show time';
     if (selectedSeats.length === 0) newErrors.seatNumber = 'Please select at least one seat';
-    if (selectedSeats.some(seat => bookedSeats.includes(seat))) {
+    if (selectedSeats.some((seat) => bookedSeats.includes(seat))) {
       newErrors.seatNumber = 'Some selected seats are already booked';
     }
     if (!formData.name.trim()) newErrors.name = 'Name is required';
@@ -224,31 +263,31 @@ const BookingForm = () => {
                   <h2 className="text-xl font-semibold text-amber mb-6 pb-2 border-b border-silver/20">Movie Details</h2>
                   
                   <style jsx>{`
-  .calendar-white::-webkit-calendar-picker-indicator {
-    filter: invert(100%);
-  }
-`}</style>
+                    .calendar-white::-webkit-calendar-picker-indicator {
+                      filter: invert(100%);
+                    }
+                  `}</style>
 
-<div>
-  <label className="block text-sm font-medium text-silver mb-2">
-    <FontAwesomeIcon icon={faCalendar} className="mr-2 text-amber" />
-    Select Date
-  </label>
-  <input
-    type="date"
-    name="movieDate"
-    value={formData.movieDate}
-    onChange={handleInputChange}
-    min={new Date().toISOString().split('T')[0]}
-    className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber calendar-white"
-  />
-  {errors.movieDate && (
-    <p className="mt-1 text-sm text-scarlet flex items-center">
-      <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
-      {errors.movieDate}
-    </p>
-  )}
-</div>
+                  <div>
+                    <label className="block text-sm font-medium text-silver mb-2">
+                      <FontAwesomeIcon icon={faCalendar} className="mr-2 text-amber" />
+                      Select Date
+                    </label>
+                    <input
+                      type="date"
+                      name="movieDate"
+                      value={formData.movieDate}
+                      onChange={handleInputChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber calendar-white"
+                    />
+                    {errors.movieDate && (
+                      <p className="mt-1 text-sm text-scarlet flex items-center">
+                        <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
+                        {errors.movieDate}
+                      </p>
+                    )}
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-silver mb-2">
@@ -262,7 +301,7 @@ const BookingForm = () => {
                       className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber"
                     >
                       <option value="">Select a time</option>
-                      {movieData.show_times.map((time, index) => (
+                      {filteredShowTimes.map((time, index) => (
                         <option key={index} value={time}>{time}</option>
                       ))}
                     </select>
@@ -270,6 +309,12 @@ const BookingForm = () => {
                       <p className="mt-1 text-sm text-scarlet flex items-center">
                         <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
                         {errors.movieTime}
+                      </p>
+                    )}
+                    {filteredShowTimes.length === 0 && formData.movieDate && (
+                      <p className="mt-1 text-sm text-scarlet flex items-center">
+                        <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
+                        No show times available for this date
                       </p>
                     )}
                   </div>
@@ -301,6 +346,8 @@ const BookingForm = () => {
                     )}
                   </div>
                 </div>
+
+
 
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold text-amber mb-6 pb-2 border-b border-silver/20">Personal Details</h2>

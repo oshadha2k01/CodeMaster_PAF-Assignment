@@ -13,6 +13,7 @@ import MovieBuddyAdmin from './components/admin/MovieBuddy/MovieBuddy';
 import MovieBuddyPortal from './components/customer/MovieBuddy/MovieBuddyPortal';
 import MovieBuddyForm from './components/customer/MovieBuddy/MovieBuddyForm';
 import MovieBuddyProfile from './components/customer/MovieBuddy/MovieBuddyProfile';
+import Payment from './components/customer/BookingManagement/Payment';
 
 import Login from './components/login';
 import Register from './components/register';
@@ -38,7 +39,8 @@ function App() {
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<Register />}/>
+          <Route path="/Payment" element={<Payment />} />
         </Routes>
       </div>
     </Router>

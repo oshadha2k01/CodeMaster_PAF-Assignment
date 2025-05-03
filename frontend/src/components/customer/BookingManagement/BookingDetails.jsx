@@ -172,7 +172,7 @@ const BookingDetails = () => {
   };
 
   const handleProceedToPayment = () => {
-    navigate('/payment', { state: { booking, totalAmount } });
+    navigate('/Payment', { state: { booking, totalAmount } });
   };
 
   const handleMovieBuddyConfirm = () => {
