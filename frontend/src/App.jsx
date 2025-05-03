@@ -39,8 +39,6 @@ function App() {
           <Route path="/admin/movie-buddy" element={<MovieBuddyAdmin />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
           <Route path="/movie-buddies" element={<MovieBuddyList />} />
-              
-
 
            <Route path='/admin/add-food' element={<AddFood />}></Route>
           <Route path='/foodlist' element={<FoodList/>}></Route>
@@ -50,7 +48,8 @@ function App() {
           <Route path="/movie-buddy-portal" element={<MovieBuddyPortal />} />
           <Route path="/movie-buddy-form" element={<MovieBuddyForm />} />
           <Route path="/movie-buddy-profile" element={<MovieBuddyProfile />} />
-          <Route path="/order-confirm" element={<OrderConfirm />} />
+          <Route path="/order-confirmation" element={<OrderConfirm/>}/>
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>

@@ -21,6 +21,7 @@ const OrderSchema = new Schema({
         food: {type: Schema.Types.ObjectId, ref: "Food", required: true},
         quantity: {type: Number, required: true},
     }]
+    
 
 });
 
