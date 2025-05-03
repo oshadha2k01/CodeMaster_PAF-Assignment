@@ -16,8 +16,11 @@ import {
   faFilter,
   faPlus,
   faList,
-  faBurger
+  faBurger,
+  faFileExport
 } from '@fortawesome/free-solid-svg-icons';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import AdminNavbar from '../../navbar/AdminNavbar';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -107,6 +110,59 @@ const FoodList = () => {
     }
   };
 
+  const generateReport = () => {
+    try {
+      // Create new PDF document
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(20);
+      doc.text('Food Items Report', 14, 15);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 25);
+      
+      // Create table
+      const tableColumn = ['Name', 'Category', 'Price', 'Ingredients'];
+      const tableRows = filteredFoods.map(food => [
+        food.name,
+        food.category,
+        `$${food.price.toFixed(2)}`,
+        food.ingrediants
+      ]);
+      
+      // Add table to PDF
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+        theme: 'grid',
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+      });
+      
+      // Save the PDF
+      doc.save(`food-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      toast.success('PDF report generated successfully');
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   const filteredFoods = foods
     .filter(food => {
       const searchLower = searchTerm.toLowerCase();
@@ -155,6 +211,14 @@ const FoodList = () => {
                 </div>
                 
                 <div className="flex gap-4">
+                  <button
+                    onClick={generateReport}
+                    className="bg-electric-purple hover:bg-electric-purple/80 text-silver px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2"
+                  >
+                    <FontAwesomeIcon icon={faFileExport} />
+                    <span>Generate Report</span>
+                  </button>
+                  
                   <Link
                     to="/admin/food-list"
                     className="bg-deep-space hover:bg-electric-purple/20 text-silver px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2"
