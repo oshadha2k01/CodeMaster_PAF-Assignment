@@ -8,7 +8,6 @@ exports.getOrders = async (req, res) => {
         if (orders.length === 0) {
             return res.status(404).json({ message: "No orders found" });
         }
-
         res.status(200).json({ message: "Orders found successfully", data: orders });
     } catch (err) {
         res.status(500).json({ error: err.message || "Error in getting orders" });

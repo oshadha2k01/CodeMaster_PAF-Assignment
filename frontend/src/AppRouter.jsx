@@ -4,8 +4,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import AppLayout from './components/AppLayout';
-import Login from './components/Login';
-import Register from './components/Register';
+// import Login from './components/Login';
+// import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
