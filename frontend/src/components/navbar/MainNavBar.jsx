@@ -69,19 +69,19 @@ const MainNavBar = () => {
 
           {/* User Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
+            {/* <Link
               to="/profile"
               className="flex items-center space-x-2 px-3 py-2 rounded-lg text-silver hover:text-amber hover:bg-electric-purple/10 transition-colors duration-300"
             >
               <FontAwesomeIcon icon={faUser} className="text-sm" />
               <span className="text-sm font-medium">Profile</span>
-            </Link>
+            </Link> */}
             <button
               onClick={handleLoginClick} // Added onClick handler
               className="flex items-center space-x-2 px-3 py-2 rounded-lg text-silver hover:text-amber hover:bg-electric-purple/10 transition-colors duration-300"
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="text-sm" />
-              <span className="text-sm font-medium">Login</span>
+              <span className="text-sm font-medium"> Admin Login</span>
             </button>
           </div>
 
