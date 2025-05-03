@@ -442,17 +442,17 @@ const Upcoming = () => {
                     <span>Show Times: {movie.show_times.join(', ')}</span>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    {/* <button
                       onClick={() => handleBookTickets(movie)}
                       className="flex-1 flex items-center space-x-2 bg-amber hover:bg-scarlet px-3 py-1.5 rounded-lg transition-colors duration-300 text-sm text-black justify-center"
                     >
                       <FontAwesomeIcon icon={faTicketAlt} className="text-black" />
                       <span>Book Tickets</span>
-                    </button>
+                    </button> */}
                     {movie.trailer_link && (
                       <button
                         onClick={() => handlePlayTrailer(movie)}
-                        className="flex items-center space-x-2 bg-electric-purple hover:bg-electric-purple/80 px-3 py-1.5 rounded-lg transition-colors duration-300 text-sm text-white justify-center"
+                        className="flex-1 items-center space-x-2 bg-electric-purple hover:bg-electric-purple/80 px-8 py-1.5 rounded-lg transition-colors duration-300 text-sm text-white justify-center"
                       >
                         <FontAwesomeIcon icon={faPlay} />
                         <span>Trailer</span>
