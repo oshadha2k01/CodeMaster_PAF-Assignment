@@ -21,8 +21,8 @@ const MainNavBar = () => {
   const navItems = [
     { path: '/now-showing', label: 'Now Showing', icon: faFilm },
     { path: '/upcoming', label: 'Upcoming', icon: faCalendar },
-    { path: '/ShowFoods', label: 'Beverages', icon: faGlassMartiniAlt },
-    { path: '/show-times', label: 'Locations', icon: faClock }
+    { path: '/beverages', label: 'Beverages', icon: faGlassMartiniAlt },
+    { path: '/Locations', label: 'Locations', icon: faClock }
     
     
   ];
