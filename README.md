@@ -1,155 +1,103 @@
-# GalaxyX Cinema - ITPM Project
+# CodeMaster - Full Stack Project
 
-## Overview
-GalaxyX Cinema is a comprehensive cinema management system developed as part of the Information Technology Project Management (ITPM) course. The system allows users to browse movies, make bookings, find movie buddies, and order food and beverages.
+## Project Overview
+CodeMaster is a full-stack web application built with modern technologies. The project consists of a React-based frontend and a Spring Boot backend, providing a robust and scalable solution.
 
 ## Technology Stack
 
 ### Frontend
-- **React** - JavaScript library for building user interfaces
-- **Vite** - Build tool and development server
-- **TailwindCSS** - Utility-first CSS framework
-- **React Router Dom** - For navigation and routing
-- **Framer Motion** - For animations
-- **React Hot Toast** - For notifications
-- **Axios** - For API requests
-- **FontAwesome** - For icons
+- **Framework**: React.js
+- **UI Library**: Material-UI (MUI)
+- **State Management**: React Context API
+- **Routing**: React Router DOM
+- **HTTP Client**: Axios
+- **Animation**: Framer Motion
+- **Styling**: Emotion
+- **Additional Libraries**:
+  - React Toastify for notifications
+  - Swiper for carousel/slider components
+  - JWT Decode for authentication
 
 ### Backend
-- **Node.js** - JavaScript runtime
-- **Express** - Web application framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB object modeling
-- **JWT** - For authentication
-- **WebSocket** - For real-time communication
-- **Multer** - For file uploads
+- **Framework**: Spring Boot 3.4.4
+- **Language**: Java 17
+- **Database**: 
+  - MySQL 
+- **Security**: 
+  - Spring Security
+  - JWT Authentication
+  - OAuth2 Client
+- **API Documentation**: Spring Boot Starter Web
+- **Testing**: Spring Boot Starter Test
 
-## Directory Structure
-
+## Project Structure
 ```
-ITPM-Project/
-├── frontend/             # React frontend
-│   ├── public/           # Static files
-│   └── src/              # Source code
-│       ├── components/   # React components
-│       │   ├── admin/    # Admin components
-│       │   ├── customer/ # Customer components
-│       │   └── navbar/   # Navigation components
-│       └── main.jsx      # Entry point
-│
-└── backend/              # Express.js backend
-    ├── controllers/      # Request handlers
-    ├── models/           # Database models
-    ├── routes/           # API routes
-    ├── uploads/          # Uploaded files
-    └── App.js            # Main application file
+CodeMastersql/
+├── FullProject/
+│   ├── frontend/          # React frontend application
+│   │   ├── src/          # Source code
+│   │   ├── public/       # Static files
+│   │   └── package.json  # Frontend dependencies
+│   │
+│   └── backend/          # Spring Boot backend application
+│       ├── src/          # Source code
+│       └── pom.xml       # Backend dependencies
 ```
 
-## Setup Instructions
+## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (for frontend)
+- Java 17 (for backend)
+- Maven
 - MongoDB
-- Git
+- MySQL (optional)
 
 ### Frontend Setup
 1. Navigate to the frontend directory:
+   ```bash
+   cd CodeMastersql/FullProject/frontend
    ```
-   cd frontend
-   ```
-
 2. Install dependencies:
-   ```
+   ```bash
    npm install
    ```
-
 3. Start the development server:
+   ```bash
+   npm start
    ```
-   npm run dev
-   ```
-
-4. The application will be available at: `http://localhost:5173`
 
 ### Backend Setup
 1. Navigate to the backend directory:
+   ```bash
+   cd CodeMastersql/FullProject/backend
    ```
-   cd backend
+2. Build the project:
+   ```bash
+   mvn clean install
    ```
-
-2. Install dependencies:
+3. Run the application:
+   ```bash
+   mvn spring-boot:run
    ```
-   npm install
-   ```
-
-3. Create a `.env` file with the following variables:
-   ```
-   PORT=3000
-   MONGO_URI=mongodb://localhost:27017/galaxyx
-   JWT_SECRET=your_jwt_secret
-   ```
-
-4. Start the server:
-   ```
-   npm run dev
-   ```
-
-5. The API will be available at: `http://localhost:3000/api`
 
 ## Features
+- Modern, responsive UI with Material Design
+- Secure authentication and authorization
+- RESTful API architecture
+- Database integration with MongoDB and MySQL
+- Real-time notifications
+- Smooth animations and transitions
 
-### Customer Features
-- Browse movies (Now Showing & Upcoming)
-- View movie details
-- Book tickets and select seats
-- Find movie buddies
-- Order food and beverages
-- User registration and authentication
-
-### Admin Features
-- Movie management (CRUD operations)
-- Booking management
-- Food and beverage management
-- Movie buddy administration
-- User management
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login a user
-
-### Movies
-- `GET /api/movies` - Get all movies
-- `GET /api/movies/:id` - Get a movie by ID
-- `POST /api/movies` - Add a new movie (admin)
-- `PUT /api/movies/:id` - Update a movie (admin)
-- `DELETE /api/movies/:id` - Delete a movie (admin)
-
-### Bookings
-- `GET /api/bookings` - Get all bookings
-- `GET /api/bookings/:id` - Get a booking by ID
-- `POST /api/bookings` - Create a new booking
-- `PUT /api/bookings/:id` - Update a booking
-- `DELETE /api/bookings/:id` - Delete a booking
-
-### Movie Buddies
-- `GET /api/movie-buddies/all` - Get all movie buddy groups
-- `POST /api/movie-buddies/update` - Update movie buddies
-- `GET /api/movie-buddies/buddies` - Get movie buddies for a specific show
-- `GET /api/movie-buddies/profile` - Get movie buddy profile
-
-### Food Management
-- `GET /api/food` - Get all food items
-- `POST /api/food` - Add a new food item
-- `PUT /api/food/:id` - Update a food item
-- `DELETE /api/food/:id` - Delete a food item
-
-## Team
-
-- Oshadha Pathiraja
-- Vidumini Chandrasekara
-- Dhanajaya Weerakoon
-- Raveesha Abeysekara
+## Contributing
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
-This project is part of the ITPM course at Sri Lanka Institute of Information Technology (SLIIT).
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contact
+For any queries or support, please reach out to the project maintainers.
