@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import MovieBuddyNavBar from '../../navbar/MovieBuddyNavBar';
 import { 
   faUser,
   faEnvelope, 
@@ -356,13 +357,14 @@ const MovieBuddyMainProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-deep-space text-silver py-12">
+    <div className="min-h-screen bg-deep-space text-silver">
+      <MovieBuddyNavBar />
       <Toaster position="top-right" />
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto"
+          className="max-w-7xl mx-auto"
         >
           <div className="bg-electric-purple/10 rounded-xl p-8 border border-silver/10 shadow-lg">
             <div className="flex justify-between items-center mb-8">
@@ -392,207 +394,213 @@ const MovieBuddyMainProfile = () => {
               </div>
             </div>
 
-            <div className="bg-deep-space/50 rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-bold text-amber mb-6">Personal Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <FontAwesomeIcon icon={faUser} className="text-amber mr-3 w-5" />
-                  <div>
-                    <p className="text-silver/80">Name</p>
-                    <p className="text-amber font-semibold">{personalInfo.name}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <FontAwesomeIcon icon={faEnvelope} className="text-amber mr-3 w-5" />
-                  <div>
-                    <p className="text-silver/80">Email</p>
-                    <p className="text-amber font-semibold">{personalInfo.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <FontAwesomeIcon icon={faPhone} className="text-amber mr-3 w-5" />
-                  <div>
-                    <p className="text-silver/80">Phone</p>
-                    <p className="text-amber font-semibold">{personalInfo.phone}</p>
-                  </div>
-                </div>
-                {personalInfo.createdAt && (
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faCalendar} className="text-amber mr-3 w-5" />
+            {/* Three Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Column 1: Personal Information */}
+              <div className="bg-deep-space/50 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-amber mb-6">Personal Information</h2>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <FontAwesomeIcon icon={faUser} className="text-amber mr-3 w-5 mt-1" />
                     <div>
-                      <p className="text-silver/80">Joined On</p>
-                      <p className="text-amber font-semibold">
-                        {new Date(personalInfo.createdAt).toLocaleDateString()}
-                      </p>
+                      <p className="text-silver/80 text-sm">Name</p>
+                      <p className="text-amber font-semibold">{personalInfo.name}</p>
                     </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FontAwesomeIcon icon={faEnvelope} className="text-amber mr-3 w-5 mt-1" />
+                    <div>
+                      <p className="text-silver/80 text-sm">Email</p>
+                      <p className="text-amber font-semibold break-all">{personalInfo.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FontAwesomeIcon icon={faPhone} className="text-amber mr-3 w-5 mt-1" />
+                    <div>
+                      <p className="text-silver/80 text-sm">Phone</p>
+                      <p className="text-amber font-semibold">{personalInfo.phone}</p>
+                    </div>
+                  </div>
+                  {personalInfo.createdAt && (
+                    <div className="flex items-start">
+                      <FontAwesomeIcon icon={faCalendar} className="text-amber mr-3 w-5 mt-1" />
+                      <div>
+                        <p className="text-silver/80 text-sm">Joined On</p>
+                        <p className="text-amber font-semibold">
+                          {new Date(personalInfo.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {preferences && (
+                    <>
+                      <div className="flex items-start">
+                        <FontAwesomeIcon icon={faBirthdayCake} className="text-amber mr-3 w-5 mt-1" />
+                        <div>
+                          <p className="text-silver/80 text-sm">Age</p>
+                          <p className="text-amber font-semibold">{preferences?.age || 'Not set'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <FontAwesomeIcon icon={faVenusMars} className="text-amber mr-3 w-5 mt-1" />
+                        <div>
+                          <p className="text-silver/80 text-sm">Gender</p>
+                          <p className="text-amber font-semibold">{preferences?.gender || 'Not set'}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Column 2: Current Movie Details */}
+              <div className="bg-deep-space/50 rounded-lg p-6">
+                {movieDetails ? (
+                  <>
+                    <h2 className="text-xl font-bold text-amber mb-6">Current Movie Details</h2>
+                    <div className="space-y-4">
+                      <div className="flex items-start">
+                        <FontAwesomeIcon icon={faFilm} className="text-amber mr-3 w-5 mt-1" />
+                        <div>
+                          <p className="text-silver/80 text-sm">Movie</p>
+                          <p className="text-amber font-semibold">{movieDetails.movieName}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <FontAwesomeIcon icon={faCalendar} className="text-amber mr-3 w-5 mt-1" />
+                        <div>
+                          <p className="text-silver/80 text-sm">Date</p>
+                          <p className="text-amber font-semibold">{movieDetails.movieDate}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <FontAwesomeIcon icon={faClock} className="text-amber mr-3 w-5 mt-1" />
+                        <div>
+                          <p className="text-silver/80 text-sm">Time</p>
+                          <p className="text-amber font-semibold">{movieDetails.movieTime}</p>
+                        </div>
+                      </div>
+                      {/* <div className="flex items-start">
+                        <FontAwesomeIcon icon={faTicketAlt} className="text-amber mr-3 w-5 mt-1" />
+                        <div>
+                          <p className="text-silver/80 text-sm">Booking ID</p>
+                          <p className="text-amber font-semibold">{movieDetails.bookingId}</p>
+                        </div>
+                      </div> */}
+                      
+                      {movieDetails.seatNumbers && movieDetails.seatNumbers.length > 0 && (
+                        <div className="mt-4">
+                          <h3 className="text-lg font-semibold text-amber mb-3">Your Seats</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {movieDetails.seatNumbers.map((seat, index) => (
+                              <span
+                                key={index}
+                                className="bg-amber/20 text-amber px-3 py-1 rounded-full text-sm flex items-center"
+                              >
+                                <FontAwesomeIcon icon={faChair} className="mr-2" />
+                                {seat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="border border-amber/20 rounded-lg p-4">
+                    <h2 className="text-xl font-bold text-amber mb-2">Current Movie Details</h2>
+                    <p className="text-silver/80 mb-4">You haven't set up your movie buddy details yet</p>
+                    <button
+                      onClick={handleCreateMovieBuddyProfile}
+                      className="px-4 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80 w-full"
+                    >
+                      Set Up Now
+                    </button>
                   </div>
                 )}
               </div>
-            </div>
 
-            {movieDetails ? (
-              <div className="bg-deep-space/50 rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-bold text-amber mb-6">Current Movie Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faFilm} className="text-amber mr-3 w-5" />
-                    <div>
-                      <p className="text-silver/80">Movie</p>
-                      <p className="text-amber font-semibold">{movieDetails.movieName}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faCalendar} className="text-amber mr-3 w-5" />
-                    <div>
-                      <p className="text-silver/80">Date</p>
-                      <p className="text-amber font-semibold">{movieDetails.movieDate}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faClock} className="text-amber mr-3 w-5" />
-                    <div>
-                      <p className="text-silver/80">Time</p>
-                      <p className="text-amber font-semibold">{movieDetails.movieTime}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faTicketAlt} className="text-amber mr-3 w-5" />
-                    <div>
-                      <p className="text-silver/80">Booking ID</p>
-                      <p className="text-amber font-semibold">{movieDetails.bookingId}</p>
-                    </div>
-                  </div>
-                </div>
+              {/* Column 3: Privacy Settings */}
+              <div className="bg-deep-space/50 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-amber mb-6">Privacy Settings</h2>
                 
-                {movieDetails.seatNumbers && movieDetails.seatNumbers.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-lg font-semibold text-amber mb-3">Your Seats</h3>
+                {preferences?.moviePreferences && preferences.moviePreferences.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-amber mb-3">Movie Preferences</h3>
                     <div className="flex flex-wrap gap-2">
-                      {movieDetails.seatNumbers.map((seat, index) => (
+                      {preferences.moviePreferences.map((pref, index) => (
                         <span
                           key={index}
-                          className="bg-amber/20 text-amber px-3 py-1 rounded-full text-sm flex items-center"
+                          className="bg-electric-purple/20 text-electric-purple px-3 py-1 rounded-full text-sm flex items-center"
                         >
-                          <FontAwesomeIcon icon={faChair} className="mr-2" />
-                          {seat}
+                          <FontAwesomeIcon icon={faHeart} className="mr-2" />
+                          {pref}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="bg-deep-space/50 rounded-lg p-6 mb-6 border border-amber/20">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-amber mb-2">Current Movie Details</h2>
-                    <p className="text-silver/80 mb-4">You haven't set up your movie buddy details yet</p>
-                  </div>
-                  <button
-                    onClick={handleCreateMovieBuddyProfile}
-                    className="px-4 py-2 bg-amber text-deep-space rounded-lg hover:bg-amber/80"
-                  >
-                    Set Up Now
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-deep-space/50 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-amber mb-6">Preferences & Settings</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center">
-                  <FontAwesomeIcon icon={faBirthdayCake} className="text-amber mr-3 w-5" />
-                  <div>
-                    <p className="text-silver/80">Age</p>
-                    <p className="text-amber font-semibold">{preferences?.age || 'Not set'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <FontAwesomeIcon icon={faVenusMars} className="text-amber mr-3 w-5" />
-                  <div>
-                    <p className="text-silver/80">Gender</p>
-                    <p className="text-amber font-semibold">{preferences?.gender || 'Not set'}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {preferences?.moviePreferences && preferences.moviePreferences.length > 0 ? (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-amber mb-3">Movie Preferences</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {preferences.moviePreferences.map((pref, index) => (
-                      <span
-                        key={index}
-                        className="bg-electric-purple/20 text-electric-purple px-3 py-1 rounded-full text-sm flex items-center"
-                      >
-                        <FontAwesomeIcon icon={faHeart} className="mr-2" />
-                        {pref}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-amber mb-3">Movie Preferences</h3>
-                  <p className="text-silver/80">No movie preferences set</p>
-                </div>
-              )}
-              
-              {preferences?.privacySettings && (
-                <div>
-                  <h3 className="text-lg font-semibold text-amber mb-3">Privacy Settings</h3>
+                
+                {preferences?.privacySettings ? (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                      <div>
-                        <p className="text-amber font-medium">Show Real Name</p>
-                        <p className="text-silver/70 text-sm">Display your real name to other movie buddies</p>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-sm ${
-                        preferences.privacySettings.showName ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                      }`}>
-                        {preferences.privacySettings.showName ? 'Enabled' : 'Disabled'}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                      <div>
-                        <p className="text-amber font-medium">Show Email</p>
-                        <p className="text-silver/70 text-sm">Let other movie buddies see your email</p>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-sm ${
-                        preferences.privacySettings.showEmail ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                      }`}>
-                        {preferences.privacySettings.showEmail ? 'Enabled' : 'Disabled'}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
-                      <div>
-                        <p className="text-amber font-medium">Show Phone</p>
-                        <p className="text-silver/70 text-sm">Let other movie buddies see your phone number</p>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-sm ${
-                        preferences.privacySettings.showPhone ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                      }`}>
-                        {preferences.privacySettings.showPhone ? 'Enabled' : 'Disabled'}
-                      </div>
-                    </div>
-                    
-                    {!preferences.privacySettings.showName && (
-                      <div className="flex items-center justify-between bg-deep-space p-3 rounded-lg">
+                    <div className="bg-deep-space p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-amber font-medium">Pet Name</p>
-                          <p className="text-silver/70 text-sm">Your display name for other movie buddies</p>
+                          <p className="text-amber font-medium text-sm">Show Real Name</p>
+                          <p className="text-silver/70 text-xs">Display your real name to other movie buddies</p>
                         </div>
-                        <div className="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">
-                          {preferences.privacySettings.petName || 'Anonymous'}
+                        <div className={`px-2 py-1 rounded-full text-xs ${
+                          preferences.privacySettings.showName ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                        }`}>
+                          {preferences.privacySettings.showName ? 'ON' : 'OFF'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-deep-space p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-amber font-medium text-sm">Show Email</p>
+                          <p className="text-silver/70 text-xs">Let other movie buddies see your email</p>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs ${
+                          preferences.privacySettings.showEmail ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                        }`}>
+                          {preferences.privacySettings.showEmail ? 'ON' : 'OFF'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-deep-space p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-amber font-medium text-sm">Show Phone</p>
+                          <p className="text-silver/70 text-xs">Let other movie buddies see your phone number</p>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs ${
+                          preferences.privacySettings.showPhone ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                        }`}>
+                          {preferences.privacySettings.showPhone ? 'ON' : 'OFF'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {!preferences.privacySettings.showName && preferences.privacySettings.petName && (
+                      <div className="bg-deep-space p-3 rounded-lg">
+                        <div>
+                          <p className="text-amber font-medium text-sm">Pet Name</p>
+                          <p className="text-silver/70 text-xs">Your display name for other movie buddies</p>
+                          <div className="mt-2 px-3 py-1 bg-amber/20 text-amber rounded-full text-sm inline-block">
+                            {preferences.privacySettings.petName || 'Anonymous'}
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-silver/80">Privacy settings not configured</p>
+                )}
+              </div>
             </div>
             
             {movieDetails && (

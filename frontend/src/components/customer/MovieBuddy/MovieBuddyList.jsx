@@ -24,7 +24,8 @@ import {
   faUserCircle,
   faUserFriends,
   faTimes,
-  faIdCard
+  faIdCard,
+  faPeopleGroup
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import CustomerNavBar from '../../navbar/MovieBuddyNavBar';
@@ -41,29 +42,49 @@ const MovieBuddyList = () => {
     privacy: 'all',
     movieName: ''
   });
-  const [selectedGroup, setSelectedGroup] = useState(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showFilterPortal, setShowFilterPortal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-
-  // Get unique movie names for navigation
-  const uniqueMovieNames = [...new Set(movieBuddyGroups.map(group => group.movieName))];
+  const [userMovieDetails, setUserMovieDetails] = useState(null);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
+    // Check if user is logged in
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+      // Redirect to login page if not logged in
+      navigate('/movie-buddy-login');
+      return;
+    }
+
+    setIsAuthChecked(true);
     fetchMovieBuddyGroups();
-  }, []);
+    
+    // Check for updated movie details from localStorage
+    const storedMovieDetails = localStorage.getItem('userMovieDetails');
+    if (storedMovieDetails) {
+      try {
+        const movieDetails = JSON.parse(storedMovieDetails);
+        setUserMovieDetails(movieDetails);
+        // Clear the stored details after using them
+        localStorage.removeItem('userMovieDetails');
+      } catch (error) {
+        console.error('Error parsing stored movie details:', error);
+      }
+    }
+  }, [navigate]);
 
   const fetchMovieBuddyGroups = async () => {
     try {
       setLoading(true);
-      // Get user email from localStorage
-      const userEmail = localStorage.getItem('userEmail');
+      // Get user email from localStorage (optional - can be null/empty)
+      const userEmail = localStorage.getItem('userEmail') || '';
       
       const response = await axios.get('http://localhost:3000/api/movie-buddies/all', {
         headers: {
-          'user-email': userEmail || ''
+          'user-email': userEmail
         }
       });
       
@@ -88,12 +109,23 @@ const MovieBuddyList = () => {
         });
         
         setMovieBuddyGroups(processedGroups);
+        
+        // Set user's movie details if provided
+        if (response.data.userMovieDetails) {
+          setUserMovieDetails(response.data.userMovieDetails);
+          console.log('User movie details set:', response.data.userMovieDetails);
+          console.log('Filtered groups returned from backend:', processedGroups.length);
+        } else {
+          console.log('No user movie details found - showing all movie buddies');
+        }
       } else {
-        toast.error('Failed to load movie buddy groups');
+        console.error('API response not successful:', response.data);
+        setMovieBuddyGroups([]); // Set empty array instead of showing error
       }
     } catch (error) {
       console.error('Error fetching movie buddy groups:', error);
-      toast.error(error.response?.data?.message || 'Failed to load movie buddy groups');
+      // Don't show error toast, just log it and show empty list
+      setMovieBuddyGroups([]);
     } finally {
       setLoading(false);
     }
@@ -187,11 +219,15 @@ const MovieBuddyList = () => {
 
   const filteredGroups = movieBuddyGroups
     .filter(group => {
+      // If user is logged in and has movie details, backend already filtered correctly
+      // Only apply search and additional filters
       const matchesSearch = 
         group.movieName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.movieDate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.movieTime?.toLowerCase().includes(searchTerm.toLowerCase());
 
+      // Apply additional filters only if user manually selects them
+      // If user has movie details, backend already handles the main filtering
       const matchesFilter = 
         (!filterOptions.movieName || group.movieName === filterOptions.movieName) &&
         (!filterOptions.date || group.movieDate === filterOptions.date) &&
@@ -213,7 +249,7 @@ const MovieBuddyList = () => {
       }
     });
 
-  if (loading) {
+  if (!isAuthChecked || loading) {
     return (
       <div className="min-h-screen bg-deep-space text-silver flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber"></div>
@@ -230,55 +266,64 @@ const MovieBuddyList = () => {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-7xl mx-auto"
         >
-          {/* Movie Name Navigation Bar */}
-          <div className="bg-electric-purple/10 rounded-xl p-4 mb-6 border border-silver/10 overflow-x-auto">
-            <div className="flex items-center space-x-4 min-w-max">
-              <div className="flex items-center space-x-3">
+          
+
+          {/* Show user's current movie details - now always show since user is logged in */}
+          {userMovieDetails && (
+            <div className="bg-amber/10 rounded-xl p-4 mb-6 border border-amber/20">
+              <div className="flex items-center space-x-4">
                 <FontAwesomeIcon icon={faTicketAlt} className="text-amber text-xl" />
-                <span className="text-amber font-semibold">Movies:</span>
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-amber font-semibold">Movie:</span>
+                    <span className="text-silver">{userMovieDetails.movieName}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <FontAwesomeIcon icon={faCalendarAlt} className="text-amber text-sm" />
+                    <span className="text-silver">{formatDate(userMovieDetails.movieDate)}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <FontAwesomeIcon icon={faClock} className="text-amber text-sm" />
+                    <span className="text-silver">{userMovieDetails.movieTime}</span>
+                  </div>
+                </div>
               </div>
-              {uniqueMovieNames.map((movieName) => (
-                <button
-                  key={movieName}
-                  onClick={() => handleMovieFilter(movieName)}
-                  className={`px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap ${
-                    filterOptions.movieName === movieName
-                      ? 'bg-amber text-deep-space'
-                      : 'bg-deep-space text-silver hover:bg-amber/20 hover:text-amber'
-                  }`}
-                >
-                  {movieName}
-                </button>
-              ))}
             </div>
-          </div>
+          )}
 
           <div className="bg-electric-purple/10 rounded-xl p-8 border border-silver/10 shadow-lg">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
-                  <FontAwesomeIcon icon={faUsers} className="text-amber text-2xl" />
-                  <h1 className="text-3xl font-bold text-amber">Movie Buddies</h1>
+                  <FontAwesomeIcon icon={faPeopleGroup} className="text-amber text-2xl" />
+                  <h1 className="text-3xl font-bold text-amber">
+                    Your Movie Buddies
+                  </h1>
                 </div>
+                <span className="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">
+                  Logged In
+                </span>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search movie buddies..."
+                    placeholder="Search your movie buddies..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="px-4 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber w-64"
                   />
                   <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-3 text-silver/50" />
                 </div>
-                <button
-                  onClick={() => handleFilterClick(movieBuddyGroups[0])}
-                  className="px-6 py-2 bg-amber/20 text-amber hover:bg-amber/30 rounded-lg flex items-center space-x-2 transition-colors duration-200"
-                >
-                  <FontAwesomeIcon icon={faFilter} />
-                  <span>Filter Your Preference</span>
-                </button>
+                {movieBuddyGroups.length > 0 && (
+                  <button
+                    onClick={() => handleFilterClick(movieBuddyGroups[0])}
+                    className="px-6 py-2 bg-amber/20 text-amber hover:bg-amber/30 rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                  >
+                    <FontAwesomeIcon icon={faFilter} />
+                    <span>Filter Your Preference</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -303,64 +348,112 @@ const MovieBuddyList = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredGroups.map((group) => (
-                <motion.div
-                  key={`${group.movieName}-${group.movieDate}-${group.movieTime}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-electric-purple/10 rounded-xl p-6 border border-silver/10 hover:border-amber/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber/10"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-3 bg-amber/20 rounded-full">
-                        <FontAwesomeIcon icon={faTicketAlt} className="text-amber text-xl" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-amber">{group.movieName}</h3>
-                        <p className="text-silver/75 text-sm">{formatDate(group.movieDate)}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">
-                        {group.movieTime}
-                      </span>
-                    </div>
-                  </div>
+            
 
-                  <div className="space-y-3 mb-6">
-                    {group.buddies.slice(0, 3).map((buddy, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-electric-purple/20 transition-colors duration-200"
-                      >
+            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredGroups.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <div className="p-6 bg-electric-purple/10 rounded-xl border border-silver/10">
+                    <FontAwesomeIcon icon={faUserFriends} className="text-amber text-6xl mb-4" />
+                    <h3 className="text-xl font-bold text-amber mb-2">
+                      No Movie Buddies Found
+                    </h3>
+                    <p className="text-silver/70">
+                      {userMovieDetails 
+                        ? `No other movie buddies found for ${userMovieDetails.movieName} on ${formatDate(userMovieDetails.movieDate)} at ${userMovieDetails.movieTime}. Be the first to connect with others!`
+                        : 'No movie buddies found for your booking. Be the first to connect with others!'
+                      }
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // Flatten all buddies from all groups and create individual cards
+                filteredGroups.flatMap(group => 
+                  group.buddies.map((buddy, buddyIndex) => (
+                    <motion.div
+                      key={`${group.movieName}-${group.movieDate}-${group.movieTime}-${buddy.email}-${buddyIndex}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-electric-purple/10 rounded-lg p-4 border border-silver/10 hover:border-amber/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber/10"
+                    >
+                      {/* Movie Details Header */}
+                      {/* <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-amber/20 rounded-full">
+                            <FontAwesomeIcon icon={faTicketAlt} className="text-amber text-sm" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-amber">{group.movieName}</h3>
+                            <p className="text-silver/75 text-xs">{formatDate(group.movieDate)} • {group.movieTime}</p>
+                          </div>
+                        </div>
+                      </div> */}
+
+                      {/* Buddy Profile */}
+                      <div className="flex items-center space-x-3 mb-3">
                         <div className={`p-2 rounded-full ${buddy.isGroup ? 'bg-amber/20' : 'bg-electric-purple/20'}`}>
                           <FontAwesomeIcon 
                             icon={buddy.isGroup ? faUserGroup : faUser} 
-                            className={`${buddy.isGroup ? 'text-amber' : 'text-electric-purple'}`}
+                            className={`text-lg ${buddy.isGroup ? 'text-amber' : 'text-electric-purple'}`}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-silver font-medium truncate">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <h4 className="text-lg font-semibold text-silver truncate">
                               {buddy.privacySettings?.showName ? buddy.name : buddy.privacySettings?.petName || 'Anonymous'}
                             </h4>
                             {!buddy.privacySettings?.showName && (
-                              <FontAwesomeIcon icon={faUserSecret} className="text-amber text-sm" title="Using pet name" />
+                              <FontAwesomeIcon icon={faUserSecret} className="text-amber text-xs" title="Using pet name" />
                             )}
                           </div>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-xs text-silver/60">
-                              {buddy.age} • {buddy.gender}
+                          <div className="flex items-center space-x-2 text-xs">
+                            <span className="text-silver/70">
+                              {buddy.age}y
                             </span>
-                            <span className="text-xs text-silver/40">•</span>
-                            <span className="text-xs text-silver/60">
-                              {buddy.isGroup ? 'Group' : 'Single'}
+                            <span className="text-silver/50">•</span>
+                            <span className="text-silver/70">
+                              {buddy.gender}
                             </span>
                           </div>
+                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${
+                            buddy.isGroup 
+                              ? 'bg-amber/20 text-amber' 
+                              : 'bg-electric-purple/20 text-electric-purple'
+                          }`}>
+                            {buddy.isGroup ? 'Group' : 'Single'}
+                          </span>
                         </div>
+                      </div>
+
+                      {/* Contact Information */}
+                      <div className="bg-deep-space/50 rounded-lg p-2 mb-3">
+                        <div className="space-y-1">
+                          {buddy.privacySettings?.showEmail && (
+                            <div className="flex items-center space-x-2">
+                              <FontAwesomeIcon icon={faEnvelope} className="text-amber text-xs" />
+                              <span className="text-silver text-xs truncate">{buddy.email}</span>
+                            </div>
+                          )}
+                          {buddy.privacySettings?.showPhone && (
+                            <div className="flex items-center space-x-2">
+                              <FontAwesomeIcon icon={faPhone} className="text-amber text-xs" />
+                              <span className="text-silver text-xs">{buddy.phone}</span>
+                            </div>
+                          )}
+                          {(!buddy.privacySettings?.showEmail && !buddy.privacySettings?.showPhone) && (
+                            <div className="flex items-center space-x-2">
+                              <FontAwesomeIcon icon={faUserSecret} className="text-amber text-xs" />
+                              <span className="text-silver/60 text-xs">Contact via WhatsApp</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Seat Information */}
+                      <div className="mb-3">
+                        <h5 className="text-amber font-semibold mb-1 text-xs">Seats:</h5>
                         <div className="flex flex-wrap gap-1">
-                          {Array.isArray(buddy.seatNumbers) && buddy.seatNumbers.slice(0, 2).map((seat, seatIndex) => (
+                          {Array.isArray(buddy.seatNumbers) && buddy.seatNumbers.slice(0, 3).map((seat, seatIndex) => (
                             <span
                               key={seatIndex}
                               className="bg-amber/20 text-amber px-2 py-0.5 rounded-full text-xs flex items-center"
@@ -369,48 +462,71 @@ const MovieBuddyList = () => {
                               {seat}
                             </span>
                           ))}
-                          {buddy.seatNumbers?.length > 2 && (
+                          {buddy.seatNumbers?.length > 3 && (
                             <span className="bg-amber/20 text-amber px-2 py-0.5 rounded-full text-xs">
-                              +{buddy.seatNumbers.length - 2}
+                              +{buddy.seatNumbers.length - 3}
                             </span>
                           )}
                         </div>
+                      </div>
+
+                      {/* Movie Preferences */}
+                      {buddy.moviePreferences && buddy.moviePreferences.length > 0 && (
+                        <div className="mb-3">
+                          <h5 className="text-amber font-semibold mb-1 text-xs">Preferences:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {buddy.moviePreferences.slice(0, 2).map((pref, prefIndex) => (
+                              <span
+                                key={prefIndex}
+                                className="bg-electric-purple/20 text-electric-purple px-2 py-0.5 rounded-full text-xs"
+                              >
+                                {pref}
+                              </span>
+                            ))}
+                            {buddy.moviePreferences.length > 2 && (
+                              <span className="text-silver/60 text-xs px-2 py-0.5">
+                                +{buddy.moviePreferences.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex space-x-2">
                         <button
                           onClick={() => handleViewProfile(buddy)}
-                          className="p-2 text-amber hover:text-amber/80 transition-colors duration-200"
-                          title="View Profile"
+                          className="flex-1 bg-electric-purple/20 text-electric-purple hover:bg-electric-purple/30 py-1.5 px-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-1"
                         >
-                          <FontAwesomeIcon icon={faIdCard} />
+                          <FontAwesomeIcon icon={faIdCard} className="text-xs" />
+                          <span className="text-xs">Profile</span>
                         </button>
-                      </div>
-                    ))}
-                    {group.buddies.length > 3 && (
-                      <div className="text-center">
                         <button
-                          onClick={() => setSelectedGroup(group)}
-                          className="text-amber hover:text-amber/80 text-sm font-medium"
+                          onClick={() => handleWhatsAppChat(buddy)}
+                          className="flex-1 bg-amber/20 text-amber hover:bg-amber/30 py-1.5 px-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-1"
                         >
-                          View all {group.buddies.length} buddies
+                          <FontAwesomeIcon icon={faUserFriends} className="text-xs" />
+                          <span className="text-xs">Chat</span>
                         </button>
                       </div>
                     )}
                   </div>
 
                   <div className="flex flex-col space-y-2">
-                    <button
+                    {/* <button
                       onClick={() => handleViewDetails(group.buddies[0], group)}
                       className="w-full bg-electric-purple/20 text-electric-purple hover:bg-electric-purple/30 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
                     >
                       <FontAwesomeIcon icon={faChartBar} />
                       <span>View Details</span>
-                    </button>
-                    <button
+                    </button> */}
+                    {/* <button
                       onClick={() => handleWhatsAppChat(group.buddies[0])}
                       className="w-full bg-amber/20 text-amber hover:bg-amber/30 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
                     >
                       <FontAwesomeIcon icon={faUserFriends} />
                       <span>Chat on WhatsApp</span>
-                    </button>
+                    </button> */}
                   </div>
                 </motion.div>
               ))}
@@ -432,22 +548,6 @@ const MovieBuddyList = () => {
               </button>
             </div>
             <MovieBuddyPortal bookingData={selectedBooking} />
-          </div>
-        </div>
-      )}
-
-      {selectedGroup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-deep-space p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-amber">Group Details</h2>
-              <button
-                onClick={() => setSelectedGroup(null)}
-                className="text-silver hover:text-amber"
-              >
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
           </div>
         </div>
       )}

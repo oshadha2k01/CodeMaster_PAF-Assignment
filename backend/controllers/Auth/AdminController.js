@@ -1,4 +1,4 @@
-const AdminRole = require('../models/AdminRole');
+const AdminRole = require('../../models/AdminRole');
 const jwt = require('jsonwebtoken');
 
 // Generate JWT token
@@ -13,11 +13,13 @@ const generateToken = (id) => {
 // @access  Public
 exports.registerUser = async (req, res) => {
   try {
+    console.log('Admin registration attempt:', req.body);
     const { name, email, password, phone, role } = req.body;
 
     // Check if admin already exists
     const adminExists = await AdminRole.findOne({ email });
     if (adminExists) {
+      console.log('Admin already exists:', email);
       return res.status(400).json({ message: 'Admin already exists' });
     }
 
@@ -29,6 +31,8 @@ exports.registerUser = async (req, res) => {
       phone,
       role: role || 'admin' // Default to 'admin' if not provided
     });
+
+    console.log('Admin created successfully:', admin.email);
 
     if (admin) {
       res.status(201).json({
@@ -53,13 +57,16 @@ exports.registerUser = async (req, res) => {
 // @access  Public
 exports.loginUser = async (req, res) => {
   try {
+    console.log('Admin login attempt:', req.body.email);
     const { email, password } = req.body;
 
     // Find admin by email
     const admin = await AdminRole.findOne({ email });
+    console.log('Admin found:', admin ? 'Yes' : 'No');
 
     // Check if admin exists and password matches
     if (admin && (await admin.matchPassword(password))) {
+      console.log('Login successful for:', email);
       res.json({
         _id: admin._id,
         name: admin.name,
@@ -69,6 +76,7 @@ exports.loginUser = async (req, res) => {
         token: generateToken(admin._id)
       });
     } else {
+      console.log('Invalid credentials for:', email);
       res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {

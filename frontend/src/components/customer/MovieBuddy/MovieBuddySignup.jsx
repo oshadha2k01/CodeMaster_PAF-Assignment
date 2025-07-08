@@ -162,40 +162,39 @@ const MovieBuddySignup = () => {
     if (!validateForm()) return;
 
     setLoading(true);
-    try {
-      const response = await axios.post('http://localhost:3000/api/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-      });
-
-      // Store user email temporarily for the login page
-      localStorage.setItem('tempUserEmail', formData.email);
-      
-      // Store booking details in localStorage if available
-      if (bookingDetails && Object.keys(bookingDetails).length > 0) {
-        localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
-      }
-      
-      // Show success message and wait a moment before redirecting
-      toast.success('Registration successful! You can now log in with your credentials.', {
-        duration: 3000, // Show toast for 3 seconds
-      });
-      
-      // Navigate to login page with booking details as state
-      setTimeout(() => {
-        setLoading(false); // Reset loading state before navigation
-        navigate('/movie-buddy-login', { 
-          state: bookingDetails // Pass booking details as state
-        });
-      }, 2000); // Wait 2 seconds before redirecting
-      
-    } catch (error) {
-      console.error('Error registering:', error);
-      toast.error(error.response?.data?.message || 'Failed to register');
-      setLoading(false);
+    
+    // Store user data in localStorage for later use
+    localStorage.setItem('userData', JSON.stringify({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password
+    }));
+    
+    // Store booking details in localStorage if available
+    if (bookingDetails && Object.keys(bookingDetails).length > 0) {
+      localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
     }
+    
+    // Show success message and navigate directly
+    toast.success('Form completed! Proceeding to next step...', {
+      duration: 2000,
+    });
+    
+    // Navigate to movie buddy form page with booking details as state
+    setTimeout(() => {
+      setLoading(false);
+      navigate('/movie-buddy-form', { 
+        state: {
+          ...bookingDetails,
+          userData: {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone
+          }
+        }
+      });
+    }, 1000); // Wait 1 second before redirecting
   };
 
   return (
@@ -320,7 +319,7 @@ const MovieBuddySignup = () => {
             <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-silver/20">
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/movie-buddy-login')}
                 className="px-6 py-2.5 bg-deep-space/50 text-silver hover:bg-deep-space/70 rounded-lg transition-colors duration-300"
               >
                 Cancel
@@ -333,10 +332,10 @@ const MovieBuddySignup = () => {
                 {loading ? (
                   <>
                     <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
-                    Registering as Movie Buddy...
+                    Processing...
                   </>
                 ) : (
-                  'Register To Movie Buddy'
+                  'Next Step'
                 )}
               </button>
             </div>

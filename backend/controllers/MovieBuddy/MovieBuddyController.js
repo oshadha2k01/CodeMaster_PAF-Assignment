@@ -1,5 +1,4 @@
 const MovieBuddy = require('../../models/MovieBuddy/MovieBuddyModel');
-const User = require('../../models/Auth/UserModel'); // Import User model for auth data
 
 
 const getMovieBuddiesByEmail = async (req, res) => {
@@ -227,14 +226,51 @@ const getAllMovieBuddyGroups = async (req, res) => {
     const userEmail = req.body.userEmail || req.headers['user-email'] || req.query.userEmail;
     const { movieName, movieDate, movieTime } = req.query;
     
+    // If user is logged in, find their movie details first
+    let userMovieDetails = null;
+    if (userEmail) {
+      const userMovieBuddy = await MovieBuddy.findOne({ email: userEmail });
+      if (userMovieBuddy) {
+        userMovieDetails = {
+          movieName: userMovieBuddy.movieName,
+          movieDate: userMovieBuddy.movieDate,
+          movieTime: userMovieBuddy.movieTime
+        };
+      }
+    }
+    
     // Build query object
     const query = {};
-    if (movieName) query.movieName = movieName;
-    if (movieDate) query.movieDate = movieDate;
-    if (movieTime) query.movieTime = movieTime;
     
-    // Only fetch buddies matching the query if specified
+    // If user is logged in and has movie details, show only matching movie buddies
+    if (userMovieDetails) {
+      query.movieName = userMovieDetails.movieName;
+      query.movieDate = userMovieDetails.movieDate;
+      query.movieTime = userMovieDetails.movieTime;
+      // Exclude the logged-in user from results
+      query.email = { $ne: userEmail };
+      console.log('Filtering for logged-in user:', userEmail);
+      console.log('User movie details:', userMovieDetails);
+      console.log('Query filter:', query);
+    } else {
+      // If no user logged in, apply any provided filters
+      if (movieName) query.movieName = movieName;
+      if (movieDate) query.movieDate = movieDate;
+      if (movieTime) query.movieTime = movieTime;
+      console.log('No user logged in, showing all or filtered results');
+    }
+    
+    // Only fetch buddies matching the query
     const allBuddies = await MovieBuddy.find(query).lean();
+    console.log(`Found ${allBuddies.length} movie buddies matching the query`);
+    if (allBuddies.length > 0) {
+      console.log('Sample buddy:', {
+        movieName: allBuddies[0].movieName,
+        movieDate: allBuddies[0].movieDate,
+        movieTime: allBuddies[0].movieTime,
+        email: allBuddies[0].email
+      });
+    }
 
     // Group buddies by movie details (movieName, movieDate, movieTime)
     const groupedBuddies = allBuddies.reduce((acc, buddy) => {
@@ -263,15 +299,13 @@ const getAllMovieBuddyGroups = async (req, res) => {
       return acc;
     }, {});
     
-    // Convert the grouped object to an array and filter out groups containing the user's email
-    const movieBuddyGroups = Object.values(groupedBuddies).filter(group => {
-      // Check if any buddy in the group has the user's email
-      return !group.buddies.some(buddy => buddy.email === userEmail);
-    });
+    // Convert the grouped object to an array
+    const movieBuddyGroups = Object.values(groupedBuddies);
     
     res.status(200).json({
       success: true,
-      data: movieBuddyGroups
+      data: movieBuddyGroups,
+      userMovieDetails: userMovieDetails // Send user's movie details to frontend
     });
   } catch (error) {
     console.error('Error fetching movie buddy groups:', {
@@ -537,6 +571,113 @@ const createMovieBuddy = async (req, res) => {
   }
 };
 
+// Create movie buddy without User model dependency (for direct registration)
+const createMovieBuddyDirect = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      phone,
+      password,
+      movieName,
+      movieDate,
+      movieTime,
+      bookingId,
+      age,
+      gender,
+      moviePreferences,
+      privacySettings,
+      seatNumbers
+    } = req.body;
+
+    // Validate required data
+    if (!name || !email || !phone || !password || !movieName || !movieDate || !movieTime || !age || !gender) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: name, email, phone, password, movieName, movieDate, movieTime, age, gender'
+      });
+    }
+
+    // Generate a unique bookingId if not provided
+    const finalBookingId = bookingId || `MB_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+
+    // Check if this specific user already has a movie buddy profile for this specific movie showing
+    const existingUserMovieBuddy = await MovieBuddy.findOne({ 
+      email,
+      movieName,
+      movieDate,
+      movieTime
+    });
+
+    let movieBuddy;
+    
+    if (existingUserMovieBuddy) {
+      // Update existing movie buddy for this user and movie showing
+      movieBuddy = await MovieBuddy.findOneAndUpdate(
+        { _id: existingUserMovieBuddy._id },
+        {
+          name,
+          email,
+          phone,
+          password,
+          movieName,
+          movieDate,
+          movieTime,
+          bookingId: finalBookingId,
+          age: parseInt(age),
+          gender,
+          moviePreferences: moviePreferences || [],
+          privacySettings: privacySettings || {
+            showName: true,
+            showEmail: false,
+            showPhone: true,
+            petName: ''
+          },
+          seatNumbers: seatNumbers || []
+        },
+        { new: true }
+      );
+    } else {
+      // Create a new movie buddy record
+      movieBuddy = new MovieBuddy({
+        name,
+        email,
+        phone,
+        password,
+        movieName,
+        movieDate,
+        movieTime,
+        bookingId: finalBookingId,
+        age: parseInt(age),
+        gender,
+        moviePreferences: moviePreferences || [],
+        privacySettings: privacySettings || {
+          showName: true,
+          showEmail: false,
+          showPhone: true,
+          petName: ''
+        },
+        seatNumbers: seatNumbers || []
+      });
+      
+      await movieBuddy.save();
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Movie buddy profile created successfully',
+      data: movieBuddy
+    });
+  } catch (error) {
+    console.error('Error creating movie buddy:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
 // Add this new function for handling login
 const loginMovieBuddy = async (req, res) => {
   try {
@@ -556,6 +697,16 @@ const loginMovieBuddy = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
+      });
+    }
+
+    // Check if password exists
+    if (!buddy.password) {
+      // Delete the record without password and ask user to register again
+      await MovieBuddy.deleteOne({ _id: buddy._id });
+      return res.status(401).json({
+        success: false,
+        message: 'This account was created before password support was added. The account has been cleared. Please register again.'
       });
     }
 
@@ -587,6 +738,61 @@ const loginMovieBuddy = async (req, res) => {
   }
 };
 
+// Update movie details for existing user
+const updateMovieDetailsForUser = async (req, res) => {
+  try {
+    const { email, movieName, movieDate, movieTime } = req.body;
+
+    // Validate required fields
+    if (!email || !movieName || !movieDate || !movieTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, movieName, movieDate, and movieTime are required'
+      });
+    }
+
+    // Find existing MovieBuddy by email
+    const existingBuddy = await MovieBuddy.findOne({ email });
+    
+    if (!existingBuddy) {
+      return res.status(404).json({
+        success: false,
+        message: 'Movie buddy not found for this email'
+      });
+    }
+
+    // Update movie details
+    existingBuddy.movieName = movieName;
+    existingBuddy.movieDate = movieDate;
+    existingBuddy.movieTime = movieTime;
+    
+    // Save the updated document
+    const updatedBuddy = await existingBuddy.save();
+
+    console.log('Movie details updated for user:', email);
+
+    res.status(200).json({
+      success: true,
+      message: 'Movie details updated successfully',
+      data: {
+        id: updatedBuddy._id,
+        email: updatedBuddy.email,
+        name: updatedBuddy.name,
+        movieName: updatedBuddy.movieName,
+        movieDate: updatedBuddy.movieDate,
+        movieTime: updatedBuddy.movieTime
+      }
+    });
+  } catch (error) {
+    console.error('Error updating movie details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating movie details',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   updateMovieBuddies,
   getAllMovieBuddyGroups,
@@ -598,5 +804,7 @@ module.exports = {
   createMovieBuddy,
   updateMovieBuddy,
   loginMovieBuddy,
-  getMovieBuddiesByEmail
+  getMovieBuddiesByEmail,
+  createMovieBuddyDirect,
+  updateMovieDetailsForUser
 };

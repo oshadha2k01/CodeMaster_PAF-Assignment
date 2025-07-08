@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdminNavbar from '../../navbar/AdminNavbar';
 import MovieList from '../../admin/MovieManagement/MovieList';
@@ -13,6 +13,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const AdminDashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalBookings: 0,
     totalMovies: 0,
@@ -22,8 +23,35 @@ const AdminDashboard = () => {
     bookingsPerMovie: {},
   });
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (!userInfo) {
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userInfo);
+      if (user && user.role === 'admin') {
+        setIsAuthenticated(true);
+      } else {
+        localStorage.removeItem('userInfo');
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error parsing user info:', error);
+      localStorage.removeItem('userInfo');
+      navigate('/login');
+    }
+  }, [navigate]);
 
   useEffect(() => {
+    // Only fetch stats if authenticated
+    if (!isAuthenticated) return;
+    
     const fetchStats = async () => {
       try {
         // Fetch bookings
@@ -59,7 +87,7 @@ const AdminDashboard = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [isAuthenticated]);
 
   // Pie chart data for movie status distribution
   const movieStatusData = {
@@ -226,6 +254,18 @@ const AdminDashboard = () => {
       </div>
     );
   };
+
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-deep-space text-silver flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber mx-auto mb-4"></div>
+          <p className="text-silver">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-deep-space text-silver">

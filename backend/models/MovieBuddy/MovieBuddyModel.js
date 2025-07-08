@@ -40,7 +40,7 @@ const movieBuddySchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: false
+    required: true,
   },
   bookingId: {
     type: String,
@@ -99,19 +99,23 @@ movieBuddySchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Pre-save middleware to handle privacy settings
-movieBuddySchema.pre('save', function(next) {
+// Method to get display data based on privacy settings
+movieBuddySchema.methods.getDisplayData = function() {
+  const data = this.toObject();
+  
+  // Apply privacy settings for display only
   if (!this.privacySettings.showEmail) {
-    this.email = '';
+    data.email = '';
   }
   if (!this.privacySettings.showPhone) {
-    this.phone = '';
+    data.phone = '';
   }
   if (!this.privacySettings.showName && this.privacySettings.petName) {
-    this.name = this.privacySettings.petName;
+    data.name = this.privacySettings.petName;
   }
-  next();
-});
+  
+  return data;
+};
 
 const MovieBuddy = mongoose.model('MovieBuddy', movieBuddySchema);
 

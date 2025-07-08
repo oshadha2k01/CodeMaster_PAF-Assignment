@@ -19,6 +19,7 @@ const MovieBuddyLogin = () => {
   
   // Create state to store booking details
   const [bookingDetails, setBookingDetails] = useState({});
+  const [isEmailFromRegistration, setIsEmailFromRegistration] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -33,6 +34,21 @@ const MovieBuddyLogin = () => {
     if (location.state?.bookingDetails || location.state?.movieName) {
       const newBookingDetails = location.state?.bookingDetails || location.state;
       setBookingDetails(newBookingDetails);
+    }
+    
+    // Show registration completion message if user just completed registration
+    // Registration message has been removed to avoid duplicate notifications
+    
+    // Auto-fill email if available from registration
+    const tempEmail = localStorage.getItem('tempUserEmail');
+    if (tempEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: tempEmail
+      }));
+      setIsEmailFromRegistration(true);
+      // Remove temp email after using it
+      localStorage.removeItem('tempUserEmail');
     }
   }, [location.state]);
 
@@ -74,97 +90,37 @@ const MovieBuddyLogin = () => {
       console.log('Attempting login with:', { email: formData.email });
       
       // Make API call to authenticate with the correct endpoint
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post('http://localhost:3000/api/movie-buddies/login', {
         email: formData.email,
         password: formData.password
       });
       
+      
       console.log('Login response data:', response.data);
-      localStorage.setItem('userEmail', response.data.email);
-      localStorage.setItem('userName', response.data.name);
-      localStorage.setItem('userPhone', response.data.phone);
-      localStorage.setItem('userId', response.data.id);
-
-      console.log('User data stored in localStorage:', {
-        email: response.data.email,
-        name: response.data.name,
-        phone: response.data.phone,
-        userId: response.data.id
-      });
       
       // Check if login was successful with proper response structure
-      if (response.data && (response.data.success || response.data.token)) {
-        // Get user details from response, exploring all possible locations
-        const responseUser = response.data.user || response.data || {};
-        
-        // Extract name from all possible locations in the response
-        const userName = responseUser.name || responseUser.username || responseUser.fullName || 
-                         response.data.name || response.data.username || response.data.fullName || 
-                         '';
-                         
-        console.log('Extracted userName:', userName);
-        
-        // Create complete user data from login response
-        let userData = {
-          email: formData.email,
-          name: userName,
-          userId: responseUser._id || responseUser.id || responseUser.userId || 
-                  response.data.userId || response.data._id || response.data.id || '',
-          token: response.data.token,
+      if (response.data && response.data.success) {
+        // Store user data from MovieBuddy response
+        const userData = {
+          email: response.data.email,
+          name: response.data.name,
+          phone: response.data.phone,
+          userId: response.data.id
         };
-        
-        console.log('Initial userData:', userData);
-        
-        // Try to get additional user details if possible
-        try {
-          // Only attempt to fetch user details if we have an ID and token
-          if (userData.userId && userData.token) {
-            console.log('Fetching user details for ID:', userData.userId);
-            
-            const userDetailsResponse = await axios.get(`http://localhost:3000/api/users/${userData.userId}`, {
-              headers: { 'Authorization': `Bearer ${userData.token}` }
-            });
-            
-            console.log('User details response:', userDetailsResponse.data);
-            
-            // Get additional details
-            const userDetails = userDetailsResponse.data;
-            
-            // Enhance user data with additional details, preserving existing values if new ones are empty
-            if (userDetails) {
-              userData = {
-                ...userData,
-                name: userDetails.name || userDetails.username || userDetails.fullName || userData.name || '',
-                phone: userDetails.phone || userDetails.phoneNumber || userDetails.contact || responseUser.phone || '',
-                profilePicture: userDetails.profilePicture || userDetails.avatar || userDetails.image || '',
-                preferences: userDetails.preferences || {},
-              };
-            }
-            
-            console.log('Enhanced userData after details API:', userData);
-          }
-        } catch (detailsError) {
-          console.error('Failed to fetch additional user details:', detailsError);
-          // Continue with basic user data, don't fail the whole login process
-        }
         
         // Store user credentials in localStorage for persistent login
         localStorage.setItem('userEmail', userData.email);
-        if (userData.phone) {
-          localStorage.setItem('userPhone', userData.phone);
-        }
+        localStorage.setItem('userName', userData.name);
+        localStorage.setItem('userPhone', userData.phone || '');
+        localStorage.setItem('userId', userData.userId);
+
+        console.log('User data stored in localStorage:', userData);
         
-        toast.success(`Welcome, ${userData.name || 'Movie Buddy'}!`);
-        
-        // Check if we have booking data to proceed with
-        if (bookingDetails && Object.keys(bookingDetails).length > 0) {
-          const enhancedBookingDetails = {
-            ...bookingDetails,
-            userEmail: userData.email,
-            userId: userData.userId,
-            userName: userData.name || '',  // Include name in booking details
-          };
+        // Check if user came from booking flow with new movie details
+        if (bookingDetails && bookingDetails.movieName && bookingDetails.movieDate && bookingDetails.movieTime) {
+          console.log('User has new movie details, updating existing record...');
           
+<<<<<<< Updated upstream
           // Try to fetch current movie details
           if (bookingDetails.movieId) {
             try {
@@ -184,19 +140,43 @@ const MovieBuddyLogin = () => {
           setTimeout(() => {
             navigate('/movie-buddy-form', { 
               state: enhancedBookingDetails
+=======
+          try {
+            // Auto-update movie details for existing user
+            const updateResponse = await axios.put('http://localhost:3000/api/movie-buddies/update-movie-details', {
+              email: userData.email,
+              movieName: bookingDetails.movieName,
+              movieDate: bookingDetails.movieDate,
+              movieTime: bookingDetails.movieTime
+>>>>>>> Stashed changes
             });
-          }, 1000);
+            
+            if (updateResponse.data.success) {
+              console.log('Movie details updated successfully');
+              toast.success(`Welcome back, ${userData.name}! Your movie details have been updated.`);
+              
+              // Store updated movie details for MovieBuddyList
+              localStorage.setItem('userMovieDetails', JSON.stringify({
+                movieName: bookingDetails.movieName,
+                movieDate: bookingDetails.movieDate,
+                movieTime: bookingDetails.movieTime
+              }));
+            } else {
+              console.error('Failed to update movie details:', updateResponse.data);
+              toast.success(`Welcome back, ${userData.name}!`);
+            }
+          } catch (updateError) {
+            console.error('Error updating movie details:', updateError);
+            toast.success(`Welcome back, ${userData.name}!`);
+          }
         } else {
-          console.log('No booking details found, asking user to make a booking first');
-          
-          // Show message about needing to make a booking first
-          toast.info('Please make a movie booking first to set up your Movie Buddy profile');
-          
-          // Navigate to movies page to select a movie and make a booking
-          setTimeout(() => {
-            navigate('/now-showing');
-          }, 1500);
+          toast.success(`Welcome back, ${userData.name}!`);
         }
+        
+        // Navigate to MovieBuddyList after login and optional update
+        setTimeout(() => {
+          navigate('/movie-buddies');
+        }, 1500);
       } else {
         console.error('Login response not as expected:', response.data);
         toast.error(response.data.message || 'Invalid email or password');
@@ -271,10 +251,16 @@ const MovieBuddyLogin = () => {
                   autoComplete="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-10 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:ring-2 focus:ring-amber focus:border-transparent"
+                  disabled={isEmailFromRegistration}
+                  className={`w-full px-10 py-2 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:ring-2 focus:ring-amber focus:border-transparent ${isEmailFromRegistration ? 'opacity-60 cursor-not-allowed' : ''}`}
                   placeholder="Enter your email"
                 />
               </div>
+              {isEmailFromRegistration && (
+                <p className="mt-1 text-xs text-amber/70">
+                  ✓ Email auto-filled from registration
+                </p>
+              )}
             </div>
             
             <div>

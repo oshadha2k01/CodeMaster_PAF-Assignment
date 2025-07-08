@@ -22,6 +22,9 @@ const movieBuddyRoute = require('./MovieBuddy/MovieBuddyRoutes.js');
 // New route for Authentication
 const authRoute = require('./Auth/AuthRoutes.js');
 
+// New route for Admin Authentication
+const adminRoute = require('./AdminRoute.js');
+
 // Root route
 router.get("/", (req, res) => {
     res.send("Hello World!");
@@ -36,8 +39,11 @@ router.use('/bookings', bookingRoute);
 // New route usage for Movie Buddy
 router.use('/movie-buddies', movieBuddyRoute);
 
-// New route usage for Authentication
-router.use('/auth', authRoute);
+
+// New route usage for Admin Authentication  
+router.use('/admin', adminRoute);
+
+
 // New route usage for Food
 router.use('/foods', foodRoute);
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faUserCircle, faFilm, faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faUserCircle, faFilm, faBars, faTimes, faPeopleGroup } from '@fortawesome/free-solid-svg-icons';
 
 const MovieBuddyNavBar = () => {
   const location = useLocation();
@@ -50,9 +50,9 @@ const MovieBuddyNavBar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faFilm} className="text-amber text-2xl" />
-              <span className="text-xl font-bold text-amber">GalaxyX Cinema</span>
+            <Link to="/movie-buddies" className="flex items-center space-x-2">
+              <FontAwesomeIcon icon={faPeopleGroup} className="text-amber text-2xl" />
+              <span className="text-xl font-bold text-amber">Movie Buddies</span>
             </Link>
           </div>
 

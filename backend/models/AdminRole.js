@@ -60,6 +60,6 @@ adminRoleSchema.methods.matchPassword = async function(enteredPassword) {
 };
 
 // Explicitly set the collection name to "loginuser"
-const AdminRole = mongoose.model('AdminRole', adminRoleSchema, 'loginuser');
+const AdminRole = mongoose.model('AdminRole', adminRoleSchema, 'admin');
 
 module.exports = AdminRole;

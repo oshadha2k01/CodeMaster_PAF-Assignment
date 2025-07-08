@@ -14,7 +14,8 @@ if (
   !movieBuddyController.checkExistingUser ||
   !movieBuddyController.getMovieBuddies ||
   !movieBuddyController.loginMovieBuddy ||
-  !movieBuddyController.getMovieBuddiesByEmail
+  !movieBuddyController.getMovieBuddiesByEmail ||
+  !movieBuddyController.createMovieBuddyDirect
 ) {
   throw new Error('One or more required controller functions are undefined.');
 }
@@ -46,8 +47,11 @@ router.post('/check-existing', async (req, res) => {
   }
 });
 
-// Create new movie buddy profile
+// Create new movie buddy profile (requires User model)
 router.post('/create', movieBuddyController.createMovieBuddy);
+
+// Create new movie buddy profile (direct - no User model dependency)
+router.post('/create-direct', movieBuddyController.createMovieBuddyDirect);
 
 // Get movie buddies for a specific show with filtering
 router.get('/buddies', async (req, res) => {
@@ -142,6 +146,9 @@ router.get('/profile', async (req, res) => {
 // Add login route
 router.post('/login', movieBuddyController.loginMovieBuddy);
 
+// Update movie details for existing user
+router.put('/update-movie-details', movieBuddyController.updateMovieDetailsForUser);
+
 // Get movie buddy group by ID
 router.get('/:id', movieBuddyController.getMovieBuddyGroupById);
 
@@ -181,6 +188,33 @@ router.delete('/:movieName/:movieDate/:movieTime', async (req, res) => {
       success: false,
       message: 'Error deleting movie buddy group',
       error: error.message
+    });
+  }
+});
+
+// Clean up route for records without passwords (for development/testing)
+router.post('/cleanup-invalid', async (req, res) => {
+  try {
+    // Delete all MovieBuddy records without passwords
+    const result = await MovieBuddy.deleteMany({
+      $or: [
+        { password: { $exists: false } },
+        { password: null },
+        { password: '' }
+      ]
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: `Cleaned up ${result.deletedCount} records without passwords`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error cleaning up records:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Server error during cleanup',
+      error: error.message 
     });
   }
 });

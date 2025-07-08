@@ -79,7 +79,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post('http://localhost:3000/api/admin/login', {
         email: formData.email,
         password: formData.password,
       });

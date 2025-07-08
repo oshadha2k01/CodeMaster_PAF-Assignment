@@ -120,25 +120,25 @@ const MovieBuddyForm = () => {
     setLoading(true);
 
     try {
-      const userEmail = localStorage.getItem('userEmail');
-      if (!userEmail) {
-        toast.error('User information not found. Please log in again');
-        navigate('/movie-buddy-login');
+      // Get user data from localStorage (from MovieBuddySignup)
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const bookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
+      
+      if (!userData.name || !userData.email || !userData.phone || !userData.password) {
+        toast.error('User signup data not found. Please start from the beginning.');
+        navigate('/movie-buddy-signup');
         return;
       }
 
-      if (!bookingData?.bookingId) {
-        toast.error('Booking ID is missing. Please complete your booking first.');
-        navigate('/booking');
-        return;
-      }
-
-      const payload = {
-        email: userEmail,
-        movieName: bookingData.movieName,
-        movieDate: bookingData.movieDate,
-        movieTime: bookingData.movieTime,
-        bookingId: bookingData.bookingId,
+      // Combine data from both forms
+      const combinedData = {
+        // From MovieBuddySignup.jsx
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        password: userData.password,
+        
+        // From MovieBuddyForm.jsx
         age: parseInt(formData.age),
         gender: formData.gender,
         moviePreferences: formData.moviePreferences,
@@ -148,44 +148,64 @@ const MovieBuddyForm = () => {
           showPhone: privacySettings.showPhone,
           petName: privacySettings.showName ? '' : privacySettings.petName
         },
-        seatNumbers: bookingData.seatNumbers || []
+        
+        // Movie details from booking
+        movieName: bookingDetails.movieTitle || bookingData?.movieName || 'Unknown Movie',
+        movieDate: bookingDetails.date || bookingData?.movieDate || new Date().toISOString().split('T')[0],
+        movieTime: bookingDetails.time || bookingData?.movieTime || '00:00',
+        bookingId: bookingDetails.bookingId || bookingData?.bookingId || `MB_${Date.now()}`,
+        seatNumbers: bookingDetails.seats || bookingData?.seatNumbers || []
       };
 
-      const response = await axios.post('http://localhost:3000/api/movie-buddies', payload);
+      console.log('Submitting combined data:', combinedData);
+
+      // Save to database using MovieBuddy endpoint (direct creation without User model)
+      const response = await axios.post('http://localhost:3000/api/movie-buddies/create-direct', combinedData);
       
-      toast.success("Movie buddy profile created successfully!", {
-        duration: 4000,
+      // Show success message
+      toast.success("Registration completed successfully!", {
+        duration: 2000,
         position: 'top-center',
         style: {
-          background: '#4ade80',
-          color: '#fff',
-          padding: '10px 20px',
+          background: '#22c55e',
+          color: '#ffffff',
+          padding: '12px 20px',
           borderRadius: '8px'
         },
-        icon: '🎉'
       });
 
-      // Store movie details in localStorage for future reference
-      const movieDetails = {
-        movieName: bookingData.movieName,
-        movieDate: bookingData.movieDate,
-        movieTime: bookingData.movieTime
-      };
-      localStorage.setItem('currentMovieBuddy', JSON.stringify(movieDetails));
+      // Clean up localStorage
+      localStorage.removeItem('userData');
+      localStorage.setItem('tempUserEmail', userData.email);
+      
+      // Store movie details for login page
+      localStorage.setItem('movieBuddyDetails', JSON.stringify({
+        movieName: combinedData.movieName,
+        movieDate: combinedData.movieDate,
+        movieTime: combinedData.movieTime
+      }));
 
-      // Navigate to buddy list with properly structured state
-      navigate("/movie-buddies", { 
-        state: { 
-          movieDetails: {
-            movieName: bookingData.movieName,
-            movieDate: bookingData.movieDate,
-            movieTime: bookingData.movieTime
+      // Navigate to login page after showing success message
+      setTimeout(() => {
+        // Dismiss any active toasts before navigation
+        toast.dismiss();
+        
+        navigate('/movie-buddy-login', { 
+          state: {
+            movieName: combinedData.movieName,
+            movieDate: combinedData.movieDate,
+            movieTime: combinedData.movieTime,
+            registrationComplete: true
           }
-        } 
-      });
+        });
+      }, 1500);
+
     } catch (error) {
-      console.error("Error saving profile:", error);
-      toast.error(error.response?.data?.message || "An unexpected error occurred");
+      console.error("Error completing registration:", error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          "Registration failed. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -452,7 +472,7 @@ const MovieBuddyForm = () => {
                         : 'bg-deep-space/50 text-silver/50 cursor-not-allowed'
                     }`}
                   >
-                    {loading ? 'Submitting...' : 'Submit'}
+                    {loading ? 'Completing Registration...' : 'Complete Registration'}
                   </button>
                 </div>
               </div>
