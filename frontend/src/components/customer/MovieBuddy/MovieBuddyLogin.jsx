@@ -120,27 +120,6 @@ const MovieBuddyLogin = () => {
         if (bookingDetails && bookingDetails.movieName && bookingDetails.movieDate && bookingDetails.movieTime) {
           console.log('User has new movie details, updating existing record...');
           
-<<<<<<< Updated upstream
-          // Try to fetch current movie details
-          if (bookingDetails.movieId) {
-            try {
-              const movieResponse = await axios.get(`http://localhost:3000/api/movies/${bookingDetails.movieId}`);
-              if (movieResponse.data) {
-                enhancedBookingDetails.movieDetails = movieResponse.data;
-              }
-            } catch (movieError) {
-              console.error('Error fetching movie details:', movieError);
-              // Continue with existing booking details
-            }
-          }
-          
-          console.log('Navigating to form with data:', { userData, bookingDetails: enhancedBookingDetails });
-          
-          // Navigate to movie-buddy-form with all available data
-          setTimeout(() => {
-            navigate('/movie-buddy-form', { 
-              state: enhancedBookingDetails
-=======
           try {
             // Auto-update movie details for existing user
             const updateResponse = await axios.put('http://localhost:3000/api/movie-buddies/update-movie-details', {
@@ -148,7 +127,6 @@ const MovieBuddyLogin = () => {
               movieName: bookingDetails.movieName,
               movieDate: bookingDetails.movieDate,
               movieTime: bookingDetails.movieTime
->>>>>>> Stashed changes
             });
             
             if (updateResponse.data.success) {
@@ -256,11 +234,11 @@ const MovieBuddyLogin = () => {
                   placeholder="Enter your email"
                 />
               </div>
-              {isEmailFromRegistration && (
+              {/* {isEmailFromRegistration && (
                 <p className="mt-1 text-xs text-amber/70">
                   ✓ Email auto-filled from registration
                 </p>
-              )}
+              )} */}
             </div>
             
             <div>

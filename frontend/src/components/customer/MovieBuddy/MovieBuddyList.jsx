@@ -29,10 +29,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import CustomerNavBar from '../../navbar/MovieBuddyNavBar';
+import MovieBuddyFilter from './MovieBuddyFilter';
 
 const MovieBuddyList = () => {
   const navigate = useNavigate();
   const [movieBuddyGroups, setMovieBuddyGroups] = useState([]);
+  const [originalMovieBuddyGroups, setOriginalMovieBuddyGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('movieDate');
@@ -43,8 +45,7 @@ const MovieBuddyList = () => {
     movieName: ''
   });
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [showFilterPortal, setShowFilterPortal] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [userMovieDetails, setUserMovieDetails] = useState(null);
@@ -91,8 +92,15 @@ const MovieBuddyList = () => {
       if (response.data.success) {
         const processedGroups = response.data.data.map(group => {
           const buddies = group.buddies || [];
-          const groupBookings = buddies.filter(buddy => buddy.isGroup).length;
-          const singleBookings = buddies.filter(buddy => !buddy.isGroup).length;
+          // Updated logic: Single = 1 seat, Group = more than 1 seat
+          const singleBookings = buddies.filter(buddy => {
+            const seatCount = Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.length : 0;
+            return seatCount === 1;
+          }).length;
+          const groupBookings = buddies.filter(buddy => {
+            const seatCount = Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.length : 0;
+            return seatCount > 1;
+          }).length;
           const totalSeats = buddies.reduce((acc, buddy) => {
             const seatCount = Array.isArray(buddy.seatNumbers) ? buddy.seatNumbers.length : 0;
             return acc + seatCount;
@@ -109,6 +117,7 @@ const MovieBuddyList = () => {
         });
         
         setMovieBuddyGroups(processedGroups);
+        setOriginalMovieBuddyGroups(processedGroups); // Store original for filter reset
         
         // Set user's movie details if provided
         if (response.data.userMovieDetails) {
@@ -185,12 +194,26 @@ const MovieBuddyList = () => {
         petName: ''
       }
     });
-    setShowFilterPortal(true);
   };
 
-  const handleFilterClose = () => {
-    setShowFilterPortal(false);
-    setSelectedBooking(null);
+  // New handlers for advanced filter
+  const handleAdvancedFilterOpen = () => {
+    setShowAdvancedFilter(true);
+  };
+
+  const handleAdvancedFilterClose = () => {
+    setShowAdvancedFilter(false);
+  };
+
+  const handleFilterResults = (filteredResults) => {
+    console.log('Filtered results received:', filteredResults);
+    setMovieBuddyGroups(filteredResults);
+    toast.success(`Filter applied! Found ${filteredResults.reduce((acc, group) => acc + group.totalBuddies, 0)} matching buddies.`);
+  };
+
+  const resetToOriginalResults = () => {
+    setMovieBuddyGroups(originalMovieBuddyGroups);
+    toast.info('Filters cleared. Showing all your movie buddies.');
   };
 
   const handleWhatsAppChat = (buddy) => {
@@ -316,13 +339,21 @@ const MovieBuddyList = () => {
                   <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-3 text-silver/50" />
                 </div>
                 {movieBuddyGroups.length > 0 && (
-                  <button
-                    onClick={() => handleFilterClick(movieBuddyGroups[0])}
-                    className="px-6 py-2 bg-amber/20 text-amber hover:bg-amber/30 rounded-lg flex items-center space-x-2 transition-colors duration-200"
-                  >
-                    <FontAwesomeIcon icon={faFilter} />
-                    <span>Filter Your Preference</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handleAdvancedFilterOpen}
+                      className="px-6 py-2 bg-amber/20 text-amber hover:bg-amber/30 rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                      <FontAwesomeIcon icon={faFilter} />
+                      <span>Filter Your Preference</span>
+                    </button>
+                    <button
+                      onClick={resetToOriginalResults}
+                      className="px-4 py-2 bg-electric-purple/20 text-electric-purple hover:bg-electric-purple/30 rounded-lg transition-colors duration-200"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -341,7 +372,7 @@ const MovieBuddyList = () => {
                       </button>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4">
-                      <MovieBuddyPortal />
+                      {/* Old filter modal content removed */}
                     </div>
                   </div>
                 </div>
@@ -376,25 +407,12 @@ const MovieBuddyList = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="bg-electric-purple/10 rounded-lg p-4 border border-silver/10 hover:border-amber/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber/10"
                     >
-                      {/* Movie Details Header */}
-                      {/* <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-amber/20 rounded-full">
-                            <FontAwesomeIcon icon={faTicketAlt} className="text-amber text-sm" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-amber">{group.movieName}</h3>
-                            <p className="text-silver/75 text-xs">{formatDate(group.movieDate)} • {group.movieTime}</p>
-                          </div>
-                        </div>
-                      </div> */}
-
                       {/* Buddy Profile */}
                       <div className="flex items-center space-x-3 mb-3">
-                        <div className={`p-2 rounded-full ${buddy.isGroup ? 'bg-amber/20' : 'bg-electric-purple/20'}`}>
+                        <div className={`p-2 rounded-full ${(buddy.seatNumbers && buddy.seatNumbers.length > 1) ? 'bg-amber/20' : 'bg-electric-purple/20'}`}>
                           <FontAwesomeIcon 
-                            icon={buddy.isGroup ? faUserGroup : faUser} 
-                            className={`text-lg ${buddy.isGroup ? 'text-amber' : 'text-electric-purple'}`}
+                            icon={(buddy.seatNumbers && buddy.seatNumbers.length > 1) ? faUserGroup : faUser} 
+                            className={`text-lg ${(buddy.seatNumbers && buddy.seatNumbers.length > 1) ? 'text-amber' : 'text-electric-purple'}`}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -416,11 +434,11 @@ const MovieBuddyList = () => {
                             </span>
                           </div>
                           <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${
-                            buddy.isGroup 
+                            (buddy.seatNumbers && buddy.seatNumbers.length > 1)
                               ? 'bg-amber/20 text-amber' 
                               : 'bg-electric-purple/20 text-electric-purple'
                           }`}>
-                            {buddy.isGroup ? 'Group' : 'Single'}
+                            {(buddy.seatNumbers && buddy.seatNumbers.length > 1) ? 'Group' : 'Single'}
                           </span>
                         </div>
                       </div>
@@ -509,48 +527,14 @@ const MovieBuddyList = () => {
                           <span className="text-xs">Chat</span>
                         </button>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-2">
-                    {/* <button
-                      onClick={() => handleViewDetails(group.buddies[0], group)}
-                      className="w-full bg-electric-purple/20 text-electric-purple hover:bg-electric-purple/30 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-                    >
-                      <FontAwesomeIcon icon={faChartBar} />
-                      <span>View Details</span>
-                    </button> */}
-                    {/* <button
-                      onClick={() => handleWhatsAppChat(group.buddies[0])}
-                      className="w-full bg-amber/20 text-amber hover:bg-amber/30 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-                    >
-                      <FontAwesomeIcon icon={faUserFriends} />
-                      <span>Chat on WhatsApp</span>
-                    </button> */}
-                  </div>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  ))
+                )
+              )}
             </div>
           </div>
         </motion.div>
       </div>
-
-      {showFilterPortal && selectedBooking && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-deep-space p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-amber">Filter Your Preference</h2>
-              <button
-                onClick={handleFilterClose}
-                className="text-silver hover:text-amber"
-              >
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
-            <MovieBuddyPortal bookingData={selectedBooking} />
-          </div>
-        </div>
-      )}
 
       {showProfileModal && selectedProfile && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -575,7 +559,7 @@ const MovieBuddyList = () => {
                     {selectedProfile.privacySettings?.showName ? selectedProfile.name : selectedProfile.privacySettings?.petName || 'Anonymous'}
                   </h3>
                   <p className="text-silver/75">
-                    {selectedProfile.isGroup ? 'Group Booking' : 'Single Booking'}
+                    {(selectedProfile.seatNumbers && selectedProfile.seatNumbers.length > 1) ? 'Group Booking' : 'Single Booking'}
                   </p>
                 </div>
               </div>
@@ -652,6 +636,14 @@ const MovieBuddyList = () => {
           </div>
         </div>
       )}
+
+      {/* Advanced Filter Modal */}
+      <MovieBuddyFilter
+        isOpen={showAdvancedFilter}
+        onClose={handleAdvancedFilterClose}
+        onFilterResults={handleFilterResults}
+        userMovieDetails={userMovieDetails}
+      />
     </div>
   );
 };

@@ -27,6 +27,7 @@ const MovieBuddySignup = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
 
   useEffect(() => {
     // Debug log
@@ -37,7 +38,21 @@ const MovieBuddySignup = () => {
       localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
     }
     
-    // Don't auto-fill form data anymore - let users enter their own information
+    // Auto-fill form data if booking details contain user information
+    if (bookingDetails.name && bookingDetails.email && bookingDetails.phone) {
+      setFormData(prev => ({
+        ...prev,
+        name: bookingDetails.name,
+        email: bookingDetails.email,
+        phone: bookingDetails.phone
+      }));
+      setIsAutoFilled(true);
+      console.log("Auto-filled user data from booking details:", {
+        name: bookingDetails.name,
+        email: bookingDetails.email,
+        phone: bookingDetails.phone
+      });
+    }
     
   }, [bookingDetails]);
 
@@ -121,6 +136,11 @@ const MovieBuddySignup = () => {
     const { name, value } = e.target;
     let newValue = value;
 
+    // Don't allow changes to auto-filled fields
+    if (isAutoFilled && (name === 'name' || name === 'email' || name === 'phone')) {
+      return;
+    }
+
     // Real-time input restrictions
     switch (name) {
       case 'name':
@@ -145,12 +165,17 @@ const MovieBuddySignup = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    // Skip validation for auto-filled fields as they're already valid
+    if (!isAutoFilled) {
+      if (!formData.name.trim()) newErrors.name = 'Name is required';
+      if (!formData.email.trim()) newErrors.email = 'Email is required';
+      if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    }
+    
+    // Always validate password fields
     if (!formData.password.trim()) newErrors.password = 'Password is required';
     if (!formData.confirmPassword.trim()) newErrors.confirmPassword = 'Confirm password is required';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -177,7 +202,11 @@ const MovieBuddySignup = () => {
     }
     
     // Show success message and navigate directly
-    toast.success('Form completed! Proceeding to next step...', {
+    const successMessage = isAutoFilled 
+      ? 'Registration details completed! Proceeding to profile setup...' 
+      : 'Form completed! Proceeding to next step...';
+    
+    toast.success(successMessage, {
       duration: 2000,
     });
     
@@ -207,7 +236,23 @@ const MovieBuddySignup = () => {
         className="max-w-xl mx-auto w-full"
       >
         <div className="bg-electric-purple/10 rounded-xl p-10 border border-silver/10 shadow-lg">
-          <h1 className="text-3xl font-bold text-amber mb-8 text-center">Register</h1>
+          <h1 className="text-3xl font-bold text-amber mb-8 text-center">
+            {isAutoFilled ? 'Complete Your Registration' : 'Register'}
+          </h1>
+
+          {/* Show auto-fill indicator */}
+          {/* {isAutoFilled && (
+            <div className="mb-6 p-4 bg-amber/10 rounded-lg border border-amber/20">
+              <div className="flex items-center space-x-2">
+                <FontAwesomeIcon icon={faUser} className="text-amber" />
+                <span className="text-amber font-medium">Auto-filled from booking details</span>
+              </div>
+              <p className="text-silver/70 text-sm mt-1">
+                Your name, email, and phone number have been automatically filled from your booking. 
+                You only need to set your password.
+              </p>
+            </div>
+          )} */}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -220,9 +265,13 @@ const MovieBuddySignup = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber opacity-75"
+                disabled={isAutoFilled}
+                className={`w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber ${
+                  isAutoFilled ? 'opacity-60 cursor-not-allowed' : 'opacity-75'
+                }`}
                 placeholder="Enter your name"
               />
+              
               {errors.name && (
                 <p className="mt-1 text-sm text-scarlet flex items-center">
                   <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
@@ -241,9 +290,13 @@ const MovieBuddySignup = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber opacity-75"
+                disabled={isAutoFilled}
+                className={`w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber ${
+                  isAutoFilled ? 'opacity-60 cursor-not-allowed' : 'opacity-75'
+                }`}
                 placeholder="example@domain.com"
               />
+              
               {errors.email && (
                 <p className="mt-1 text-sm text-scarlet flex items-center">
                   <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
@@ -262,9 +315,13 @@ const MovieBuddySignup = () => {
                 value={formData.phone}
                 onChange={handleInputChange}
                 maxLength={10}
-                className="w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber opacity-75"
+                disabled={isAutoFilled}
+                className={`w-full px-4 py-2.5 bg-deep-space border border-silver/20 rounded-lg text-silver focus:outline-none focus:border-amber ${
+                  isAutoFilled ? 'opacity-60 cursor-not-allowed' : 'opacity-75'
+                }`}
                 placeholder="Enter phone number"
               />
+              
               {errors.phone && (
                 <p className="mt-1 text-sm text-scarlet flex items-center">
                   <FontAwesomeIcon icon={faExclamationCircle} className="mr-1" />
@@ -335,7 +392,7 @@ const MovieBuddySignup = () => {
                     Processing...
                   </>
                 ) : (
-                  'Next Step'
+                  isAutoFilled ? 'Complete Registration' : 'Next Step'
                 )}
               </button>
             </div>
